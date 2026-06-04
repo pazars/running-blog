@@ -12,6 +12,7 @@
     "astro": "^5.17.1"
   },
   "devDependencies": {
-    "@astrojs/sitemap": "^3.7.3"
+    "@astrojs/sitemap": "^3.7.3",
+    "lorem-ipsum": "^3.0.0"
   }
 }

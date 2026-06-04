@@ -956,6 +956,92 @@ nav > .link.active {
   padding: 16px 16px 0;
 }
 
+/* ===== Featured Post (latest article) ===== */
+.featured-post {
+  display: block;
+  text-decoration: none;
+}
+.featured-card {
+  flex-direction: column;
+  padding: 12px;
+  margin: -12px;
+  border: 1px solid transparent;
+  border-radius: var(--border-rounded-lg);
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.featured-post:hover > .featured-card {
+  border-color: var(--color-border-default);
+  background-color: var(--color-bg-subtle);
+}
+@media (min-width: 768px) {
+  .featured-card {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+.featured-card > .image-wrapper {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.featured-card > .image-wrapper:hover {
+  transform: scale(0.98);
+}
+@media (min-width: 768px) {
+  .featured-card > .image-wrapper {
+    width: 40%;
+    min-height: 0;
+  }
+}
+/* Stacked (mobile): the thumbnail needs its own height. */
+.featured-card > .image-wrapper > .image {
+  object-fit: cover;
+  height: 240px;
+}
+/* Side-by-side (desktop): the thumbnail stretches to the text column's height,
+   so the card is sized by the copy and never leaves an empty gap. */
+@media (min-width: 768px) {
+  .featured-card > .image-wrapper > .image {
+    height: 100%;
+  }
+}
+.featured-card > .info {
+  gap: 8px;
+  justify-content: flex-start;
+}
+.featured-card > .info > .date {
+  font-size: var(--text-body-size-small);
+  color: var(--color-fg-muted);
+}
+.featured-card > .info > .title {
+  font-size: var(--text-body-size-extra-large-mobile);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3em;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+@media (min-width: 1012px) {
+  .featured-card > .info > .title {
+    font-size: var(--text-body-size-extra-large);
+  }
+}
+.featured-card > .info > .summary {
+  font-size: var(--text-body-size-medium-mobile);
+  color: var(--color-fg-muted);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+@media (min-width: 1012px) {
+  .featured-card > .info > .summary {
+    font-size: var(--text-body-size-medium);
+  }
+}
+
 /* ===== Content Grid ===== */
 .content-grid {
   display: grid;

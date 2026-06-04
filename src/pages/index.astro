@@ -3,8 +3,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
 import SectionHeader from "../components/SectionHeader.astro";
 import ProjectCard from "../components/ProjectCard.astro";
+import FeaturedPost from "../components/FeaturedPost.astro";
 import Footer from "../components/Footer.astro";
 import { site } from "../site.config";
+import { LoremIpsum } from "lorem-ipsum";
+
+// Placeholder copy for the featured post until a real article is wired in.
+const lorem = new LoremIpsum();
+const loremTitle = lorem.generateWords(8).replace(/^\w/, (c) => c.toUpperCase());
+const loremSummary = lorem.generateSentences(6);
 
 // Read a page's current og:image at build time so linked projects always show
 // their live share image. Falls back to the last known URL if the fetch fails.
@@ -30,6 +37,15 @@ const pasaulesTureImage = await fetchOgImage(
   "https://pasaulesture.lv/",
   "https://pasaulesture.lv/events/egipte-malta/og/og-image-lv.jpg",
 );
+
+const latestPost = {
+  href: "#",
+  title: loremTitle,
+  date: "2026-05-28",
+  dateLabel: "2026. gada 28. maijs",
+  summary: loremSummary,
+  imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=Jaunākais",
+};
 
 const recentShips = [
   {
@@ -143,31 +159,26 @@ const sideProjects = [
       </h2>
     </section>
 
-    <!-- Bio -->
+    <!-- Introduction -->
+    <section id="intro">
+      <p>
+        Šī mājaslapa ir mans mēģinājums radīt vietu brīvi pieejamai un skrējējiem noderīgai informācijai,
+        kas nav aprakta reklāmās vai paslēpta zem reģistrācijām un maksas abonementiem. Varu arī apsolīt,
+        ka ikvienu rakstu būšu rakstījis un pārbaudījis es pats nevis kāds mākslīgā intelekta rīks.
+      </p>
+    </section>
+
+    <!-- Latest article -->
     <section>
-      <p>
-        I'm a creative technologist at
-        <a href="#" class="avatar-link">
-          <img
-            src="https://placehold.co/20x20/090e24/ffffff?text=A"
-            alt={site.company}
-            class="avatar"
-            width="20"
-            height="20"
-          />
-          {site.company}</a
-        >, currently focused on
-        <a href="#">interactive tools and data visualization</a>. Over the past
-        several years, I've shipped work across onboarding, collaboration,
-        search, notifications, and developer infrastructure.
-      </p>
-      <p>
-        I started out writing backend services and gradually moved toward the
-        intersection of engineering and craft. I still push code regularly and
-        find that fluency in both worlds helps me move faster, communicate
-        clearly with engineers, and ship work that holds up under real
-        constraints.
-      </p>
+      <SectionHeader id="latest-post" title="Jaunākais raksts" />
+      <FeaturedPost
+        href={latestPost.href}
+        title={latestPost.title}
+        date={latestPost.date}
+        dateLabel={latestPost.dateLabel}
+        summary={latestPost.summary}
+        imageUrl={latestPost.imageUrl}
+      />
     </section>
 
     <!-- Previous work -->
