@@ -1,22 +1,88 @@
 ---
+import { site } from "../site.config";
+
 interface Props {
   title: string;
   description?: string;
+  /** Site-relative share image; resolved to an absolute URL below. */
+  image?: string;
+  /** og:type — pages (e.g. blog posts) can pass "article". */
+  type?: string;
 }
 
-const { title, description = "Product designer" } = Astro.props;
+const {
+  title,
+  description = "Taku skrējēja un programmētāja Dāvja Pazara personīgais blogs.",
+  image = "/og-image.jpg",
+  type = "website",
+} = Astro.props;
+
+// Absolute URLs for canonical + social metadata (Astro.site comes from astro.config).
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image, Astro.site);
+
+// Site-wide structured data: who the author is and what the site is.
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      name: site.name,
+      url: site.url,
+      jobTitle: site.role,
+      sameAs: site.socials.map((s) => s.href),
+    },
+    {
+      "@type": "WebSite",
+      name: site.name,
+      url: site.url,
+      inLanguage: "lv",
+    },
+  ],
+};
 
 import "../styles/global.css";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="lv">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href={canonical} />
+
+    <!-- Primary meta tags -->
     <title>{title}</title>
     <meta name="title" content={title} />
     <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="lv_LV" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonical} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={ogImage} />
+
+    <!-- Icons & PWA manifest -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#283cff" />
+
+    <!-- Structured data -->
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} is:inline />
   </head>
   <body>
     <slot />
