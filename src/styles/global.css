@@ -219,6 +219,19 @@ section {
 section:first-child {
   padding: 80px 0;
 }
+/* Tight, symmetric spacing for hero (first) sections. Top gap = header mb (16)
+   + 28 + SectionHeader pt (12) = 56px; bottom gap = next section pt (40) +
+   paragraph margin-top (16) = 56px. Overrides section:first-child by source
+   order (equal specificity). */
+section.section-hero {
+  padding-top: 28px;
+  padding-bottom: 0;
+}
+/* Hero sections with no eyebrow/SectionHeader need the extra 12px on top to
+   reach the same header-to-heading distance. */
+section.section-hero.-no-eyebrow {
+  padding-top: 40px;
+}
 
 /* ===== Utility Classes ===== */
 .d-block { display: block !important; }
@@ -412,11 +425,6 @@ header > .brand:hover {
 }
 header > .brand > .wrapper {
   position: relative;
-}
-header > .brand > .wrapper > .link {
-  position: absolute;
-  inset: 0;
-  z-index: 1100;
 }
 header > .brand > .wrapper > .image-container {
   position: relative;
@@ -1099,6 +1107,12 @@ footer a:hover {
   cursor: default;
   transform: none;
 }
+.newsletter-note {
+  margin-top: 8px;
+  font-size: var(--text-body-size-extra-small);
+  color: var(--color-fg-muted);
+  font-style: italic;
+}
 .newsletter-status {
   font-size: var(--text-body-size-small);
   color: var(--color-fg-muted);
@@ -1115,16 +1129,20 @@ footer a:hover {
   top: 56px;
 }
 .subscribe-popup {
-  padding: 14px 16px;
+  padding: 14px 16px 10px;
+}
+/* Tighten the gap between the input and the unsubscribe note in the popup. */
+.subscribe-popup .newsletter-note {
+  margin-top: 5px;
 }
 .subscribe-popup-done {
   padding: 14px 16px;
 }
 .subscribe-popup-desc {
-  font-size: var(--text-body-size-extra-small);
+  font-size: var(--text-body-size-small);
   margin-bottom: 10px;
   line-height: 1.4;
-  opacity: 0.6;
+  opacity: 0.85;
 }
 .subscribe-popup-form {
   flex-direction: row;
@@ -1139,7 +1157,11 @@ footer a:hover {
 }
 .subscribe-popup .newsletter-status {
   font-size: var(--text-body-size-extra-small);
-  min-height: 1.2em;
+  min-height: 0;
+}
+/* Status feedback only needs spacing when it actually has a message. */
+.subscribe-popup .newsletter-status:not(:empty) {
+  margin-top: 6px;
 }
 
 /* ===== Work Detail Pages ===== */

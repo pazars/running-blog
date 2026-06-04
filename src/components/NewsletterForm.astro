@@ -1,16 +1,15 @@
 ---
 import SectionHeader from "./SectionHeader.astro";
+import { newsletter } from "../site.config";
 
 interface Props {
-  heading?: string;
   description?: string;
   showBorder?: boolean;
   hideWhenSubscribed?: boolean;
 }
 
 const {
-  heading = "Subscribe",
-  description = "I send a short email once a month with what I've been writing about. No spam, unsubscribe anytime.",
+  description = "Saņemsi bloga rakstu kopsavilkums ne biežāk kā reizi dažās nedēļās. Raksti saturēs ikvienam noderīgu informāciju par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei.",
   showBorder = false,
   hideWhenSubscribed = false,
 } = Astro.props;
@@ -21,21 +20,21 @@ const {
   data-js-newsletter-form
   data-js-hide-when-subscribed={hideWhenSubscribed ? "true" : undefined}
 >
-  <SectionHeader id="newsletter" title={heading} />
   <p>{description}</p>
   <form class="newsletter-form d-flex gap-2" data-js-newsletter-submit>
     <input
       type="email"
       name="email"
-      placeholder="you@example.com"
+      placeholder="tavs@epasts.lv"
       required
       autocomplete="email"
       class="newsletter-input flex-1"
       data-js-newsletter-email
     />
     <button type="submit" class="newsletter-btn btn-secondary" data-js-newsletter-btn>
-      Subscribe
+      {newsletter.subscribeButton}
     </button>
   </form>
+  <p class="newsletter-note">{newsletter.unsubscribeNote}</p>
   <div class="newsletter-status" data-js-newsletter-status></div>
 </section>
