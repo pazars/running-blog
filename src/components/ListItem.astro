@@ -10,9 +10,16 @@ interface Props {
 const { title, description, trailing, href, external = false } = Astro.props;
 
 const Tag = href ? "a" : "div";
+// Outbound links open in a new tab; noopener (not noreferrer) keeps the referrer.
+const opensNewTab = Boolean(href) && external;
 ---
 
-<Tag href={href} class="list-item item">
+<Tag
+  href={href}
+  class="list-item item"
+  target={opensNewTab ? "_blank" : undefined}
+  rel={opensNewTab ? "noopener" : undefined}
+>
   <div class="content">
     <p class="h3 title my-0">{title}</p>
     {description && <div class="description">{description}</div>}

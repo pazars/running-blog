@@ -20,7 +20,12 @@ const {
 } = Astro.props;
 ---
 
-<a href={href} class="content">
+<a
+  href={href}
+  class="content"
+  target={external ? "_blank" : undefined}
+  rel={external ? "noopener" : undefined}
+>
   <div class="content-card card d-flex flex-column gap-3">
     <figure
       class={`image-wrapper rounded d-flex flex-column flex-items-center flex-justify-end ${frameBg ? "-frame" : ""}`}
