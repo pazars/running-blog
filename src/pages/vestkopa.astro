@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import NewsletterForm from "../components/NewsletterForm.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../site.config";
+---
+
+<BaseLayout
+  title="Vēstkopa"
+  description="Pievienojies Dāvja Pazara vēstkopai un saņem bloga rakstu kopsavilkumus e-pastā reizi dažās nedēļās."
+>
+  <Header
+    name={site.name}
+    role={site.role}
+    company={site.company}
+    email={site.email}
+    activePage="none"
+  />
+
+  <main>
+    <section class="section-hero -no-eyebrow">
+      <h1>Pievienojies vēstkopai</h1>
+    </section>
+
+    <NewsletterForm
+      description="Saņemsi bloga rakstu kopsavilkums ne biežāk kā reizi dažās nedēļās. Raksti saturēs ikvienam noderīgu informāciju par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei."
+    />
+  </main>
+
+  <Footer email={site.email} />
+</BaseLayout>

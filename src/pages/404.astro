@@ -1,0 +1,28 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../site.config";
+---
+
+<BaseLayout title="404">
+  <Header
+    name={site.name}
+    role={site.role}
+    company={site.company}
+    email={site.email}
+    activePage="none"
+  />
+
+  <main>
+    <section class="section-hero -no-eyebrow">
+      <h1 class="mb-3">404</h1>
+      <p class="color-fg-muted mb-6">
+        Šī lapa neeksistē vai ir pārvietota.
+      </p>
+      <a href="/">← Atpakaļ uz sākumu</a>
+    </section>
+  </main>
+
+  <Footer email={site.email} />
+</BaseLayout>

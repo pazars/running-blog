@@ -15,19 +15,22 @@ const contacts = [
 ];
 ---
 
-<BaseLayout title={`Contact · ${site.name}`}>
+<BaseLayout
+  title="Sasniegumi"
+  description="Dāvja Pazara skriešanas sasniegumi, sacensību rezultāti un nozīmīgākie distanču atskati."
+>
   <Header
     name={site.name}
     role={site.role}
     company={site.company}
     email={site.email}
-    activePage="contact"
+    activePage="sasniegumi"
   />
 
   <main>
     <!-- Hero -->
-    <section>
-      <h1 class="mb-7">Say hello</h1>
+    <section class="section-hero -no-eyebrow">
+      <h1>Say hello</h1>
     </section>
 
     <!-- Intro -->

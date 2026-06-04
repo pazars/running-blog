@@ -6,6 +6,31 @@ import ProjectCard from "../components/ProjectCard.astro";
 import Footer from "../components/Footer.astro";
 import { site } from "../site.config";
 
+// Read a page's current og:image at build time so linked projects always show
+// their live share image. Falls back to the last known URL if the fetch fails.
+async function fetchOgImage(pageUrl: string, fallback: string): Promise<string> {
+  try {
+    const res = await fetch(pageUrl);
+    if (!res.ok) return fallback;
+    const html = await res.text();
+    const match =
+      html.match(
+        /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
+      ) ||
+      html.match(
+        /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
+      );
+    return match?.[1] ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const pasaulesTureImage = await fetchOgImage(
+  "https://pasaulesture.lv/",
+  "https://pasaulesture.lv/events/egipte-malta/og/og-image-lv.jpg",
+);
+
 const recentShips = [
   {
     href: "#",
@@ -77,31 +102,32 @@ const sideProjects = [
     href: "https://pasaulesture.lv/",
     title: "pasaulesture.lv",
     role: "Riteņbraukšanas pasākumi Latvijā (ar našķiem)",
-    imageUrl: "/pt-thumbnail.jpg",
-    frameBg: "#d4dbb8",
+    imageUrl: pasaulesTureImage,
   },
   {
     href: "https://noskrien-ziemu.pages.dev/",
     title: "noskrien-ziemu.pages.dev",
     role: "Dalībnieku rezultātu salīdzināšana",
     imageUrl: "https://noskrien-ziemu.pages.dev/og-image.png",
-    frameBg: "#f1f7fc",
   },
 ];
 ---
 
-<BaseLayout title={`${site.name} · ${site.role}`}>
+<BaseLayout
+  title={site.role}
+  description="Taku skrējēja un programmētāja Dāvja Pazara blogs — raksti par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei."
+>
   <Header
     name={site.name}
     role={site.role}
     company={site.company}
     email={site.email}
-    activePage="work"
+    activePage="blog"
   />
 
   <main>
     <!-- Currently working on -->
-    <section>
+    <section class="section-hero">
       <SectionHeader
         id="currently-working-on"
         title="Šobrīd gatavojos"
@@ -110,7 +136,7 @@ const sideProjects = [
       />
       
       <h2 class="h1 mb-1">
-        <a href="https://vilkacumaratons.lv" target="_blank" rel="noopener noreferrer" class="d-inline-flex flex-items-center gap-2">
+        <a href="https://vilkacumaratons.lv" target="_blank" rel="noopener" class="d-inline-flex flex-items-center gap-2">
           Vilkaču maratonam
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
         </a>

@@ -75,25 +75,28 @@ const playground = [
 ];
 ---
 
-<BaseLayout title={`About · ${site.name}`}>
+<BaseLayout
+  title="Iesaku"
+  description="Dāvja Pazara ieteikumi — aprīkojums, grāmatas un rīki, kas noder skriešanā, programmēšanā un ikdienā."
+>
   <Header
     name={site.name}
     role={site.role}
     company={site.company}
     email={site.email}
-    activePage="about"
+    activePage="iesaku"
   />
 
   <main>
     <!-- Hero -->
-    <section>
+    <section class="section-hero">
       <SectionHeader
         id="about-intro"
         title="12th year building"
         showDot={false}
         class="pt-3"
       />
-      <h1 class="mb-7">
+      <h1>
         A maker who writes code and cares about the details
       </h1>
     </section>
