@@ -16,6 +16,11 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+# Cloudflare local secrets/vars (used by `wrangler pages dev`). The
+# database_id in wrangler.toml is a non-secret identifier and is committed;
+# real secrets/tokens live here and must never be committed.
+.dev.vars
+.dev.vars.*
 
 # macOS-specific files
 .DS_Store
