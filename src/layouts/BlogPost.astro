@@ -7,14 +7,37 @@ import { site } from "../site.config";
 
 interface Props {
   title: string;
+  subtitle?: string;
   description?: string;
+  /** Remote thumbnail/hero image URL; also used as the OG share image. */
+  image?: string;
+  imageAlt?: string;
+  /** Human-readable date label, e.g. "2026. gada 28. maijs". */
   date?: string;
+  /** ISO date for the <time datetime> attribute, e.g. "2026-05-28". */
+  isoDate?: string;
+  /** Article slug used as the view-counter key (Phase 2 / Cloudflare D1). */
+  viewKey?: string;
 }
 
-const { title, description, date } = Astro.props;
+const {
+  title,
+  subtitle,
+  description,
+  image,
+  imageAlt = title,
+  date,
+  isoDate,
+  viewKey,
+} = Astro.props;
 ---
 
-<BaseLayout title={`${title} · ${site.name}`} description={description}>
+<BaseLayout
+  title={`${title} · ${site.name}`}
+  description={description}
+  image={image}
+  type="article"
+>
   <Header
     name={site.name}
     role={site.role}
@@ -24,21 +47,78 @@ const { title, description, date } = Astro.props;
 
   <main>
     <article>
-      <section>
-        {date && <p class="color-fg-muted text-small mb-0">{date}</p>}
-        <h1 class="mb-7">{title}</h1>
+      <section class="article-hero">
+        {
+          date && (
+            <p class="color-fg-muted text-small mb-0">
+              <time datetime={isoDate ?? date}>{date}</time>
+              {viewKey && (
+                <span class="article-views" data-js-view-count data-slug={viewKey} hidden />
+              )}
+            </p>
+          )
+        }
+        <h1 class="mb-3">{title}</h1>
+        {subtitle && <p class="article-subtitle color-fg-muted m-0">{subtitle}</p>}
       </section>
 
-      <slot />
+      {
+        image && (
+          <figure class="article-hero-image work-hero-image rounded">
+            <img src={image} alt={imageAlt} width="1110" height="773" loading="eager" />
+          </figure>
+        )
+      }
+
+      <div class="article-body">
+        <slot />
+      </div>
     </article>
 
-    <NewsletterForm
-      heading="Keep reading"
-      description="I send a short email once a month with what I've been writing about. No spam, unsubscribe anytime."
-      showBorder={true}
-      hideWhenSubscribed={true}
-    />
+    <NewsletterForm showBorder={true} hideWhenSubscribed={true} />
   </main>
 
   <Footer email={site.email} />
 </BaseLayout>
+
+<script>
+  // Article view counter (Phase 2). Reads/increments the count via the
+  // Cloudflare /api/views/<slug> function. Counts one view per browser per
+  // article (refreshes are GET-only via a localStorage flag). Degrades
+  // silently when the API isn't deployed (e.g. local static preview).
+  (function () {
+    const el = document.querySelector<HTMLElement>("[data-js-view-count]");
+    const slug = el?.dataset.slug;
+    if (!el || !slug) return;
+
+    const label = (n: number) => {
+      // Rough Latvian agreement: "1 skatījums", else "N skatījumi".
+      const word = n % 10 === 1 && n % 100 !== 11 ? "skatījums" : "skatījumi";
+      return ` · ${n} ${word}`;
+    };
+
+    const key = `viewed:${slug}`;
+    let counted = false;
+    try {
+      counted = !!localStorage.getItem(key);
+    } catch {}
+
+    fetch(`/api/views/${encodeURIComponent(slug)}`, {
+      method: counted ? "GET" : "POST",
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data || typeof data.views !== "number") return;
+        el.textContent = label(data.views);
+        el.removeAttribute("hidden");
+        if (!counted) {
+          try {
+            localStorage.setItem(key, "1");
+          } catch {}
+        }
+      })
+      .catch(() => {
+        /* API unavailable — leave the count hidden. */
+      });
+  })();
+</script>

@@ -25,7 +25,7 @@ export const newsletter = {
 // Single source of truth for the main navigation sections, shared by the
 // header and footer so their labels and order always stay in sync.
 export const navLinks = [
-  { href: "/", text: "Blogs", id: "blog" },
+  { href: "/blogs", text: "Blogs", id: "blog" },
   { href: "/iesaku", text: "Iesaku", id: "iesaku" },
   { href: "/sasniegumi", text: "Sasniegumi", id: "sasniegumi" },
 ];

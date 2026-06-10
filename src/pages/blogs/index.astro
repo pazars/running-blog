@@ -1,0 +1,198 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import FeaturedPost from "../../components/FeaturedPost.astro";
+import Footer from "../../components/Footer.astro";
+import { site } from "../../site.config";
+import { toIsoDate, formatLatvianDate } from "../../utils/date";
+
+// Newest first. Each card carries its metadata in data-* attributes so the
+// scoped script below can filter/sort entirely on the client (no fetch).
+const posts = (await getCollection("blogs", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) =>
+  a.localeCompare(b, "lv"),
+);
+const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
+  (a, b) => b - a,
+);
+---
+
+<BaseLayout
+  title={`Raksti · ${site.name}`}
+  description="Visi raksti par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei."
+>
+  <Header
+    name={site.name}
+    role={site.role}
+    company={site.company}
+    email={site.email}
+    activePage="blog"
+  />
+
+  <main>
+    <section class="section-hero -no-eyebrow">
+      <!-- Filters: tag chips + year filter + date sort -->
+      <div class="blog-filters" data-js-blog-filters>
+        <div class="blog-chips" data-js-tag-filter aria-label="Filtrēt pēc tēmas">
+          <button type="button" class="btn btn-secondary blog-chip active" data-tag="">
+            Visas tēmas
+          </button>
+          {
+            allTags.map((tag) => (
+              <button type="button" class="btn btn-invisible blog-chip" data-tag={tag}>
+                {tag}
+              </button>
+            ))
+          }
+        </div>
+
+        <div class="blog-selects">
+          <label class="blog-select-label">
+            <span class="sr-only">Filtrēt pēc gada</span>
+            <select class="blog-select" data-js-year-filter>
+              <option value="">Visi gadi</option>
+              {years.map((year) => <option value={String(year)}>{year}</option>)}
+            </select>
+          </label>
+          <label class="blog-select-label">
+            <span class="sr-only">Kārtot</span>
+            <select class="blog-select" data-js-sort>
+              <option value="date-desc">Jaunākie</option>
+              <option value="date-asc">Vecākie</option>
+              <option value="views-desc">Populārākie</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <!-- Article cards -->
+      <div class="blog-list" data-js-blog-list>
+        {
+          posts.map((post) => {
+            const iso = toIsoDate(post.data.date);
+            return (
+              <div
+                class="blog-list-item"
+                data-slug={post.data.slug}
+                data-tags={post.data.tags.join(",")}
+                data-date={iso}
+                data-year={String(post.data.date.getUTCFullYear())}
+                data-views="0"
+              >
+                <FeaturedPost
+                  href={`/blogs/${iso}/${post.data.slug}`}
+                  title={post.data.title}
+                  date={iso}
+                  dateLabel={formatLatvianDate(post.data.date)}
+                  summary={post.data.summary}
+                  imageUrl={post.data.thumbnail}
+                  imageAlt={post.data.thumbnailAlt ?? post.data.title}
+                />
+              </div>
+            );
+          })
+        }
+      </div>
+
+      <p class="blog-empty color-fg-muted d-none" data-js-blog-empty>
+        Nav atrasts neviens raksts ar šo filtru.
+      </p>
+    </section>
+  </main>
+
+  <Footer email={site.email} />
+</BaseLayout>
+
+<script>
+  // Client-side filtering/sorting for the blog list. All data lives in the
+  // cards' data-* attributes, so this is pure DOM work — no fetch, no framework
+  // (matching the project's vanilla-JS convention; scoped to this page only).
+  (function () {
+    const list = document.querySelector<HTMLElement>("[data-js-blog-list]");
+    const tagBar = document.querySelector<HTMLElement>("[data-js-tag-filter]");
+    const yearSel = document.querySelector<HTMLSelectElement>("[data-js-year-filter]");
+    const sortSel = document.querySelector<HTMLSelectElement>("[data-js-sort]");
+    const empty = document.querySelector<HTMLElement>("[data-js-blog-empty]");
+    if (!list) return;
+
+    const items = Array.from(
+      list.querySelectorAll<HTMLElement>(".blog-list-item"),
+    );
+    let activeTag = "";
+
+    function apply() {
+      const year = yearSel?.value ?? "";
+      let visible = 0;
+
+      items.forEach((el) => {
+        const tags = (el.dataset.tags || "").split(",").filter(Boolean);
+        const matchesTag = !activeTag || tags.includes(activeTag);
+        const matchesYear = !year || el.dataset.year === year;
+        const show = matchesTag && matchesYear;
+        el.classList.toggle("d-none", !show);
+        if (show) visible++;
+      });
+
+      empty?.classList.toggle("d-none", visible !== 0);
+
+      // Sort. ISO YYYY-MM-DD compares lexicographically == chronologically;
+      // "views-desc" uses the live counts populated below (Phase 2).
+      const mode = sortSel?.value || "date-desc";
+      const sorted = items.slice().sort((a, b) => {
+        if (mode === "views-desc") {
+          return Number(b.dataset.views || 0) - Number(a.dataset.views || 0);
+        }
+        const da = a.dataset.date || "";
+        const db = b.dataset.date || "";
+        return mode === "date-asc" ? da.localeCompare(db) : db.localeCompare(da);
+      });
+      sorted.forEach((el) => list.appendChild(el));
+    }
+
+    function setActiveTag(tag: string) {
+      activeTag = tag;
+      tagBar?.querySelectorAll<HTMLElement>("[data-tag]").forEach((btn) => {
+        const on = (btn.dataset.tag || "") === tag;
+        btn.classList.toggle("active", on);
+        btn.classList.toggle("btn-secondary", on);
+        btn.classList.toggle("btn-invisible", !on);
+      });
+    }
+
+    tagBar?.addEventListener("click", (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-tag]");
+      if (!btn) return;
+      setActiveTag(btn.dataset.tag || "");
+      apply();
+    });
+
+    yearSel?.addEventListener("change", apply);
+    sortSel?.addEventListener("change", apply);
+
+    // Phase 2: pull live view counts from the Cloudflare function to enable the
+    // "Populārākie" sort. No-ops gracefully when the API isn't deployed.
+    fetch("/api/views")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((counts: Record<string, number> | null) => {
+        if (!counts) return;
+        items.forEach((el) => {
+          const slug = el.dataset.slug;
+          if (slug && counts[slug] != null) el.dataset.views = String(counts[slug]);
+        });
+        if ((sortSel?.value || "") === "views-desc") apply();
+      })
+      .catch(() => {});
+
+    // Allow deep-linking from an article's tag chips: /blogs?tag=treniņi
+    const urlTag = new URLSearchParams(window.location.search).get("tag");
+    if (urlTag && items.some((el) => (el.dataset.tags || "").split(",").includes(urlTag))) {
+      setActiveTag(urlTag);
+    }
+
+    apply();
+  })();
+</script>

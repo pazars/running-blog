@@ -1288,3 +1288,70 @@ footer a:hover {
   height: auto;
   border: 1px solid var(--color-border-onOff);
 }
+
+/* ===== Blog Listing (/blogs) ===== */
+.blog-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.blog-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.blog-chip {
+  font-weight: var(--font-weight-medium);
+}
+.blog-selects {
+  display: flex;
+  gap: 8px;
+}
+.blog-select-label {
+  display: inline-flex;
+}
+.blog-select {
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--border-radius);
+  padding: 4px 12px;
+  font-family: var(--system-ui);
+  font-size: var(--text-body-size-small);
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  outline: none;
+}
+.blog-select:focus {
+  border-color: var(--color-fg-emphasis);
+}
+
+/* Generous gap offsets the featured card's -12px margin (24px of it), leaving
+   a comfortable visual gutter between stacked cards. */
+.blog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+  margin-top: 32px;
+}
+.blog-empty {
+  margin-top: 32px;
+}
+
+/* ===== Article Page ===== */
+.article-subtitle {
+  font-size: var(--text-body-size-large);
+  margin-top: 8px;
+}
+.article-hero-image {
+  margin: 24px 0 8px;
+}
+.article-body :is(h2, h3) {
+  margin-top: 32px;
+  margin-bottom: 4px;
+}
+.article-body > :first-child {
+  margin-top: 0;
+}
