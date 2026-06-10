@@ -1,23 +1,32 @@
-# Cloudflare Pages config for the view-count backend (Phase 2).
-# The static Astro build (dist/) is served as assets; everything under
-# functions/ deploys as Pages Functions alongside it. No Astro adapter / SSR.
+# Cloudflare Pages config for the view-count backend.
+# Static Astro build (dist/) is served as assets; everything under functions/
+# deploys as Pages Functions alongside it. No Astro adapter / SSR.
 #
-# One-time setup:
-#   npx wrangler d1 create personal-blog-views
-#   # paste the printed database_id below, then create the table:
-#   npx wrangler d1 execute personal-blog-views --remote --file=./schema.sql
+# Environments (full workflow in README.md): the top-level binding = production
+# + local dev; [env.preview] = preview deploys. Each remote tier has its own D1
+# so preview traffic never touches production counts; local dev uses a local
+# SQLite copy.
 #
-# Local dev against the functions + a local D1:
-#   npm run build && npx wrangler pages dev dist
+# One-time D1 setup — paste each printed id below:
+#   npx wrangler d1 create personal-blog-views          # -> production id
+#   npx wrangler d1 create personal-blog-views-preview  # -> preview id
 name = "personal-blog"
 compatibility_date = "2026-06-05"
 pages_build_output_dir = "dist"
 
-# Consumed by functions/api/views/* as `env.DB`.
+# Consumed by functions/api/views/* as `env.DB`. Production DB — also the one
+# local `wrangler pages dev` mirrors into a LOCAL SQLite database.
 # database_id is a non-secret account-scoped identifier — safe to commit (access
 # still requires Cloudflare auth). Real secrets/tokens never go here: put them in
-# `.dev.vars` (gitignored) for local dev, or `wrangler secret put` / the dashboard.
+# `.dev.vars` (gitignored) for local dev, or `wrangler pages secret put` / the dashboard.
 [[d1_databases]]
 binding = "DB"
 database_name = "personal-blog-views"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "REPLACE_WITH_PROD_D1_ID"
+
+# Preview DB — used by all non-production branch deploys. Declared explicitly
+# because preview does NOT inherit the top-level binding.
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "personal-blog-views-preview"
+database_id = "REPLACE_WITH_PREVIEW_D1_ID"

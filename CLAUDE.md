@@ -21,8 +21,9 @@ npm run preview    # preview the built site
 npm run build && npx wrangler pages dev dist
 ```
 
-D1 one-time setup and schema are documented inline in `wrangler.toml` and
-`schema.sql`. The functions need a D1 binding named `DB`.
+The dev/preview/prod workflow and D1 one-time setup live in `README.md` (and
+inline in `wrangler.toml` / `schema.sql`). The functions need a D1 binding
+named `DB`.
 
 ## Architecture
 
@@ -60,6 +61,11 @@ entirely client-side from `data-tags`/`data-date`, no fetch). Match this style.
   blog list fetches `/api/views` and no-ops gracefully when the API isn't
   deployed (so local `astro dev` still works).
 - Slugs key on the article's frontmatter `slug`.
+- **Environments** (three tiers, all on Pages — no Workers): local dev uses an
+  auto-created **local** SQLite D1; Pages **preview** (non-`main` branches) and
+  **production** (`main`) each bind their own remote D1, the latter via
+  `[env.preview]` in `wrangler.toml` (preview does **not** inherit the top-level
+  binding). Per-env commands are in `README.md`.
 
 ### Why no @astrojs/cloudflare adapter
 
