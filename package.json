@@ -11,10 +11,6 @@
   "dependencies": {
     "astro": "^6.4.5"
   },
-  "devDependencies": {
-    "@astrojs/sitemap": "^3.7.3",
-    "lorem-ipsum": "^3.0.0"
-  },
   "//engines": "Astro 6 dropped Node 18/20 and requires Node >=22.12. Keep this in sync with .nvmrc, which Cloudflare Pages reads to pin the build image's Node version.",
   "engines": {
     "node": ">=22.12.0"

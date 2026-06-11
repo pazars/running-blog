@@ -1,253 +1,118 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import Header from "../components/Header.astro";
-import SectionHeader from "../components/SectionHeader.astro";
-import ProjectCard from "../components/ProjectCard.astro";
-import FeaturedPost from "../components/FeaturedPost.astro";
-import Footer from "../components/Footer.astro";
 import { site } from "../site.config";
-import { LoremIpsum } from "lorem-ipsum";
-import { getCollection } from "astro:content";
-import { toIsoDate } from "../utils/date";
-
-// Placeholder copy for the featured post until a real article is wired in.
-const lorem = new LoremIpsum();
-const loremTitle = lorem.generateWords(8).replace(/^\w/, (c) => c.toUpperCase());
-const loremSummary = lorem.generateSentences(6);
-
-// Read a page's current og:image at build time so linked projects always show
-// their live share image. Falls back to the last known URL if the fetch fails.
-async function fetchOgImage(pageUrl: string, fallback: string): Promise<string> {
-  try {
-    const res = await fetch(pageUrl);
-    if (!res.ok) return fallback;
-    const html = await res.text();
-    const match =
-      html.match(
-        /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
-      ) ||
-      html.match(
-        /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
-      );
-    return match?.[1] ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-const pasaulesTureImage = await fetchOgImage(
-  "https://pasaulesture.lv/",
-  "https://pasaulesture.lv/events/egipte-malta/og/og-image-lv.jpg",
-);
-
-// Real (placeholder-content) articles from the blog collection, newest first.
-// The home page keeps its placeholder cards but links them to actual article
-// pages, so the flow works end to end.
-const articles = (await getCollection("blogs", ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
-);
-const articleHref = (i: number) => {
-  if (!articles.length) return "#";
-  const a = articles[i % articles.length];
-  return `/blogs/${toIsoDate(a.data.date)}/${a.data.slug}`;
-};
-
-const latestPost = {
-  href: articleHref(0),
-  title: loremTitle,
-  date: "2026-05-28",
-  dateLabel: "2026. gada 28. maijs",
-  summary: loremSummary,
-  imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=Jaunākais",
-};
-
-const recentShips = [
-  {
-    href: "#",
-    title: "Overhauled the onboarding experience for new users",
-    role: "Project lead",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=01",
-  },
-  {
-    href: "#",
-    title: "Real-time collaboration engine for documents",
-    role: "Contributor",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=02",
-  },
-  {
-    href: "#",
-    title: "Accessibility audit and remediation across the platform",
-    role: "Contributor",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=03",
-  },
-  {
-    href: "#",
-    title: "Dark mode and theming system",
-    role: "Contributor",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=04",
-  },
-  {
-    href: "#",
-    title: "Notifications redesign for mobile and web",
-    role: "Project lead",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=05",
-  },
-  {
-    href: "#",
-    title: "Search infrastructure and ranking improvements",
-    role: "Project lead",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=06",
-  },
-];
-
-const previousWork = [
-  {
-    href: "/work/streamlining-logistics",
-    title: "Streamlining logistics for a freight startup",
-    role: "Lead, end-to-end",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=A",
-  },
-  {
-    href: "/work/patient-portal",
-    title: "Patient portal for a regional health network",
-    role: "Lead, end-to-end",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=B",
-  },
-  {
-    href: "/work/older-projects",
-    title: "Older projects and explorations",
-    role: "Various roles",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=C",
-  },
-  {
-    href: "/work/reimagining-checkout",
-    title: "Reimagining the checkout flow",
-    role: "Lead, end-to-end",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=D",
-  },
-];
-
-const sideProjects = [
-    {
-    href: "https://pasaulesture.lv/",
-    title: "pasaulesture.lv",
-    role: "Riteņbraukšanas pasākumi Latvijā (ar našķiem)",
-    imageUrl: pasaulesTureImage,
-  },
-  {
-    href: "https://noskrien-ziemu.pages.dev/",
-    title: "noskrien-ziemu.pages.dev",
-    role: "Dalībnieku rezultātu salīdzināšana",
-    imageUrl: "https://noskrien-ziemu.pages.dev/og-image.png",
-  },
-];
 ---
 
-<BaseLayout
-  title={site.role}
-  description="Taku skrējēja un programmētāja Dāvja Pazara blogs — raksti par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei."
->
-  <Header
-    name={site.name}
-    role={site.role}
-    company={site.company}
-    email={site.email}
-    activePage="home"
-  />
-
-  <main>
-    <!-- Currently working on -->
-    <section class="section-hero">
-      <SectionHeader
-        id="currently-working-on"
-        title="Šobrīd gatavojos"
-        showDot={true}
-        class="pt-3"
+<BaseLayout title="Dāvis Pazars — drīzumā">
+  <main class="coming-soon">
+    <!-- Kalnu grēda — krāsas no dizaina tokeniem,
+         tāpēc grafika pielāgojas arī tumšajam režīmam. -->
+    <svg
+      class="graphic color-fg-muted"
+      width="280"
+      height="120"
+      viewBox="0 0 280 120"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M8 104 H272"
+        stroke="var(--color-line-default)"
+        stroke-width="1.5"
+        stroke-linecap="round"
       />
-      
-      <h2 class="h1 mb-1">
-        <a href="https://vilkacumaratons.lv" target="_blank" rel="noopener" class="d-inline-flex flex-items-center gap-2">
-          Vilkaču maratonam
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
-        </a>
-      </h2>
-    </section>
-
-    <!-- Introduction -->
-    <section id="intro">
-      <p>
-        Šī mājaslapa ir mans mēģinājums radīt vietu brīvi pieejamai un skrējējiem noderīgai informācijai,
-        kas nav aprakta reklāmās vai paslēpta zem reģistrācijām un maksas abonementiem. Varu arī apsolīt,
-        ka ikvienu rakstu būšu rakstījis un pārbaudījis es pats nevis kāds mākslīgā intelekta rīks.
-      </p>
-    </section>
-
-    <!-- Latest article -->
-    <section>
-      <SectionHeader id="latest-post" title="Jaunākais raksts" />
-      <FeaturedPost
-        href={latestPost.href}
-        title={latestPost.title}
-        date={latestPost.date}
-        dateLabel={latestPost.dateLabel}
-        summary={latestPost.summary}
-        imageUrl={latestPost.imageUrl}
+      <path
+        d="M8 104 L64 44 L96 78 L140 24 L196 88 L232 56 L272 104"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       />
-    </section>
+    </svg>
 
-    <!-- Previous work -->
-    <section>
-      <SectionHeader id="previous-work" title="Populārākās tēmas" />
-      <div class="content-grid">
-        {
-          previousWork.map((project) => (
-            <ProjectCard
-              href={project.href}
-              title={project.title}
-              role={project.role}
-              imageUrl={project.imageUrl}
-            />
-          ))
-        }
-      </div>
-    </section>
+    <h1>Drīzumā</h1>
 
-    <!-- Recent ships -->
-    <section>
-      <SectionHeader id="recent-ships" title="Pēdējie raksti" />
-      <div class="content-grid -equal mb-3">
-        {
-          recentShips.map((project, i) => (
-            <ProjectCard
-              href={articleHref(i)}
-              title={project.title}
-              role={project.role}
-              imageUrl={project.imageUrl}
-            />
-          ))
-        }
-      </div>
-    </section>
+    <p class="color-fg-muted">Pa to laiku mani vari atrast šeit:</p>
 
-    <!-- Side projects -->
-    <section>
-      <SectionHeader id="side-projects" title="Citi projekti" />
-      <div class="content-grid -equal">
-        {
-          sideProjects.map((project) => (
-            <ProjectCard
-              href={project.href}
-              title={project.title}
-              role={project.role}
-              imageUrl={project.imageUrl}
-              external={true}
-              frameBg={project.frameBg}
-            />
-          ))
-        }
-      </div>
-    </section>
+    <nav class="socials d-flex flex-items-center gap-5" aria-label="Sociālie tīkli">
+      {
+        site.socials.map((social) => (
+          <a
+            href={social.href}
+            target="_blank"
+            rel="noopener"
+            class="d-flex flex-items-center gap-1"
+          >
+            {social.label}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="trailingIcon"
+            >
+              <path d="M7 7h10v10" />
+              <path d="M7 17 17 7" />
+            </svg>
+          </a>
+        ))
+      }
+    </nav>
   </main>
-
-  <Footer email={site.email} />
 </BaseLayout>
+
+<style>
+  /* Fill the viewport minus the actual body padding (it grows past the
+     --body-padding token at the breakpoints below) so the group centers. */
+  .coming-soon {
+    min-height: calc(100svh - 2 * var(--body-padding));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  @media (min-width: 768px) {
+    .coming-soon {
+      min-height: calc(100svh - 2 * 60px);
+    }
+  }
+
+  @media (min-width: 1012px) {
+    .coming-soon {
+      min-height: calc(100svh - 2 * 80px);
+    }
+  }
+
+  .graphic {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 16px;
+  }
+
+  .coming-soon h1 {
+    margin: 0;
+  }
+
+  .socials {
+    margin-top: 8px;
+  }
+
+  .socials a {
+    color: var(--color-fg-muted);
+    text-decoration: none;
+  }
+
+  .socials a:hover {
+    color: var(--color-fg-default);
+    text-decoration: underline;
+    text-decoration-color: var(--color-line-emphasis);
+  }
+</style>

@@ -1,4 +1,2 @@
 User-agent: *
-Allow: /
-
-Sitemap: https://davispazars.lv/sitemap-index.xml
+Disallow: /
