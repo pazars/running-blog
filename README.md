@@ -3,7 +3,7 @@
 Astro static site + Cloudflare Pages Functions (D1-backed view counts) for
 [davispazars.lv](https://davispazars.lv).
 
-Requires **Node 22.12+** (`.nvmrc`). Run `npm install` to set up.
+Requires **Node 22.12+** (`.nvmrc`). Run `npm install` or `npm i` to set up.
 
 ## Environments
 
