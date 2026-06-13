@@ -3,7 +3,10 @@
 Astro static site + Cloudflare Pages Functions (D1-backed view counts) for
 [davispazars.lv](https://davispazars.lv).
 
-Requires **Node 22.12+** (`.nvmrc`). Run `npm install` to set up.
+Requires **Node 22.12+** (`.nvmrc`). Run `npm install` to set up. To get types
+for the Pages Functions (the `env.DB` binding etc.), run `npm run cf-typegen`
+— it generates a gitignored `worker-configuration.d.ts` from `wrangler.toml`.
+Re-run it whenever you change a binding.
 
 ## Environments
 

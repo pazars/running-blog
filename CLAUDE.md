@@ -97,9 +97,14 @@ typed bindings). Not worth it for one view counter.
 - **Dates**: never hand-write date strings. `src/utils/date.ts` derives both the
   URL segment (`toIsoDate`) and the Latvian label (`formatLatvianDate`) from the
   single frontmatter `date` (UTC getters — don't switch to local).
-- **TypeScript**: `astro/tsconfigs/strict`. Cloudflare types are kept loose
-  (`DB: any`) to avoid an extra dep; tighten with `@cloudflare/workers-types`
-  only if needed.
+- **TypeScript**: the Astro app uses `astro/tsconfigs/strict`. The Pages
+  Functions are typed separately (Cloudflare's `workerd` runtime, not the DOM)
+  via `functions/tsconfig.json` + a generated `worker-configuration.d.ts`
+  (`npm run cf-typegen`, i.e. `wrangler types`) that provides the typed `Env`
+  (`DB: D1Database`) and `PagesFunction`. The generated file is gitignored and
+  excluded from the root tsconfig so workerd globals don't clash with the DOM
+  lib. **Re-run `npm run cf-typegen` after changing bindings in `wrangler.toml`**
+  — it's what catches binding/code mismatches at compile time.
 - **Visual style**: `STYLE_GUIDE.md` is the reference for the aesthetic (colors,
   type, spacing, dark mode). Design tokens are CSS custom properties in
   `src/styles/global.css`. Reuse tokens; don't hardcode colors.
