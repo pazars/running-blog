@@ -13,6 +13,9 @@
 name = "personal-blog"
 compatibility_date = "2026-06-05"
 pages_build_output_dir = "dist"
+# nodejs_compat lets the bundled `resend` SDK (used by functions/api/newsletter/*)
+# run on workerd. Harmless for the view-count functions, which use only Web APIs.
+compatibility_flags = ["nodejs_compat"]
 
 # Consumed by functions/api/views/* as `env.DB`. Production DB — also the one
 # local `wrangler pages dev` mirrors into a LOCAL SQLite database.
@@ -24,6 +27,32 @@ binding = "DB"
 database_name = "personal-blog-views"
 database_id = "96379359-8499-4364-bd40-0a92c39f1a18"
 
+# Newsletter (Resend) — PRODUCTION non-secret config, read by
+# functions/api/newsletter/* as env.RESEND_*. Audience ids are account-scoped
+# identifiers (non-secret, like database_id above) — paste the real ids from the
+# Resend dashboard. The API key (RESEND_API_KEY) and token signing secret
+# (RESEND_VERIFY_SECRET) are SECRETS: never put them here — use .dev.vars locally
+# or `wrangler pages secret put` remotely. Re-run `npm run cf-typegen` after edits.
+# See README.md → "Newsletter (Resend)".
+[vars]
+RESEND_FROM = "Dāvis Pazars <vestkopa@davispazars.lv>"
+RESEND_AUDIENCE_STAGING_ID = "REPLACE_WITH_PROD_STAGING_AUDIENCE_ID"
+RESEND_AUDIENCE_VERIFIED_ID = "REPLACE_WITH_PROD_VERIFIED_AUDIENCE_ID"
+RESEND_CONFIRM_TEMPLATE_ID = "REPLACE_WITH_PROD_CONFIRM_TEMPLATE_ID"
+
+# Per-IP rate limit for POST /api/newsletter/subscribe (read as
+# env.SUBSCRIBE_RATE_LIMITER). The binding is OPTIONAL in code — subscribe.ts skips
+# the check if it isn't bound. namespace_id is an arbitrary account-unique integer;
+# period must be 10 or 60. Counts are per Cloudflare location, so pair this with a
+# WAF rate-limiting rule for an edge-level cap (see README → "Bot protection").
+[[ratelimits]]
+name = "SUBSCRIBE_RATE_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60
+
 # Preview DB — used by all non-production branch deploys. Declared under
 # [env.preview] with the SAME binding name ("DB") because preview does NOT
 # inherit the top-level binding; the functions stay env-agnostic and just read
@@ -32,3 +61,22 @@ database_id = "96379359-8499-4364-bd40-0a92c39f1a18"
 binding = "DB"
 database_name = "personal-blog-views-preview"
 database_id = "65acbf15-63e7-4f74-bdaa-f95532864331"
+
+# Newsletter (Resend) — PREVIEW non-secret config. Preview does NOT inherit the
+# top-level [vars], so the keys are repeated here pointing at the preview audiences
+# (use separate Resend audiences so test sign-ups never touch the production list).
+[env.preview.vars]
+RESEND_FROM = "Dāvis Pazars <vestkopa@davispazars.lv>"
+RESEND_AUDIENCE_STAGING_ID = "REPLACE_WITH_PREVIEW_STAGING_AUDIENCE_ID"
+RESEND_AUDIENCE_VERIFIED_ID = "REPLACE_WITH_PREVIEW_VERIFIED_AUDIENCE_ID"
+RESEND_CONFIRM_TEMPLATE_ID = "REPLACE_WITH_PREVIEW_CONFIRM_TEMPLATE_ID"
+
+# Preview rate limiter (preview doesn't inherit the top-level binding). Separate
+# namespace_id so preview and production counters never share buckets.
+[[env.preview.ratelimits]]
+name = "SUBSCRIBE_RATE_LIMITER"
+namespace_id = "1002"
+
+  [env.preview.ratelimits.simple]
+  limit = 5
+  period = 60

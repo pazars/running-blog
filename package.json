@@ -7,14 +7,19 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "test": "vitest run"
   },
   "dependencies": {
-    "astro": "^6.4.5"
+    "astro": "^6.4.5",
+    "jose": "^6.2.3",
+    "resend": "^6.12.4"
   },
   "devDependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "lorem-ipsum": "^3.0.0"
+    "@types/node": "^22.12.0",
+    "lorem-ipsum": "^3.0.0",
+    "vitest": "^3.2.4"
   },
   "//engines": "Astro 6 dropped Node 18/20 and requires Node >=22.12. Keep this in sync with .nvmrc, which Cloudflare Pages reads to pin the build image's Node version.",
   "engines": {

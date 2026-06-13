@@ -21,5 +21,9 @@
   // ../worker-configuration.d.ts is in `include` (not `files`) so a fresh clone
   // that hasn't run `npm run cf-typegen` yet fails softly (missing `Env`)
   // instead of erroring that the file doesn't exist.
-  "include": ["**/*.ts", "../worker-configuration.d.ts"]
+  "include": ["**/*.ts", "../worker-configuration.d.ts"],
+  // Vitest specs run under Node (vitest globals + process.env), not the workerd
+  // runtime, so keep them out of this DOM-less typecheck — vitest type-checks them
+  // via its own config.
+  "exclude": ["**/*.test.ts"]
 }
