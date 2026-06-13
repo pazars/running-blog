@@ -21,15 +21,23 @@ export const site = {
 // so this stays the single source of truth even though the handler isn't a module.
 export const newsletter = {
   subscribeButton: "Abonēt",
+  // Button label while the request is in flight (replaces "Abonēt" — a real word,
+  // not a bare "…"; the button width is locked client-side so it doesn't jump).
+  submittingLabel: "Sūta…",
   unsubscribeNote: "No vēstkopas vari atteikties jebkurā brīdī",
   // Double opt-in: a successful submit means "now go confirm via email", not "done".
-  pendingMessage: "Gandrīz! Pārbaudi e-pastu un apstiprini pierakstīšanos.",
+  // {email} is filled in client-side with the address the visitor entered.
+  pendingMessage:
+    "Gandrīz! Nosūtījām apstiprinājuma saiti uz {email} — atver to un apstiprini pierakstīšanos.",
+  // Secondary line shown under the pending message.
+  pendingHint: "Nesaņēmi? Pārbaudi arī mēstuļu (spam) mapi.",
   alreadyMessage: "Tu jau esi pierakstījies vēstkopai.",
   errorMessage: "Neizdevās pierakstīties. Mēģini vēlreiz nedaudz vēlāk.",
   // Shown on HTTP 429 (rate limit) — distinct from the generic error so the user
   // knows to simply wait rather than that something is broken.
   rateLimitMessage: "Pārāk daudz mēģinājumu. Lūdzu, pamēģini vēlreiz pēc minūtes.",
-  // Header pop-up "done" panel shown to returning subscribers.
+  // Header pop-up "done" panel — shown only once the visitor has CONFIRMED (via the
+  // /vestkopa/confirmed page) or was already on the list; never for a pending submit.
   subscribedTitle: "Tu esi pierakstījies vēstkopai",
   // Cloudflare Turnstile public site key (bot protection on the form). Leave empty
   // to disable the widget — the form then submits without a token and the backend

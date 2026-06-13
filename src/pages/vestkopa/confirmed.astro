@@ -29,3 +29,14 @@ const page = newsletterPages.confirmed;
 
   <Footer email={site.email} />
 </BaseLayout>
+
+<script is:inline>
+  // Reaching this page means the visitor clicked the confirm link — record the
+  // genuine "confirmed" state so the sign-up forms/popup show the real "subscribed"
+  // panel and stop prompting, and clear the interim "pending" flag. Keys must match
+  // those in public/script.js (newsletter-confirmed / newsletter-pending).
+  try {
+    localStorage.setItem("newsletter-confirmed", "true");
+    localStorage.removeItem("newsletter-pending");
+  } catch {}
+</script>

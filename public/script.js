@@ -145,21 +145,73 @@
 
 // ===== Newsletter Form =====
 (function () {
-  const SUBSCRIBED_KEY = "newsletter-subscribed";
+  // Double opt-in has two real states, so we track two flags instead of one:
+  //   newsletter-pending   = the email we sent a confirm link to (set on submit)
+  //   newsletter-confirmed = "true" once the user actually confirmed on the
+  //                          /vestkopa/confirmed page, or was already on the list.
+  // confirmed wins over pending, keeping the UI honest: "check your email" until
+  // confirmed, "you're subscribed" only after. (confirmed.astro also sets these.)
+  const PENDING_KEY = "newsletter-pending";
+  const CONFIRMED_KEY = "newsletter-confirmed";
 
-  // Hide forms marked with hideWhenSubscribed if already subscribed
-  if (localStorage.getItem(SUBSCRIBED_KEY)) {
-    document
-      .querySelectorAll('[data-js-hide-when-subscribed="true"]')
-      .forEach((section) => {
-        section.hidden = true;
-        // Show the "subscribed" fallback if present (subscribe popup)
-        const doneEl = section.parentElement?.querySelector(
-          "[data-js-subscribe-done]"
-        );
-        if (doneEl) doneEl.style.display = "";
-      });
+  const getFlag = (k) => {
+    try {
+      return localStorage.getItem(k);
+    } catch {
+      return null;
+    }
+  };
+  const setFlag = (k, v) => {
+    try {
+      localStorage.setItem(k, v);
+    } catch {}
+  };
+  const clearFlag = (k) => {
+    try {
+      localStorage.removeItem(k);
+    } catch {}
+  };
+
+  // Migrate the old single "newsletter-subscribed" flag so visitors who subscribed
+  // under the previous version aren't re-prompted.
+  if (getFlag("newsletter-subscribed") && !getFlag(CONFIRMED_KEY)) {
+    setFlag(CONFIRMED_KEY, "true");
+    clearFlag("newsletter-subscribed");
   }
+
+  const fillEmail = (tmpl, email) => tmpl.replace("{email}", email || "");
+
+  // Settle a [data-js-hide-when-subscribed] form into its sibling done panel: hide
+  // the form, then reveal the confirmed panel (wins) or the pending panel (filled
+  // with the stored email). Standalone forms have no panels — they just get hidden.
+  // Returns true when a panel was actually shown.
+  const applyState = (section) => {
+    const confirmed = getFlag(CONFIRMED_KEY);
+    const pendingEmail = getFlag(PENDING_KEY);
+    if (!confirmed && !pendingEmail) return false;
+
+    const wrap = section.parentElement;
+    const doneEl = wrap && wrap.querySelector("[data-js-subscribe-done]");
+    const pendingEl = wrap && wrap.querySelector("[data-js-subscribe-pending]");
+
+    section.hidden = true;
+    if (confirmed) {
+      if (pendingEl) pendingEl.style.display = "none";
+      if (doneEl) doneEl.style.display = "";
+    } else if (pendingEl) {
+      if (doneEl) doneEl.style.display = "none";
+      const textEl = pendingEl.querySelector("[data-js-pending-text]");
+      if (textEl)
+        textEl.textContent = fillEmail(section.dataset.msgPending || "", pendingEmail);
+      pendingEl.style.display = "";
+    }
+    return Boolean(doneEl || pendingEl);
+  };
+
+  // On load, settle every "hide when subscribed" form into its panel / hidden state.
+  document
+    .querySelectorAll('[data-js-hide-when-subscribed="true"]')
+    .forEach((section) => applyState(section));
 
   document
     .querySelectorAll("[data-js-newsletter-submit]")
@@ -194,9 +246,13 @@
           }
         };
 
-        // Submitting state
+        // Submitting state: lock the button width so it can't jump, keep a real
+        // label (not a bare "..."), and mark it busy for assistive tech.
+        const submittingLabel = btn.dataset.labelSubmitting || originalBtnText;
+        btn.style.minWidth = btn.offsetWidth + "px";
         btn.disabled = true;
-        btn.textContent = "\u2026";
+        btn.setAttribute("aria-busy", "true");
+        btn.textContent = submittingLabel;
         emailInput.disabled = true;
         status.textContent = "";
         status.classList.remove("is-error");
@@ -205,6 +261,8 @@
         // single-use token is issued for the retry.
         const fail = (message) => {
           btn.disabled = false;
+          btn.removeAttribute("aria-busy");
+          btn.style.minWidth = "";
           btn.textContent = originalBtnText;
           emailInput.disabled = false;
           status.textContent = message;
@@ -228,12 +286,28 @@
             return;
           }
 
-          // Success (pending confirmation, or already subscribed) \u2014 stop nagging.
-          try {
-            localStorage.setItem(SUBSCRIBED_KEY, "true");
-          } catch {}
-          form.style.display = "none";
-          status.textContent = data.status === "already" ? msgAlready : msgPending;
+          // Persist the real two-step state: "already" means they confirmed before;
+          // a fresh sign-up is only pending until they click the emailed link.
+          if (data.status === "already") {
+            setFlag(CONFIRMED_KEY, "true");
+            clearFlag(PENDING_KEY);
+          } else {
+            setFlag(PENDING_KEY, email);
+          }
+
+          // Show the result in place (no refresh). Forms with a done/pending panel
+          // (the header popup) swap to it; standalone forms get an inline message.
+          const wrap = section.parentElement;
+          const hasPanels =
+            wrap &&
+            wrap.querySelector("[data-js-subscribe-pending], [data-js-subscribe-done]");
+          if (hasPanels) {
+            applyState(section);
+          } else {
+            form.style.display = "none";
+            status.textContent =
+              data.status === "already" ? msgAlready : fillEmail(msgPending, email);
+          }
         } catch {
           fail(msgError); // network / unexpected failure
         }

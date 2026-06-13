@@ -35,7 +35,12 @@ const {
       class="newsletter-input flex-1"
       data-js-newsletter-email
     />
-    <button type="submit" class="newsletter-btn btn-secondary" data-js-newsletter-btn>
+    <button
+      type="submit"
+      class="newsletter-btn btn-secondary"
+      data-js-newsletter-btn
+      data-label-submitting={newsletter.submittingLabel}
+    >
       {newsletter.subscribeButton}
     </button>
     {
@@ -45,5 +50,5 @@ const {
     }
   </form>
   <p class="newsletter-note">{newsletter.unsubscribeNote}</p>
-  <div class="newsletter-status" data-js-newsletter-status></div>
+  <div class="newsletter-status" data-js-newsletter-status aria-live="polite"></div>
 </section>
