@@ -13,8 +13,11 @@
 name = "personal-blog"
 compatibility_date = "2026-06-05"
 pages_build_output_dir = "dist"
-# nodejs_compat lets the bundled `resend` SDK (used by functions/api/newsletter/*)
-# run on workerd. Harmless for the view-count functions, which use only Web APIs.
+# nodejs_compat is REQUIRED: the bundled `resend` SDK (functions/api/newsletter/*)
+# imports `node:stream`, so a Pages deploy fails with `No such module "node:stream"`
+# without it. Gotcha: local `wrangler pages dev` compiles AND sends fine without the
+# flag — only the real publish/deploy enforces it, so don't "verify removal" locally.
+# Harmless for the view-count functions, which use only Web APIs.
 compatibility_flags = ["nodejs_compat"]
 
 # Consumed by functions/api/views/* as `env.DB`. Production DB — also the one
