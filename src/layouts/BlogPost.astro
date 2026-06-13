@@ -94,17 +94,22 @@ const {
     const key = `viewed:${slug}`;
     try {
       if (localStorage.getItem(key)) return; // already counted in this browser
+      // Claim the slot up front so concurrent loads (two tabs, a fast reload)
+      // see it immediately and don't all fire the POST. Rolled back below if
+      // the increment never actually lands.
+      localStorage.setItem(key, "1");
     } catch {}
 
     fetch(`/api/views/${encodeURIComponent(slug)}`, { method: "POST" })
       .then((r) => {
-        if (!r.ok) return;
-        try {
-          localStorage.setItem(key, "1");
-        } catch {}
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
       })
       .catch(() => {
-        /* API unavailable — ignore. */
+        // Increment didn't land (API not deployed, transient error) — release
+        // the claim so a later visit can retry.
+        try {
+          localStorage.removeItem(key);
+        } catch {}
       });
   })();
 </script>
