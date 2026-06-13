@@ -100,32 +100,35 @@ const recentShips = [
   },
 ];
 
-const previousWork = [
-  {
-    href: "/work/streamlining-logistics",
-    title: "Streamlining logistics for a freight startup",
-    role: "Lead, end-to-end",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=A",
-  },
-  {
-    href: "/work/patient-portal",
-    title: "Patient portal for a regional health network",
-    role: "Lead, end-to-end",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=B",
-  },
-  {
-    href: "/work/older-projects",
-    title: "Older projects and explorations",
-    role: "Various roles",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=C",
-  },
-  {
-    href: "/work/reimagining-checkout",
-    title: "Reimagining the checkout flow",
-    role: "Lead, end-to-end",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=D",
-  },
-];
+// Placeholder data for the "Populārākās tēmas" (most-popular) section, which is
+// commented out in the template below while the blog is still small. Restore
+// both together.
+// const previousWork = [
+//   {
+//     href: "/work/streamlining-logistics",
+//     title: "Streamlining logistics for a freight startup",
+//     role: "Lead, end-to-end",
+//     imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=A",
+//   },
+//   {
+//     href: "/work/patient-portal",
+//     title: "Patient portal for a regional health network",
+//     role: "Lead, end-to-end",
+//     imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=B",
+//   },
+//   {
+//     href: "/work/older-projects",
+//     title: "Older projects and explorations",
+//     role: "Various roles",
+//     imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=C",
+//   },
+//   {
+//     href: "/work/reimagining-checkout",
+//     title: "Reimagining the checkout flow",
+//     role: "Lead, end-to-end",
+//     imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=D",
+//   },
+// ];
 
 const sideProjects = [
     {
@@ -195,7 +198,13 @@ const sideProjects = [
       />
     </section>
 
-    <!-- Previous work -->
+    {/* "Populārākās tēmas" (most-popular) — hidden for now while the blog is
+        small: ranking by popularity isn't meaningful with only a few articles.
+        Restore this section (and the `previousWork` data above) once there are
+        enough posts to rank. NB: this was never wired to real view counts —
+        the only live popularity signal is the "Populārākie" sort on the blog
+        listing page (/blogs), which stays. */}
+    {/*
     <section>
       <SectionHeader id="previous-work" title="Populārākās tēmas" />
       <div class="content-grid">
@@ -211,6 +220,7 @@ const sideProjects = [
         }
       </div>
     </section>
+    */}
 
     <!-- Recent ships -->
     <section>
