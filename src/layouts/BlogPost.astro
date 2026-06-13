@@ -52,12 +52,12 @@ const {
           date && (
             <p class="color-fg-muted text-small mb-0">
               <time datetime={isoDate ?? date}>{date}</time>
-              {viewKey && (
-                <span class="article-views" data-js-view-count data-slug={viewKey} hidden />
-              )}
             </p>
           )
         }
+        {/* No visible count — this only pings the view counter so the blog
+            list can sort by popularity. The number is intentionally not shown. */}
+        {viewKey && <span data-js-view-ping data-slug={viewKey} hidden />}
         <h1 class="mb-3">{title}</h1>
         {subtitle && <p class="article-subtitle color-fg-muted m-0">{subtitle}</p>}
       </section>
@@ -82,43 +82,29 @@ const {
 </BaseLayout>
 
 <script>
-  // Article view counter (Phase 2). Reads/increments the count via the
-  // Cloudflare /api/views/<slug> function. Counts one view per browser per
-  // article (refreshes are GET-only via a localStorage flag). Degrades
-  // silently when the API isn't deployed (e.g. local static preview).
+  // Article view tracking (Cloudflare D1). Increments the per-article counter
+  // once per browser via the /api/views/<slug> function, so the blog list can
+  // sort by popularity. The count is never displayed. Degrades silently when
+  // the API isn't deployed (e.g. local static preview).
   (function () {
-    const el = document.querySelector<HTMLElement>("[data-js-view-count]");
+    const el = document.querySelector<HTMLElement>("[data-js-view-ping]");
     const slug = el?.dataset.slug;
-    if (!el || !slug) return;
-
-    const label = (n: number) => {
-      // Rough Latvian agreement: "1 skatījums", else "N skatījumi".
-      const word = n % 10 === 1 && n % 100 !== 11 ? "skatījums" : "skatījumi";
-      return ` · ${n} ${word}`;
-    };
+    if (!slug) return;
 
     const key = `viewed:${slug}`;
-    let counted = false;
     try {
-      counted = !!localStorage.getItem(key);
+      if (localStorage.getItem(key)) return; // already counted in this browser
     } catch {}
 
-    fetch(`/api/views/${encodeURIComponent(slug)}`, {
-      method: counted ? "GET" : "POST",
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data || typeof data.views !== "number") return;
-        el.textContent = label(data.views);
-        el.removeAttribute("hidden");
-        if (!counted) {
-          try {
-            localStorage.setItem(key, "1");
-          } catch {}
-        }
+    fetch(`/api/views/${encodeURIComponent(slug)}`, { method: "POST" })
+      .then((r) => {
+        if (!r.ok) return;
+        try {
+          localStorage.setItem(key, "1");
+        } catch {}
       })
       .catch(() => {
-        /* API unavailable — leave the count hidden. */
+        /* API unavailable — ignore. */
       });
   })();
 </script>
