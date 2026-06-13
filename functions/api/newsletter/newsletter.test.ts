@@ -22,7 +22,6 @@ import { verifyTurnstile } from "./_turnstile";
 const env = {
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
   RESEND_VERIFY_SECRET: process.env.RESEND_VERIFY_SECRET ?? "",
-  RESEND_AUDIENCE_STAGING_ID: process.env.RESEND_AUDIENCE_STAGING_ID ?? "",
   RESEND_AUDIENCE_VERIFIED_ID: process.env.RESEND_AUDIENCE_VERIFIED_ID ?? "",
   RESEND_FROM: process.env.RESEND_FROM ?? "",
   // Confirm-email Resend template id. The live "sends the confirm mail" case needs a
@@ -40,7 +39,6 @@ const TURNSTILE_ALWAYS_FAIL = "2x0000000000000000000000000000000AA";
 const hasCreds = Boolean(
   env.RESEND_API_KEY &&
     env.RESEND_VERIFY_SECRET &&
-    env.RESEND_AUDIENCE_STAGING_ID &&
     env.RESEND_AUDIENCE_VERIFIED_ID &&
     env.RESEND_FROM &&
     env.RESEND_CONFIRM_TEMPLATE_ID,
@@ -121,19 +119,19 @@ describe.skipIf(!hasCreds)("live Resend flow (simulator address + test audiences
   const resend = new Resend(env.RESEND_API_KEY || "re_placeholder");
 
   afterEach(async () => {
-    await deleteContact(resend, env.RESEND_AUDIENCE_STAGING_ID, TEST_EMAIL).catch(() => {});
     await deleteContact(resend, env.RESEND_AUDIENCE_VERIFIED_ID, TEST_EMAIL).catch(() => {});
   });
 
-  it("stages a new email and sends the confirm mail", async () => {
+  it("sends the confirm mail without adding a contact yet", async () => {
     const res = await onRequestPost(
       ctx(subscribeReq(JSON.stringify({ email: TEST_EMAIL, turnstileToken: "dummy" })), env),
     );
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe("pending");
 
-    const staged = await getContact(resend, env.RESEND_AUDIENCE_STAGING_ID, TEST_EMAIL);
-    expect(staged).not.toBeNull();
+    // Double opt-in: nothing is stored until the confirm click.
+    const contact = await getContact(resend, env.RESEND_AUDIENCE_VERIFIED_ID, TEST_EMAIL);
+    expect(contact).toBeNull();
   });
 
   it("no-ops (no send) when already verified", async () => {
@@ -153,8 +151,7 @@ describe.skipIf(!hasCreds)("live Resend flow (simulator address + test audiences
     expect(await verifyTurnstile(TURNSTILE_ALWAYS_FAIL, "dummy")).toBe(false);
   });
 
-  it("confirm with a valid token promotes staging -> verified", async () => {
-    await addContact(resend, env.RESEND_AUDIENCE_STAGING_ID, TEST_EMAIL);
+  it("confirm with a valid token adds the contact to the list", async () => {
     const token = await signToken(TEST_EMAIL, env.RESEND_VERIFY_SECRET);
 
     const res = await onRequestGet(ctx(confirmReq(token), env));

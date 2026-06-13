@@ -92,7 +92,6 @@ plus an optional Turnstile secret:
 | `RESEND_API_KEY` | secret | `.dev.vars` (local) · `wrangler pages secret put` / dashboard (remote) · GitHub secret (CI test key) |
 | `RESEND_VERIFY_SECRET` | secret | same — any long random string; signs the confirm token |
 | `RESEND_FROM` | var | `wrangler.toml` `[vars]` / `[env.preview.vars]` · GitHub Actions **variable** |
-| `RESEND_AUDIENCE_STAGING_ID` | var | same — id of the *unverified* audience |
 | `RESEND_AUDIENCE_VERIFIED_ID` | var | same — id of the *verified* mailing list |
 | `RESEND_CONFIRM_TEMPLATE_ID` | var | same — id of the Resend template for the confirm email |
 | `TURNSTILE_SECRET_KEY` | secret | optional bot check; same places as the Resend secrets. Unset → skipped |
@@ -110,7 +109,8 @@ After editing `[vars]` in `wrangler.toml`, run `npm run cf-typegen` to keep `Env
 sync (the newsletter keys are also typed by the committed `functions/env.d.ts`, so the
 Functions type-check even before that).
 
-Example `.dev.vars` for local dev:
+For local dev, copy the committed `.dev.vars.example` to `.dev.vars` (gitignored) and
+fill in the two secrets — the non-secret vars come from `wrangler.toml`:
 
 ```ini
 RESEND_API_KEY="re_..."
@@ -120,14 +120,14 @@ RESEND_VERIFY_SECRET="any-long-random-string"
 ## Newsletter (Resend)
 
 Sign-up is **double opt-in**. `functions/api/newsletter/subscribe.ts` validates the
-email, adds it to the **staging** Resend audience, and sends the confirm email as a
-**Resend template** (`RESEND_CONFIRM_TEMPLATE_ID`) — the subject and markup live in the
-template; the function only fills its `{{confirm_url}}` variable with the signed link.
-`confirm.ts` verifies that link and moves the contact to the **verified** audience (the
-real list), redirecting to `/vestkopa/confirmed` (or `/vestkopa/invalid` if
-the token is bad/expired). State lives entirely in Resend's two audiences plus a
-stateless signed JWT (HS256 via [`jose`](https://github.com/panva/jose), keyed on
-`RESEND_VERIFY_SECRET`) — **no D1**. The functions talk to Resend through the official
+email and sends the confirm email as a **Resend template** (`RESEND_CONFIRM_TEMPLATE_ID`)
+— the subject and markup live in the template; the function only fills its
+`{{confirm_url}}` variable with the signed link. Nothing is stored at this point: the
+unverified address lives only inside the token. `confirm.ts` verifies that link and
+adds the contact to the **verified** audience (the real list), redirecting to
+`/vestkopa/confirmed` (or `/vestkopa/invalid` if the token is bad/expired). The only
+subscriber state is that single audience plus a stateless signed JWT (HS256 via
+[`jose`](https://github.com/panva/jose), keyed on `RESEND_VERIFY_SECRET`) — **no D1**. The functions talk to Resend through the official
 [`resend`](https://www.npmjs.com/package/resend) SDK; `wrangler.toml` sets
 `compatibility_flags = ["nodejs_compat"]` so it bundles on workerd — ensure that flag
 is enabled for **both** the Production and Preview environments of the Pages project.
@@ -139,9 +139,9 @@ One-time Resend setup:
 
 1. Verify the sending domain `davispazars.lv` (add the SPF/DKIM/DMARC DNS records Resend
    shows).
-2. Create audiences and paste their ids into `wrangler.toml`:
-   - production: a *staging* + a *verified* audience → top-level `[vars]`
-   - preview/test: a **separate** *staging* + *verified* pair → `[env.preview.vars]`
+2. Create one **verified** audience per tier and paste its id into `wrangler.toml`:
+   - production → top-level `[vars]` (`RESEND_AUDIENCE_VERIFIED_ID`)
+   - preview/test → a **separate** audience in `[env.preview.vars]`
      (so test sign-ups never touch the production list)
 3. Create the confirm-email **template** (Resend → Templates) with a subject and body
    in Latvian, placing the confirm button/link on a `{{confirm_url}}` variable. Paste
@@ -152,9 +152,9 @@ One-time Resend setup:
    (Pages → Settings → Variables and Secrets) or `wrangler pages secret put`:
    `RESEND_API_KEY`, `RESEND_VERIFY_SECRET`.
 6. In the GitHub repo, add Actions **secrets** `RESEND_API_KEY` + `RESEND_VERIFY_SECRET`
-   and **variables** `RESEND_FROM`, `RESEND_AUDIENCE_STAGING_ID`,
-   `RESEND_AUDIENCE_VERIFIED_ID`, `RESEND_CONFIRM_TEMPLATE_ID`, all pointing at the
-   **test** key + test audiences/template, for the CI job below.
+   and **variables** `RESEND_FROM`, `RESEND_AUDIENCE_VERIFIED_ID`,
+   `RESEND_CONFIRM_TEMPLATE_ID`, all pointing at the **test** key + test
+   audience/template, for the CI job below.
 
 ### Bot protection (Cloudflare Turnstile)
 
@@ -194,7 +194,7 @@ binding isn't present. Two caveats:
 
 `.github/workflows/ci.yml` runs on PRs to `main` (and pushes to `main`): `npm ci`,
 `npm run build`, `npm test`. The newsletter tests use the real Resend **test** key and
-send only to the `delivered@resend.dev` simulator, writing to the test audiences and
+send only to the `delivered@resend.dev` simulator, writing to the test audience and
 cleaning up after each case. The token/validation tests need no secrets, so forked PRs
 (which don't receive secrets) still get a useful gate. Deploys are **not** done here —
 Cloudflare Pages' Git integration handles those.

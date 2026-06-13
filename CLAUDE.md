@@ -91,25 +91,27 @@ typed bindings). Not worth it for one view counter.
 
 ## Newsletter sign-up (Resend, double opt-in)
 
-- `functions/api/newsletter/subscribe.ts` (`POST`) validates the email, adds it to
-  the **staging** Resend audience, and sends the confirm email as a **Resend template**
-  (`RESEND_CONFIRM_TEMPLATE_ID` — subject + markup managed in Resend, not in code; the
-  function only fills its `{{confirm_url}}` variable);
-  `functions/api/newsletter/confirm.ts` (`GET`) verifies the token and promotes the
-  contact to the **verified** audience, then 302s to a Latvian landing page whose copy
-  lives in `src/site.config.ts` (`newsletterPages`):
+- `functions/api/newsletter/subscribe.ts` (`POST`) validates the email and sends the
+  confirm email as a **Resend template** (`RESEND_CONFIRM_TEMPLATE_ID` — subject +
+  markup managed in Resend, not in code; the function only fills its `{{confirm_url}}`
+  variable). Nothing is stored at this step — the unverified address lives only in the
+  signed token. `functions/api/newsletter/confirm.ts` (`GET`) verifies the token and
+  adds the contact to the **verified** audience, then 302s to a Latvian landing page
+  whose copy lives in `src/site.config.ts` (`newsletterPages`):
   `src/pages/vestkopa/confirmed.astro` / `…/invalid.astro`.
-- **No D1 for subscribers.** State lives in Resend's two audiences (staging =
-  unverified, verified = the list) plus a **stateless signed JWT**
-  (`_token.ts` — HS256 via the `jose` lib, keyed on `RESEND_VERIFY_SECRET`) — so `schema.sql` / the `DB`
+- **No D1 for subscribers.** State lives in a single **verified** Resend audience plus
+  a **stateless signed JWT** (`_token.ts` — HS256 via the `jose` lib, keyed on
+  `RESEND_VERIFY_SECRET`); the unverified address is never persisted (it rides in the
+  token until confirm) — so `schema.sql` / the `DB`
   binding stay view-counts-only. Resend calls go through the official **`resend`
   SDK**, wrapped by thin helpers in `_resend.ts` that normalize its `{data, error}`
   returns (get → null on not-found, mutations throw); `_`-prefixed files aren't
   routed by Pages. wrangler sets `compatibility_flags = ["nodejs_compat"]` so the SDK
   bundles on workerd.
-- Env: non-secret `RESEND_FROM` + the two `RESEND_AUDIENCE_*_ID`s live in
-  `wrangler.toml` `[vars]` / `[env.preview.vars]`; secrets `RESEND_API_KEY` +
-  `RESEND_VERIFY_SECRET` go in `.dev.vars` / Pages secrets. All five are typed by
+- Env: non-secret `RESEND_FROM`, `RESEND_AUDIENCE_VERIFIED_ID`, and
+  `RESEND_CONFIRM_TEMPLATE_ID` live in `wrangler.toml` `[vars]` / `[env.preview.vars]`;
+  secrets `RESEND_API_KEY` + `RESEND_VERIFY_SECRET` go in `.dev.vars` / Pages secrets.
+  All are typed by
   `functions/env.d.ts` (`NewsletterEnv`), used as `PagesFunction<Env & NewsletterEnv>`
   so they survive `cf-typegen` regen.
 - Form copy/messages live in `src/site.config.ts` and reach the static

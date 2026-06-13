@@ -13,8 +13,6 @@ interface NewsletterEnv {
   RESEND_API_KEY: string;
   /** HMAC secret used to sign/verify the double opt-in token. SECRET. */
   RESEND_VERIFY_SECRET: string;
-  /** Resend audience id for unverified (pending) sign-ups. */
-  RESEND_AUDIENCE_STAGING_ID: string;
   /** Resend audience id for the verified mailing list. */
   RESEND_AUDIENCE_VERIFIED_ID: string;
   /** From header for outgoing mail, e.g. "Name <vestkopa@davispazars.lv>". */

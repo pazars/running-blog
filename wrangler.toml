@@ -36,7 +36,6 @@ database_id = "96379359-8499-4364-bd40-0a92c39f1a18"
 # See README.md → "Newsletter (Resend)".
 [vars]
 RESEND_FROM = "Dāvis Pazars <vestkopa@davispazars.lv>"
-RESEND_AUDIENCE_STAGING_ID = "REPLACE_WITH_PROD_STAGING_AUDIENCE_ID"
 RESEND_AUDIENCE_VERIFIED_ID = "REPLACE_WITH_PROD_VERIFIED_AUDIENCE_ID"
 RESEND_CONFIRM_TEMPLATE_ID = "REPLACE_WITH_PROD_CONFIRM_TEMPLATE_ID"
 
@@ -63,11 +62,10 @@ database_name = "personal-blog-views-preview"
 database_id = "65acbf15-63e7-4f74-bdaa-f95532864331"
 
 # Newsletter (Resend) — PREVIEW non-secret config. Preview does NOT inherit the
-# top-level [vars], so the keys are repeated here pointing at the preview audiences
-# (use separate Resend audiences so test sign-ups never touch the production list).
+# top-level [vars], so the keys are repeated here pointing at the preview audience
+# (use a separate Resend audience so test sign-ups never touch the production list).
 [env.preview.vars]
 RESEND_FROM = "Dāvis Pazars <vestkopa@davispazars.lv>"
-RESEND_AUDIENCE_STAGING_ID = "REPLACE_WITH_PREVIEW_STAGING_AUDIENCE_ID"
 RESEND_AUDIENCE_VERIFIED_ID = "REPLACE_WITH_PREVIEW_VERIFIED_AUDIENCE_ID"
 RESEND_CONFIRM_TEMPLATE_ID = "REPLACE_WITH_PREVIEW_CONFIRM_TEMPLATE_ID"
 

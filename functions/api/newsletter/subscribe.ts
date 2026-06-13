@@ -1,17 +1,18 @@
 // Cloudflare Pages Function — newsletter sign-up (double opt-in, step 1).
 //   POST /api/newsletter/subscribe  { email }  ->  { status: "pending" | "already" }
 //
-// Validates the email, makes sure they aren't already on the verified list, adds
-// them to the STAGING audience, and emails a signed confirm link. Only the confirm
-// click (see confirm.ts) promotes them to the verified list. State lives entirely
-// in Resend's two audiences + the stateless token — no D1.
+// Validates the email, makes sure they aren't already on the list, and emails a
+// signed confirm link. Nothing is stored at this step — the unverified address lives
+// only in the signed token until the confirm click (see confirm.ts) adds it to the
+// audience. The only server state is Resend's single audience; the pending step is
+// stateless — no D1.
 //
-// Env (RESEND_*) comes from wrangler.toml [vars] (audience ids, from) plus secrets
-// in .dev.vars / `wrangler pages secret put` (API key, verify secret). Run
+// Env (RESEND_*) comes from wrangler.toml [vars] (audience id, template, from) plus
+// secrets in .dev.vars / `wrangler pages secret put` (API key, verify secret). Run
 // `npm run cf-typegen` after editing wrangler.toml bindings.
 
 import { Resend } from "resend";
-import { addContact, getContact, sendTemplate } from "./_resend";
+import { getContact, sendTemplate } from "./_resend";
 import { signToken } from "./_token";
 import { verifyTurnstile } from "./_turnstile";
 
@@ -63,15 +64,13 @@ export const onRequestPost: PagesFunction<Env & NewsletterEnv> = async ({ reques
   const resend = new Resend(env.RESEND_API_KEY);
 
   try {
-    // Already on the verified list (and not unsubscribed)? No-op, send nothing.
+    // Already on the list (and not unsubscribed)? No-op, send nothing.
     const verified = await getContact(resend, env.RESEND_AUDIENCE_VERIFIED_ID, email);
     if (verified && !verified.unsubscribed) return json({ status: "already" });
 
-    // Stage the address (skip if already pending), then email the confirm link.
-    // A repeat sign-up while pending simply gets another confirm email.
-    const staged = await getContact(resend, env.RESEND_AUDIENCE_STAGING_ID, email);
-    if (!staged) await addContact(resend, env.RESEND_AUDIENCE_STAGING_ID, email);
-
+    // Don't store anything yet: the unverified address rides in the signed token and
+    // is added to the audience only when confirm.ts runs. A repeat sign-up while
+    // pending just re-sends the confirm email.
     const token = await signToken(email, env.RESEND_VERIFY_SECRET);
     const confirmUrl = `${new URL(request.url).origin}/api/newsletter/confirm?token=${encodeURIComponent(token)}`;
 

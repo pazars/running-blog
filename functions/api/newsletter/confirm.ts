@@ -1,14 +1,14 @@
 // Cloudflare Pages Function — newsletter sign-up (double opt-in, step 2).
 //   GET /api/newsletter/confirm?token=...  ->  302 redirect to a friendly page
 //
-// Verifies the signed token from the confirm email, then promotes the contact from
-// the STAGING audience to the VERIFIED audience (= the real mailing list). The user
-// is reached here by clicking a link in their inbox, so we redirect to a Latvian
-// landing page rather than returning JSON. Idempotent: clicking twice just re-adds
-// (Resend dedupes) and lands on the same success page.
+// Verifies the signed token from the confirm email, then adds the contact to the
+// VERIFIED audience (= the real mailing list). The user is reached here by clicking a
+// link in their inbox, so we redirect to a Latvian landing page rather than returning
+// JSON. Idempotent: clicking twice just no-ops on the existing contact and lands on
+// the same success page.
 
 import { Resend } from "resend";
-import { addContact, deleteContact, getContact } from "./_resend";
+import { addContact, getContact } from "./_resend";
 import { verifyToken } from "./_token";
 
 export const onRequestGet: PagesFunction<Env & NewsletterEnv> = async ({ request, env }) => {
@@ -22,12 +22,11 @@ export const onRequestGet: PagesFunction<Env & NewsletterEnv> = async ({ request
   const resend = new Resend(env.RESEND_API_KEY);
 
   try {
-    // Promote to the verified list (skip if already there, so re-clicking the link
-    // is idempotent), then drop the staging copy so a later broadcast can't
-    // double-send.
+    // Add to the list (skip if already there, so re-clicking the link is idempotent).
+    // There's no staging contact to clean up — the token was the only record of the
+    // pending step.
     const existing = await getContact(resend, env.RESEND_AUDIENCE_VERIFIED_ID, email);
     if (!existing) await addContact(resend, env.RESEND_AUDIENCE_VERIFIED_ID, email);
-    await deleteContact(resend, env.RESEND_AUDIENCE_STAGING_ID, email);
   } catch {
     return redirect("/vestkopa/invalid");
   }

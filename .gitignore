@@ -24,6 +24,8 @@ pnpm-debug.log*
 # real secrets/tokens live here and must never be committed.
 .dev.vars
 .dev.vars.*
+# ...except the committed template (placeholders only, no real secrets).
+!.dev.vars.example
 
 # Cloudflare local dev state (local D1 SQLite + cache) from `wrangler pages dev`
 .wrangler/
