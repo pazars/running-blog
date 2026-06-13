@@ -19,6 +19,10 @@ const {
   class={`newsletter-form-section ${showBorder ? "border-top" : ""}`}
   data-js-newsletter-form
   data-js-hide-when-subscribed={hideWhenSubscribed ? "true" : undefined}
+  data-msg-pending={newsletter.pendingMessage}
+  data-msg-already={newsletter.alreadyMessage}
+  data-msg-error={newsletter.errorMessage}
+  data-msg-ratelimit={newsletter.rateLimitMessage}
 >
   <p>{description}</p>
   <form class="newsletter-form d-flex gap-2" data-js-newsletter-submit>
@@ -34,6 +38,11 @@ const {
     <button type="submit" class="newsletter-btn btn-secondary" data-js-newsletter-btn>
       {newsletter.subscribeButton}
     </button>
+    {
+      newsletter.turnstileSiteKey && (
+        <div class="cf-turnstile" data-sitekey={newsletter.turnstileSiteKey} />
+      )
+    }
   </form>
   <p class="newsletter-note">{newsletter.unsubscribeNote}</p>
   <div class="newsletter-status" data-js-newsletter-status></div>

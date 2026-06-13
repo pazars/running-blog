@@ -155,6 +155,10 @@ const {
             class="subscribe-popup"
             data-js-newsletter-form
             data-js-hide-when-subscribed="true"
+            data-msg-pending={newsletter.pendingMessage}
+            data-msg-already={newsletter.alreadyMessage}
+            data-msg-error={newsletter.errorMessage}
+            data-msg-ratelimit={newsletter.rateLimitMessage}
           >
             <p class="subscribe-popup-desc">
               Kopsavilkumi par jaunākajiem rakstiem
@@ -176,12 +180,17 @@ const {
               >
                 {newsletter.subscribeButton}
               </button>
+              {
+                newsletter.turnstileSiteKey && (
+                  <div class="cf-turnstile" data-sitekey={newsletter.turnstileSiteKey} />
+                )
+              }
             </form>
             <p class="newsletter-note">{newsletter.unsubscribeNote}</p>
             <div class="newsletter-status" data-js-newsletter-status></div>
           </div>
           <div class="subscribe-popup-done" data-js-subscribe-done style="display:none;">
-            <p class="subscribe-popup-desc">You're subscribed!</p>
+            <p class="subscribe-popup-desc">{newsletter.subscribedTitle}</p>
           </div>
         </div>
       </div>

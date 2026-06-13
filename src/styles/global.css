@@ -1202,6 +1202,19 @@ footer a:hover {
   color: var(--color-fg-muted);
   min-height: 1.5em;
 }
+.newsletter-status.is-error {
+  color: var(--color-border-danger);
+}
+/* Turnstile widget sits on its own row below the input/button (the forms are flex). */
+.newsletter-form,
+.subscribe-popup-form {
+  flex-wrap: wrap;
+}
+.newsletter-form .cf-turnstile,
+.subscribe-popup-form .cf-turnstile {
+  flex-basis: 100%;
+  margin-top: 10px;
+}
 .newsletter-form-section[hidden] {
   display: none;
 }

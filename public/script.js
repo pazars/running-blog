@@ -164,7 +164,7 @@
   document
     .querySelectorAll("[data-js-newsletter-submit]")
     .forEach((form) => {
-      form.addEventListener("submit", (event) => {
+      form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         const section = form.closest("[data-js-newsletter-form]");
@@ -175,29 +175,68 @@
 
         if (!email) return;
 
+        // Copy comes from site.config via data-* attributes (single source of truth).
+        const msgPending = section.dataset.msgPending || "";
+        const msgAlready = section.dataset.msgAlready || msgPending;
+        const msgError = section.dataset.msgError || "";
+        const msgRateLimit = section.dataset.msgRatelimit || msgError;
+        const originalBtnText = btn.textContent;
+
+        // Cloudflare Turnstile token, if the widget is rendered in this form.
+        const turnstileWidget = form.querySelector(".cf-turnstile");
+        const tokenInput = form.querySelector('[name="cf-turnstile-response"]');
+        const turnstileToken = tokenInput ? tokenInput.value : "";
+        const resetTurnstile = () => {
+          if (window.turnstile && turnstileWidget) {
+            try {
+              window.turnstile.reset(turnstileWidget);
+            } catch {}
+          }
+        };
+
         // Submitting state
         btn.disabled = true;
         btn.textContent = "\u2026";
         emailInput.disabled = true;
         status.textContent = "";
+        status.classList.remove("is-error");
 
-        // TODO: Replace with actual API call (Resend, ConvertKit, etc.)
-        // Example: fetch("/api/subscribe", {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify({ email }),
-        // })
-        // For now, simulate a successful subscription
-        setTimeout(() => {
-          localStorage.setItem(SUBSCRIBED_KEY, "true");
+        // Re-enable the form and show a message, resetting Turnstile so a fresh,
+        // single-use token is issued for the retry.
+        const fail = (message) => {
+          btn.disabled = false;
+          btn.textContent = originalBtnText;
+          emailInput.disabled = false;
+          status.textContent = message;
+          status.classList.add("is-error");
+          resetTurnstile();
+        };
+
+        // Double opt-in: this only stages the address + sends a confirm email.
+        // The mailing list isn't joined until the user clicks that link.
+        try {
+          const res = await fetch("/api/newsletter/subscribe", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ email, turnstileToken }),
+          });
+          const data = await res.json().catch(() => ({}));
+
+          // 429 = rate limited (just wait and retry); anything else is a generic error.
+          if (!res.ok) {
+            fail(res.status === 429 ? msgRateLimit : msgError);
+            return;
+          }
+
+          // Success (pending confirmation, or already subscribed) \u2014 stop nagging.
+          try {
+            localStorage.setItem(SUBSCRIBED_KEY, "true");
+          } catch {}
           form.style.display = "none";
-          status.textContent = "You\u2019re in \u2014 thanks.";
-          // Show "subscribed" fallback if in a popup
-          const doneEl = section.parentElement?.querySelector(
-            "[data-js-subscribe-done]"
-          );
-          if (doneEl) doneEl.style.display = "";
-        }, 600);
+          status.textContent = data.status === "already" ? msgAlready : msgPending;
+        } catch {
+          fail(msgError); // network / unexpected failure
+        }
       });
     });
 })();

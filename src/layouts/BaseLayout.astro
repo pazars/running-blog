@@ -1,5 +1,5 @@
 ---
-import { site } from "../site.config";
+import { site, newsletter } from "../site.config";
 
 interface Props {
   /** Tab/OG title. Defaults to the site-wide title; blog posts pass their own. */
@@ -88,6 +88,16 @@ import "../styles/global.css";
   </head>
   <body>
     <slot />
+    {
+      newsletter.turnstileSiteKey && (
+        <script
+          is:inline
+          async
+          defer
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        />
+      )
+    }
     <script is:inline src="/script.js"></script>
   </body>
 </html>
