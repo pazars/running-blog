@@ -79,7 +79,7 @@ export const onRequestPost: PagesFunction<Env & NewsletterEnv> = async ({ reques
     await sendTemplate(resend, {
       from: env.RESEND_FROM,
       to: email,
-      templateId: env.RESEND_CONFIRM_TEMPLATE_ID,
+      templateAlias: env.RESEND_CONFIRM_TEMPLATE_ALIAS,
       variables: { [CONFIRM_URL_VAR]: confirmUrl },
     });
   } catch {

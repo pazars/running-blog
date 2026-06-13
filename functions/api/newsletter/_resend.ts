@@ -52,23 +52,24 @@ export async function deleteContact(
   }
 }
 
-// Send a published Resend template by id, filling its variables. The email body
+// Send a published Resend template by alias, filling its variables. The email body
 // AND subject live in the template (managed in the Resend dashboard, not here); we
 // only supply `from` (so the verified sending domain wins over any template default)
 // and the dynamic variables. Per Resend, a template send must NOT carry html/text.
+// The alias goes into the SDK's `template.id`, which accepts a UUID or the alias.
 export async function sendTemplate(
   resend: Resend,
   msg: {
     from: string;
     to: string;
-    templateId: string;
+    templateAlias: string;
     variables?: Record<string, string | number>;
   },
 ): Promise<void> {
   const { error } = await resend.emails.send({
     from: msg.from,
     to: msg.to,
-    template: { id: msg.templateId, variables: msg.variables },
+    template: { id: msg.templateAlias, variables: msg.variables },
   });
   if (error) throw new Error(`Resend emails.send: ${error.message ?? error.name}`);
 }

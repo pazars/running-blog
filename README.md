@@ -93,7 +93,7 @@ plus an optional Turnstile secret:
 | `RESEND_VERIFY_SECRET` | secret | same — any long random string; signs the confirm token |
 | `RESEND_FROM` | var | `wrangler.toml` `[vars]` / `[env.preview.vars]` · GitHub Actions **variable** |
 | `RESEND_AUDIENCE_VERIFIED_ID` | var | same — id of the *verified* mailing list |
-| `RESEND_CONFIRM_TEMPLATE_ID` | var | same — id of the Resend template for the confirm email |
+| `RESEND_CONFIRM_TEMPLATE_ALIAS` | var | same — alias of the Resend template for the confirm email |
 | `TURNSTILE_SECRET_KEY` | secret | optional bot check; same places as the Resend secrets. Unset → skipped |
 
 The audience/template **ids** are account-scoped identifiers, not credentials — they
@@ -120,7 +120,7 @@ RESEND_VERIFY_SECRET="any-long-random-string"
 ## Newsletter (Resend)
 
 Sign-up is **double opt-in**. `functions/api/newsletter/subscribe.ts` validates the
-email and sends the confirm email as a **Resend template** (`RESEND_CONFIRM_TEMPLATE_ID`)
+email and sends the confirm email as a **Resend template** (`RESEND_CONFIRM_TEMPLATE_ALIAS`)
 — the subject and markup live in the template; the function only fills its
 `{{confirm_url}}` variable with the signed link. Nothing is stored at this point: the
 unverified address lives only inside the token. `confirm.ts` verifies that link and
@@ -145,15 +145,16 @@ One-time Resend setup:
      (so test sign-ups never touch the production list)
 3. Create the confirm-email **template** (Resend → Templates) with a subject and body
    in Latvian, placing the confirm button/link on a `{{confirm_url}}` variable. Paste
-   its id into `wrangler.toml` as `RESEND_CONFIRM_TEMPLATE_ID` (a separate template per
-   tier is fine but not required — a shared template id can go in both `[vars]` blocks).
+   its **alias** into `wrangler.toml` as `RESEND_CONFIRM_TEMPLATE_ALIAS` (the SDK takes the
+   alias in `template.id` in place of the UUID; the alias is stabler and can stay the same
+   across tiers — a separate template per tier is fine but not required).
 4. Create API keys: production, preview, and a **test** key for CI.
 5. Set the secrets per environment (Production vs Preview) via the Cloudflare dashboard
    (Pages → Settings → Variables and Secrets) or `wrangler pages secret put`:
    `RESEND_API_KEY`, `RESEND_VERIFY_SECRET`.
 6. In the GitHub repo, add Actions **secrets** `RESEND_API_KEY` + `RESEND_VERIFY_SECRET`
    and **variables** `RESEND_FROM`, `RESEND_AUDIENCE_VERIFIED_ID`,
-   `RESEND_CONFIRM_TEMPLATE_ID`, all pointing at the **test** key + test
+   `RESEND_CONFIRM_TEMPLATE_ALIAS`, all pointing at the **test** key + test
    audience/template, for the CI job below.
 
 ### Bot protection (Cloudflare Turnstile)

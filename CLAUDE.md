@@ -92,7 +92,9 @@ typed bindings). Not worth it for one view counter.
 ## Newsletter sign-up (Resend, double opt-in)
 
 - `functions/api/newsletter/subscribe.ts` (`POST`) validates the email and sends the
-  confirm email as a **Resend template** (`RESEND_CONFIRM_TEMPLATE_ID` — subject +
+  confirm email as a **Resend template** (`RESEND_CONFIRM_TEMPLATE_ALIAS` — the template's
+  human-readable alias, which the SDK accepts in `template.id` in place of the UUID;
+  subject +
   markup managed in Resend, not in code; the function only fills its `{{confirm_url}}`
   variable). Nothing is stored at this step — the unverified address lives only in the
   signed token. `functions/api/newsletter/confirm.ts` (`GET`) verifies the token and
@@ -109,7 +111,7 @@ typed bindings). Not worth it for one view counter.
   routed by Pages. wrangler sets `compatibility_flags = ["nodejs_compat"]` so the SDK
   bundles on workerd.
 - Env: non-secret `RESEND_FROM`, `RESEND_AUDIENCE_VERIFIED_ID`, and
-  `RESEND_CONFIRM_TEMPLATE_ID` live in `wrangler.toml` `[vars]` / `[env.preview.vars]`;
+  `RESEND_CONFIRM_TEMPLATE_ALIAS` live in `wrangler.toml` `[vars]` / `[env.preview.vars]`;
   secrets `RESEND_API_KEY` + `RESEND_VERIFY_SECRET` go in `.dev.vars` / Pages secrets.
   All are typed by
   `functions/env.d.ts` (`NewsletterEnv`), used as `PagesFunction<Env & NewsletterEnv>`

@@ -1,7 +1,7 @@
 # Local dev secrets for `npx wrangler pages dev dist`. Copy this file to .dev.vars
 # (gitignored) and fill in real values. Use the TEST/preview Resend key so local
 # sign-ups never touch the production audience. The non-secret vars (RESEND_FROM,
-# RESEND_AUDIENCE_VERIFIED_ID, RESEND_CONFIRM_TEMPLATE_ID) come from wrangler.toml —
+# RESEND_AUDIENCE_VERIFIED_ID, RESEND_CONFIRM_TEMPLATE_ALIAS) come from wrangler.toml —
 # only secrets belong here.
 
 # Resend API key (Bearer token).

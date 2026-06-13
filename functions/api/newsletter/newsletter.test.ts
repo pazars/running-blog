@@ -24,9 +24,9 @@ const env = {
   RESEND_VERIFY_SECRET: process.env.RESEND_VERIFY_SECRET ?? "",
   RESEND_AUDIENCE_VERIFIED_ID: process.env.RESEND_AUDIENCE_VERIFIED_ID ?? "",
   RESEND_FROM: process.env.RESEND_FROM ?? "",
-  // Confirm-email Resend template id. The live "sends the confirm mail" case needs a
+  // Confirm-email Resend template alias. The live "sends the confirm mail" case needs a
   // real published template in the test account; without it the block self-skips.
-  RESEND_CONFIRM_TEMPLATE_ID: process.env.RESEND_CONFIRM_TEMPLATE_ID ?? "",
+  RESEND_CONFIRM_TEMPLATE_ALIAS: process.env.RESEND_CONFIRM_TEMPLATE_ALIAS ?? "",
   // Optional: when set (CI), subscribe enforces Turnstile. The always-pass dummy
   // secret (1x000…AA) lets any non-empty token through.
   TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? "",
@@ -41,7 +41,7 @@ const hasCreds = Boolean(
     env.RESEND_VERIFY_SECRET &&
     env.RESEND_AUDIENCE_VERIFIED_ID &&
     env.RESEND_FROM &&
-    env.RESEND_CONFIRM_TEMPLATE_ID,
+    env.RESEND_CONFIRM_TEMPLATE_ALIAS,
 );
 
 // Resend's delivery simulator — accepted by /emails but never actually delivered.

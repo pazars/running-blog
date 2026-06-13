@@ -17,9 +17,10 @@ interface NewsletterEnv {
   RESEND_AUDIENCE_VERIFIED_ID: string;
   /** From header for outgoing mail, e.g. "Name <vestkopa@davispazars.lv>". */
   RESEND_FROM: string;
-  /** Id of the published Resend template for the double opt-in confirm email
-   *  (owns subject + markup; the {{confirm_url}} variable is filled at send time). */
-  RESEND_CONFIRM_TEMPLATE_ID: string;
+  /** Alias of the published Resend template for the double opt-in confirm email
+   *  (owns subject + markup; the {{confirm_url}} variable is filled at send time).
+   *  Fed into the SDK's `template.id`, which accepts a UUID or the alias. */
+  RESEND_CONFIRM_TEMPLATE_ALIAS: string;
   /**
    * Cloudflare Turnstile secret key. SECRET. Optional: when unset, subscribe.ts
    * skips the bot check (so local dev / pre-setup still works). The matching site

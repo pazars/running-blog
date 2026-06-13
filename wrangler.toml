@@ -36,8 +36,8 @@ database_id = "96379359-8499-4364-bd40-0a92c39f1a18"
 # See README.md → "Newsletter (Resend)".
 [vars]
 RESEND_FROM = "Dāvis Pazars <vestkopa@davispazars.lv>"
-RESEND_AUDIENCE_VERIFIED_ID = "REPLACE_WITH_PROD_VERIFIED_AUDIENCE_ID"
-RESEND_CONFIRM_TEMPLATE_ID = "REPLACE_WITH_PROD_CONFIRM_TEMPLATE_ID"
+RESEND_AUDIENCE_VERIFIED_ID = ""
+RESEND_CONFIRM_TEMPLATE_ALIAS = "REPLACE_WITH_PROD_CONFIRM_TEMPLATE_ALIAS"
 
 # Per-IP rate limit for POST /api/newsletter/subscribe (read as
 # env.SUBSCRIBE_RATE_LIMITER). The binding is OPTIONAL in code — subscribe.ts skips
@@ -66,8 +66,8 @@ database_id = "65acbf15-63e7-4f74-bdaa-f95532864331"
 # (use a separate Resend audience so test sign-ups never touch the production list).
 [env.preview.vars]
 RESEND_FROM = "Dāvis Pazars <vestkopa@davispazars.lv>"
-RESEND_AUDIENCE_VERIFIED_ID = "REPLACE_WITH_PREVIEW_VERIFIED_AUDIENCE_ID"
-RESEND_CONFIRM_TEMPLATE_ID = "REPLACE_WITH_PREVIEW_CONFIRM_TEMPLATE_ID"
+RESEND_AUDIENCE_VERIFIED_ID = "5f9e0896-9e47-4d80-82c9-09ab7eb2329d"
+RESEND_CONFIRM_TEMPLATE_ALIAS = "test-confirm-email"
 
 # Preview rate limiter (preview doesn't inherit the top-level binding). Separate
 # namespace_id so preview and production counters never share buckets.
