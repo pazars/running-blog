@@ -61,6 +61,14 @@ entirely client-side from `data-tags`/`data-date`, no fetch). Match this style.
   blog list fetches `/api/views` and no-ops gracefully when the API isn't
   deployed (so local `astro dev` still works).
 - Slugs key on the article's frontmatter `slug`.
+- **Binding vs. database name**: the functions reach D1 through one binding,
+  read in code as `env.DB`. The `binding` (`DB`) is the runtime handle your code
+  uses; the `database_name` (`personal-blog-views`) is what the `wrangler d1`
+  CLI commands target — they are independent. The binding is kept the **same
+  name across all three environments** (only the underlying DB swaps), so the
+  functions stay environment-agnostic. This single-binding model assumes one
+  logical database; if the project ever needs several *different* databases at
+  once, refactor to distinct named bindings (e.g. `env.VIEWS`, `env.COMMENTS`).
 - **Environments** (three tiers, all on Pages — no Workers): local dev uses an
   auto-created **local** SQLite D1; Pages **preview** (non-`main` branches) and
   **production** (`main`) each bind their own remote D1, the latter via

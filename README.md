@@ -17,6 +17,14 @@ Three tiers — local for **dev**, Cloudflare Pages **preview** for test, Pages
 | **test** | Pages preview| push any non-`main` branch   | `personal-blog-views-preview`  |
 | **prod** | Pages prod   | push to `main`               | `personal-blog-views`          |
 
+The functions read D1 through a single binding, `env.DB`. The **binding name**
+(`DB`) is the handle your code uses at runtime; the **database name**
+(`personal-blog-views`) is what the `wrangler d1` commands below target — they
+are different things. The binding is the same in every environment; only the
+database it points at changes (top-level block = prod/local, `[env.preview]` =
+preview). If the project later needs several *different* databases at once, this
+will need refactoring to distinct named bindings.
+
 ## Dev (local)
 
 ```bash

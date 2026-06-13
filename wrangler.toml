@@ -20,13 +20,15 @@ pages_build_output_dir = "dist"
 # still requires Cloudflare auth). Real secrets/tokens never go here: put them in
 # `.dev.vars` (gitignored) for local dev, or `wrangler pages secret put` / the dashboard.
 [[d1_databases]]
-binding = "personal_blog_views"
+binding = "DB"
 database_name = "personal-blog-views"
 database_id = "96379359-8499-4364-bd40-0a92c39f1a18"
 
-# Preview DB — used by all non-production branch deploys. Declared explicitly
-# because preview does NOT inherit the top-level binding.
-[[d1_databases]]
-binding = "personal_blog_views_preview"
+# Preview DB — used by all non-production branch deploys. Declared under
+# [env.preview] with the SAME binding name ("DB") because preview does NOT
+# inherit the top-level binding; the functions stay env-agnostic and just read
+# env.DB in both tiers.
+[[env.preview.d1_databases]]
+binding = "DB"
 database_name = "personal-blog-views-preview"
 database_id = "65acbf15-63e7-4f74-bdaa-f95532864331"
