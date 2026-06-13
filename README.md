@@ -84,5 +84,117 @@ npx wrangler d1 execute personal-blog-views-preview --remote --file=./schema.sql
 
 ## Secrets / vars
 
-None required today. Local secrets go in `.dev.vars` (gitignored); remote ones in
-`npx wrangler pages secret put <NAME>` or the dashboard — never in `wrangler.toml`.
+The view counter needs none. The **newsletter** (see below) needs five Resend keys,
+plus an optional Turnstile secret:
+
+| Name | Kind | Where it's set |
+|------|------|----------------|
+| `RESEND_API_KEY` | secret | `.dev.vars` (local) · `wrangler pages secret put` / dashboard (remote) · GitHub secret (CI test key) |
+| `RESEND_VERIFY_SECRET` | secret | same — any long random string; signs the confirm token |
+| `RESEND_FROM` | var | `wrangler.toml` `[vars]` / `[env.preview.vars]` · GitHub Actions **variable** |
+| `RESEND_AUDIENCE_STAGING_ID` | var | same — id of the *unverified* audience |
+| `RESEND_AUDIENCE_VERIFIED_ID` | var | same — id of the *verified* mailing list |
+| `RESEND_CONFIRM_TEMPLATE_ID` | var | same — id of the Resend template for the confirm email |
+| `TURNSTILE_SECRET_KEY` | secret | optional bot check; same places as the Resend secrets. Unset → skipped |
+
+The audience/template **ids** are account-scoped identifiers, not credentials — they
+grant nothing without the API key (which an attacker who had it could use to list the
+audiences anyway), so committing them as `[vars]` adds no real exposure and avoids the
+operational cost of provisioning them out-of-band in every environment. The Turnstile
+**site** key is public and lives in `src/site.config.ts`
+(`newsletter.turnstileSiteKey`), not here.
+
+Secrets **never** go in `wrangler.toml`. Local secrets live in `.dev.vars`
+(gitignored); remote ones in `npx wrangler pages secret put <NAME>` or the dashboard.
+After editing `[vars]` in `wrangler.toml`, run `npm run cf-typegen` to keep `Env` in
+sync (the newsletter keys are also typed by the committed `functions/env.d.ts`, so the
+Functions type-check even before that).
+
+Example `.dev.vars` for local dev:
+
+```ini
+RESEND_API_KEY="re_..."
+RESEND_VERIFY_SECRET="any-long-random-string"
+```
+
+## Newsletter (Resend)
+
+Sign-up is **double opt-in**. `functions/api/newsletter/subscribe.ts` validates the
+email, adds it to the **staging** Resend audience, and sends the confirm email as a
+**Resend template** (`RESEND_CONFIRM_TEMPLATE_ID`) — the subject and markup live in the
+template; the function only fills its `{{confirm_url}}` variable with the signed link.
+`confirm.ts` verifies that link and moves the contact to the **verified** audience (the
+real list), redirecting to `/vestkopa/confirmed` (or `/vestkopa/invalid` if
+the token is bad/expired). State lives entirely in Resend's two audiences plus a
+stateless signed JWT (HS256 via [`jose`](https://github.com/panva/jose), keyed on
+`RESEND_VERIFY_SECRET`) — **no D1**. The functions talk to Resend through the official
+[`resend`](https://www.npmjs.com/package/resend) SDK; `wrangler.toml` sets
+`compatibility_flags = ["nodejs_compat"]` so it bundles on workerd — ensure that flag
+is enabled for **both** the Production and Preview environments of the Pages project.
+Newsletters
+themselves are sent as Resend **Broadcasts** to the verified audience; Resend also
+hosts the unsubscribe page and the `List-Unsubscribe` header.
+
+One-time Resend setup:
+
+1. Verify the sending domain `davispazars.lv` (add the SPF/DKIM/DMARC DNS records Resend
+   shows).
+2. Create audiences and paste their ids into `wrangler.toml`:
+   - production: a *staging* + a *verified* audience → top-level `[vars]`
+   - preview/test: a **separate** *staging* + *verified* pair → `[env.preview.vars]`
+     (so test sign-ups never touch the production list)
+3. Create the confirm-email **template** (Resend → Templates) with a subject and body
+   in Latvian, placing the confirm button/link on a `{{confirm_url}}` variable. Paste
+   its id into `wrangler.toml` as `RESEND_CONFIRM_TEMPLATE_ID` (a separate template per
+   tier is fine but not required — a shared template id can go in both `[vars]` blocks).
+4. Create API keys: production, preview, and a **test** key for CI.
+5. Set the secrets per environment (Production vs Preview) via the Cloudflare dashboard
+   (Pages → Settings → Variables and Secrets) or `wrangler pages secret put`:
+   `RESEND_API_KEY`, `RESEND_VERIFY_SECRET`.
+6. In the GitHub repo, add Actions **secrets** `RESEND_API_KEY` + `RESEND_VERIFY_SECRET`
+   and **variables** `RESEND_FROM`, `RESEND_AUDIENCE_STAGING_ID`,
+   `RESEND_AUDIENCE_VERIFIED_ID`, `RESEND_CONFIRM_TEMPLATE_ID`, all pointing at the
+   **test** key + test audiences/template, for the CI job below.
+
+### Bot protection (Cloudflare Turnstile)
+
+The form is optionally guarded by [Turnstile](https://developers.cloudflare.com/turnstile/).
+It's **off until configured** — with no site key the widget isn't rendered and the
+backend skips the check, so local dev and the pre-setup state just work. To enable it:
+
+1. Create a Turnstile widget in the Cloudflare dashboard; allow the hostnames
+   `davispazars.lv`, your `*.pages.dev` preview host, and `localhost`.
+2. Put the **site key** in `src/site.config.ts` → `newsletter.turnstileSiteKey`
+   (public, committed). The widget then renders in every newsletter form and
+   `BaseLayout` loads `api.js`.
+3. Set the **secret key** as `TURNSTILE_SECRET_KEY` (Pages secret per env, `.dev.vars`
+   locally). `functions/api/newsletter/subscribe.ts` then verifies every sign-up via
+   siteverify and returns `403` on failure.
+
+For tests/CI use Cloudflare's dummy keys — site `1x00000000000000000000AA` (always
+passes) and secret `1x0000000000000000000000000000000AA` (always passes).
+
+### Rate limiting
+
+`subscribe.ts` uses the [Rate Limiting binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/)
+`SUBSCRIBE_RATE_LIMITER` (declared in `wrangler.toml` `[[ratelimits]]`, **5 requests
+per 60 s per IP**) and returns `429` when tripped. The check is **optional in code**
+(`if (env.SUBSCRIBE_RATE_LIMITER)`), so it no-ops in `astro dev` and anywhere the
+binding isn't present. Two caveats:
+
+- The binding counts **per Cloudflare location**, not globally — it's a coarse abuse
+  guard, not a precise cap.
+- Add a **WAF Rate Limiting rule** as the edge-level backstop (it runs *before* the
+  Function, so it also shields your Resend quota): in the Cloudflare dashboard →
+  Security → WAF → Rate limiting rules, match `http.request.uri.path eq
+  "/api/newsletter/subscribe"`, e.g. 5 requests / 1 min per IP → *Block*. This is
+  account/zone config, not committed code.
+
+## CI
+
+`.github/workflows/ci.yml` runs on PRs to `main` (and pushes to `main`): `npm ci`,
+`npm run build`, `npm test`. The newsletter tests use the real Resend **test** key and
+send only to the `delivered@resend.dev` simulator, writing to the test audiences and
+cleaning up after each case. The token/validation tests need no secrets, so forked PRs
+(which don't receive secrets) still get a useful gate. Deploys are **not** done here —
+Cloudflare Pages' Git integration handles those.
