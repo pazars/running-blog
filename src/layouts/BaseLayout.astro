@@ -2,7 +2,8 @@
 import { site } from "../site.config";
 
 interface Props {
-  title: string;
+  /** Tab/OG title. Defaults to the site-wide title; blog posts pass their own. */
+  title?: string;
   description?: string;
   /** Site-relative share image; resolved to an absolute URL below. */
   image?: string;
@@ -11,8 +12,8 @@ interface Props {
 }
 
 const {
-  title,
-  description = "Taku skrējēja un programmētāja Dāvja Pazara personīgais blogs.",
+  title = "Dāvja skriešanas blogs",
+  description = "Dāvja Pazara skriešanas blogs",
   image = "/og-image.jpg",
   type = "website",
 } = Astro.props;
