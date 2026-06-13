@@ -8,6 +8,27 @@ for the Pages Functions (the `env.DB` binding etc.), run `npm run cf-typegen`
 — it generates a gitignored `worker-configuration.d.ts` from `wrangler.toml`.
 Re-run it whenever you change a binding.
 
+## Icons
+
+The favicon and PWA icons in `public/` are **circular crops of the Gravatar
+profile picture** (the same photo as the header avatar — a favicon can't be
+CSS-rounded, so it's pre-rendered). Regenerate them with ImageMagick if the
+Gravatar photo changes (`HASH` is the SHA-256 of the lowercased
+`gravatarEmail` in `src/site.config.ts`):
+
+```bash
+HASH=$(printf '%s' davis.pazars@gmail.com | sha256sum | cut -d' ' -f1)
+curl -sL "https://www.gravatar.com/avatar/$HASH?s=512" -o /tmp/gravatar.png
+magick /tmp/gravatar.png -resize 512x512^ -gravity center -extent 512x512 \
+  \( +clone -alpha extract -fill black -colorize 100 \
+     -fill white -draw "circle 255.5,255.5 255.5,0" \) \
+  -alpha off -compose CopyOpacity -composite /tmp/circle.png
+magick /tmp/circle.png -resize 192x192 public/icon-192.png
+cp /tmp/circle.png public/icon-512.png
+magick /tmp/circle.png -resize 180x180 -background white -flatten public/apple-touch-icon.png
+magick /tmp/circle.png -define icon:auto-resize=16,32,48,64 public/favicon.ico
+```
+
 ## Environments
 
 Three tiers — local for **dev**, Cloudflare Pages **preview** for test, Pages

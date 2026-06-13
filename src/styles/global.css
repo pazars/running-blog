@@ -432,6 +432,8 @@ header > .brand > .wrapper > .image-container {
   width: 40px;
   max-width: 40px;
   overflow: hidden;
+  /* Circular profile picture (matches the favicon). */
+  border-radius: 50%;
   z-index: 1000;
 }
 header > .brand > .wrapper > .image-container > .image {
@@ -473,10 +475,6 @@ header > .brand > .wrapper:active > .image-container {
 @media (max-width: 543px) {
   header > .brand {
     max-width: calc(100% - 88px);
-  }
-
-  header > .brand > .wrapper > .image-container {
-    border-radius: var(--border-rounded);
   }
 
   header > .brand > .wrapper > .info > .desc {

@@ -75,9 +75,10 @@ import "../styles/global.css";
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={ogImage} />
 
-    <!-- Icons & PWA manifest -->
+    <!-- Icons & PWA manifest. The icons are circular crops of the Gravatar
+         profile picture (a favicon can't be CSS-rounded, so it's pre-rendered);
+         regenerate with the recipe in README.md if the photo changes. -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#283cff" />

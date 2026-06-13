@@ -1,15 +1,11 @@
 ---
-import crypto from "node:crypto";
 import { site, navLinks, newsletter } from "../site.config";
+import { gravatarUrl } from "../utils/avatar";
 
-// Derive the site-wide profile image from the Gravatar account.
-const gravatarHash = crypto
-  .createHash("sha256")
-  .update(site.gravatarEmail.trim().toLowerCase())
-  .digest("hex");
-const gravatarAvatar = `https://www.gravatar.com/avatar/${gravatarHash}?s=160`;
+// Site-wide profile image from the Gravatar account (see src/utils/avatar.ts).
+const gravatarAvatar = gravatarUrl(160);
 // Larger render shown when the avatar is hovered (desktop) or tapped (mobile).
-const gravatarAvatarLarge = `https://www.gravatar.com/avatar/${gravatarHash}?s=480`;
+const gravatarAvatarLarge = gravatarUrl(480);
 
 interface Props {
   name: string;
