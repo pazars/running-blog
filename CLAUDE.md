@@ -7,8 +7,10 @@ D1 backend for article view counts. UI copy and routes are in **Latvian**
 
 > **Active development.** On **Astro 6** (Zod 4, Vite 7; needs **Node 22.12+**).
 > No Cloudflare adapter — see "Why no @astrojs/cloudflare adapter" below. Before
-> non-trivial Astro work, confirm APIs against current docs (use the context7
-> MCP for Astro docs rather than relying on memory).
+> non-trivial Astro work, confirm APIs against current docs rather than relying
+> on memory: the latest Astro docs are readily available through the **context7
+> MCP**, which is well-maintained with a high trust score — prefer it over web
+> search or recall.
 
 ## Commands
 
