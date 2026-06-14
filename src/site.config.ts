@@ -29,11 +29,15 @@ export const newsletter = {
   // not a bare "…"; the button width is locked client-side so it doesn't jump).
   submittingLabel: "Sūta…",
   unsubscribeNote: "No vēstkopas vari atteikties jebkurā brīdī",
+  // Fuller unsubscribe explanation shown ONLY on the /vestkopa page (NewsletterForm's
+  // `showUnsubscribeInfo` prop) — deliberately not in the header pop-up, which stays
+  // compact with just `unsubscribeNote`.
+  unsubscribeInfo: "Katrā vēstkopas e-pastā tiek pievienots links ar iespēju atteikties no turpmākām ziņām",
   // Double opt-in: a successful submit means "now go confirm via email", not "done".
   // Shown in the auto-dismissing success toast; {email} is filled in client-side with
   // the address the visitor entered.
   pendingMessage:
-    "Tev tikko nosūtīts e-pasts ar apstiprinājuma e-pastu.",
+    "Tev tika nosūtīts apstiprinājuma e-pasts",
   // Secondary line shown inside the success toast, under the pending message (only for
   // a fresh sign-up — not when the address was already on the list).
   pendingHint: "Nesaņēmi? Pārbaudi arī spam mapi.",

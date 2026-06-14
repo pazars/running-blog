@@ -10,6 +10,8 @@
       Variable (triple braces = unescaped, required for URLs): {{{confirm_url}}}.
       No <head>: Resend wraps the stored HTML in its own document shell, so the dark-mode
       <style> lives in the body (Gmail hoists it; Apple Mail honors the media query).
+      Preview text (inbox snippet) is NOT here — the templates API has no field for it;
+      set it by hand on the template in the Resend dashboard after syncing.
       Email-safe: tables, inline styles, hex colors. Palette mirrors STYLE_GUIDE.md.
     -->
     <style>
@@ -25,13 +27,6 @@
       a { color: #283cff; }
     </style>
 
-    <!-- Preheader: the inbox preview line. Hidden in the body. This is the ONLY way
-         to set preview text for a transactional template — Resend's templates API has
-         no preview-text field, so the dashboard's preview-text box stays empty. -->
-    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; mso-hide: all;">
-      Apstiprini savu e-pasta adresi, lai pabeigtu pierakstīšanos vēstkopai.
-    </div>
-
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="bg-page" style="width: 100%; background-color: #f6f7f9;">
       <tr>
         <td align="center" style="padding: 40px 20px 0;">
@@ -45,7 +40,7 @@
                   Apstiprini pierakstīšanos vēstkopai
                 </h1>
                 <p class="fg-default" style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #090e24;">
-                  Paldies, ka izvēlējies pievienoties. Atlicis tikai apstiprināt savu e-pastu, ko vari izdarīt, spiežot pogu:
+                  Paldies, ka izvēlējies pievienoties. Atlicis tikai apstiprināt e-pastu, ko vari izdarīt, spiežot pogu:
                 </p>
 
                 <!-- CTA button (bulletproof) -->
@@ -68,7 +63,7 @@
 
                 <!-- "Didn't sign up" note -->
                 <p class="fg-muted" style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #757676;">
-                  Ja tu nepierakstījies, vari ignorēt šo vēstuli. Bez apstiprinājuma tā netiek saglabāta.
+                  Ja tu nepierakstījies, vari ignorēt šo vēstuli. Bez apstiprinājuma tavs e-pasts netiek saglabāts.
                 </p>
 
                 <!-- Scam warning -->

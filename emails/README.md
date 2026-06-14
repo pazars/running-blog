@@ -19,18 +19,15 @@ its wrapper. Push the raw HTML through the API instead — a send with `template
 renders the stored HTML verbatim.
 
 ```bash
-npm run template:sync        # preview/test alias (default)
-npm run template:sync:prod   # production alias  (passes --prod)
+npm run template:sync   # preview alias only
 ```
 
-`scripts/sync-confirm-template.mjs` upserts + publishes the template, sets the
-**subject** (`CONFIRM_SUBJECT`, default "Apstiprini pierakstīšanos vēstkopai"), and
-declares the `confirm_url` variable with its fallback. The per-env vars
-(`RESEND_FROM`, `RESEND_CONFIRM_TEMPLATE_ALIAS`) come straight from **`wrangler.toml`**
-— `[vars]` for `--prod`, `[env.preview.vars]` otherwise — so there's one source of
-truth. The secret `RESEND_API_KEY` is read from the environment or `.dev.vars`; export
-the **prod** key when running `--prod` (`RESEND_API_KEY=re_… npm run template:sync:prod`),
-since `.dev.vars` holds the test key. Re-run after any edit to the HTML or subject.
+`scripts/sync-confirm-template.mjs` upserts + publishes the **preview** template, sets
+the **subject** (`CONFIRM_SUBJECT`, default "Apstiprini pierakstīšanos vēstkopai"), and
+declares the `confirm_url` variable with its fallback. `RESEND_FROM` +
+`RESEND_CONFIRM_TEMPLATE_ALIAS` come straight from **`wrangler.toml`**
+`[env.preview.vars]` (one source of truth); the secret `RESEND_API_KEY` is read from
+the environment or `.dev.vars`. Re-run after any edit to the HTML or subject.
 
 > If the alias currently points at a template you already built in the **visual
 > editor**, delete that one in the dashboard first, then run the script — a leftover
@@ -42,15 +39,28 @@ unsubscribe link** in this email — the address isn't on the list until the con
 click. (The unsubscribe page/endpoint at `/vestkopa/unsubscribe` exists for the actual
 newsletter broadcasts.)
 
-### Preview text (inbox snippet)
+### Release flow (preview → prod)
+
+The script syncs **preview only** — there is no `--prod`. Promote to production by
+**duplicating in the Resend UI**, because the one thing that can't be scripted (preview
+text) is set by hand:
+
+1. `npm run template:sync` — pushes the HTML to the preview template.
+2. In the Resend dashboard, **set the preview text** (inbox snippet) on that template
+   by hand — see below — and review the rendered result.
+3. **Duplicate** the reviewed template in the Resend UI onto the production alias
+   (`RESEND_CONFIRM_TEMPLATE_ALIAS` in `wrangler.toml` `[vars]`). The duplicate carries
+   the preview text with it.
+
+### Preview text (inbox snippet) — set it MANUALLY
 
 The templates API has **no preview-text field** (only `name`, `subject`, `html`,
 `text`, `from`, `alias`, `variables`), and `emails.send` has no `previewText` either —
-that option only exists for Broadcasts. So the dashboard's preview-text box stays
-**empty** when synced via API; that's expected, not a sync bug. The actual inbox
-snippet comes from the **hidden preheader `<div>`** at the top of the HTML body — edit
-the text there. The template also has **no `<head>`**: Resend wraps the stored HTML in
-its own document shell, so the dark-mode `<style>` and the preheader live in the body.
+that option only exists for Broadcasts. So the sync script **cannot** set it: after
+syncing, open the template in the Resend dashboard and type the preview text into its
+preview-text box by hand (e.g. "Apstiprini savu e-pasta adresi, lai pabeigtu
+pierakstīšanos vēstkopai."). The template also has **no `<head>`**: Resend wraps the
+stored HTML in its own document shell, so the dark-mode `<style>` lives in the body.
 
 ### URL fallbacks
 

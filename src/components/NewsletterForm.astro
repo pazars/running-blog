@@ -4,11 +4,15 @@ import { newsletter } from "../site.config";
 interface Props {
   description?: string;
   showBorder?: boolean;
+  // When true, render the fuller unsubscribe explanation (`newsletter.unsubscribeInfo`)
+  // under the short note. Used only on the /vestkopa page, not the header pop-up.
+  showUnsubscribeInfo?: boolean;
 }
 
 const {
   description = "Saņemsi bloga rakstu kopsavilkumus ne biežāk kā reizi dažās nedēļās. Raksti saturēs ikvienam noderīgu informāciju par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei.",
   showBorder = false,
+  showUnsubscribeInfo = false,
 } = Astro.props;
 ---
 
@@ -51,7 +55,9 @@ const {
       )
     }
   </form>
-  <p class="newsletter-note">{newsletter.unsubscribeNote}</p>
+  <p class="newsletter-note">
+    {showUnsubscribeInfo ? newsletter.unsubscribeInfo : newsletter.unsubscribeNote}
+  </p>
   <div class="newsletter-status" data-js-newsletter-status aria-live="polite"></div>
   <div class="newsletter-toast" data-js-newsletter-toast hidden tabindex="-1">
     <p class="newsletter-toast-text" data-js-toast-text aria-live="polite"></p>

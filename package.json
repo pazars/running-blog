@@ -11,7 +11,6 @@
     "cf-typegen": "wrangler types",
     "check:functions": "tsc -p functions/tsconfig.json",
     "template:sync": "node scripts/sync-confirm-template.mjs",
-    "template:sync:prod": "node scripts/sync-confirm-template.mjs --prod",
     "test": "vitest run"
   },
   "dependencies": {
