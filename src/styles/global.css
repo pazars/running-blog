@@ -1215,6 +1215,29 @@ footer a:hover {
   flex-basis: 100%;
   margin-top: 10px;
 }
+/* The widget is a cross-origin iframe (challenges.cloudflare.com), so only its outer
+   box is ours to style — internals and branding are off-limits. Match the input/button
+   corner radius and fade it in when api.js injects it. With appearance="interaction-only"
+   that's only on the rare occasion a real challenge is shown. */
+.cf-turnstile iframe {
+  border-radius: var(--border-rounded);
+  animation: newsletter-turnstile-in 240ms ease-out both;
+}
+@keyframes newsletter-turnstile-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cf-turnstile iframe {
+    animation: none;
+  }
+}
 /* ===== Newsletter success toast =====
    Replaces the form in place for ~6s after a successful submit, then JS reverts to
    the input. The form is hidden via `d-none` (it carries `d-flex !important`); the

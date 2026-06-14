@@ -7,7 +7,7 @@ interface Props {
 }
 
 const {
-  description = "Saņemsi bloga rakstu kopsavilkums ne biežāk kā reizi dažās nedēļās. Raksti saturēs ikvienam noderīgu informāciju par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei.",
+  description = "Saņemsi bloga rakstu kopsavilkumus ne biežāk kā reizi dažās nedēļās. Raksti saturēs ikvienam noderīgu informāciju par treniņiem, sacensību atskatiem un to, kā paņemt mācības no sporta pārējai dzīvei.",
   showBorder = false,
 } = Astro.props;
 ---
@@ -42,7 +42,12 @@ const {
     </button>
     {
       newsletter.turnstileSiteKey && (
-        <div class="cf-turnstile" data-sitekey={newsletter.turnstileSiteKey} />
+        <div
+          class="cf-turnstile"
+          data-sitekey={newsletter.turnstileSiteKey}
+          data-theme="auto"
+          data-appearance="interaction-only"
+        />
       )
     }
   </form>

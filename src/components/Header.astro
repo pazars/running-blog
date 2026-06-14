@@ -183,7 +183,12 @@ const {
               </button>
               {
                 newsletter.turnstileSiteKey && (
-                  <div class="cf-turnstile" data-sitekey={newsletter.turnstileSiteKey} />
+                  <div
+                    class="cf-turnstile"
+                    data-sitekey={newsletter.turnstileSiteKey}
+                    data-theme="auto"
+                    data-appearance="interaction-only"
+                  />
                 )
               }
             </form>
