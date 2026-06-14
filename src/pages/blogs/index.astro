@@ -16,9 +16,9 @@ const posts = (await getCollection("blogs", ({ data }) => !data.draft)).sort(
 const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) =>
   a.localeCompare(b, "lv"),
 );
-const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
-  (a, b) => b - a,
-);
+
+// Display label only — the raw tag stays in `data-tag` for matching/deep-links.
+const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase("lv") + s.slice(1);
 ---
 
 <BaseLayout
@@ -34,29 +34,27 @@ const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
 
   <main>
     <section class="section-hero -no-eyebrow">
-      <!-- Filters: tag chips + year filter + date sort -->
+      <!-- Filters: tag chips (multi-select, AND) + date sort -->
       <div class="blog-filters" data-js-blog-filters>
         <div class="blog-chips" data-js-tag-filter aria-label="Filtrēt pēc tēmas">
-          <button type="button" class="btn btn-secondary blog-chip active" data-tag="">
+          <button type="button" class="btn btn-secondary blog-chip active" data-tag="" aria-pressed="true">
             Visas tēmas
           </button>
           {
             allTags.map((tag) => (
-              <button type="button" class="btn btn-invisible blog-chip" data-tag={tag}>
-                {tag}
+              <button
+                type="button"
+                class="btn btn-invisible blog-chip"
+                data-tag={tag}
+                aria-pressed="false"
+              >
+                {capitalize(tag)}
               </button>
             ))
           }
         </div>
 
         <div class="blog-selects">
-          <label class="blog-select-label">
-            <span class="sr-only">Filtrēt pēc gada</span>
-            <select class="blog-select" data-js-year-filter>
-              <option value="">Visi gadi</option>
-              {years.map((year) => <option value={String(year)}>{year}</option>)}
-            </select>
-          </label>
           <label class="blog-select-label">
             <span class="sr-only">Kārtot</span>
             <select class="blog-select" data-js-sort>
@@ -79,7 +77,6 @@ const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
                 data-slug={post.data.slug}
                 data-tags={post.data.tags.join(",")}
                 data-date={iso}
-                data-year={String(post.data.date.getUTCFullYear())}
                 data-views="0"
               >
                 <FeaturedPost
@@ -113,7 +110,6 @@ const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
   (function () {
     const list = document.querySelector<HTMLElement>("[data-js-blog-list]");
     const tagBar = document.querySelector<HTMLElement>("[data-js-tag-filter]");
-    const yearSel = document.querySelector<HTMLSelectElement>("[data-js-year-filter]");
     const sortSel = document.querySelector<HTMLSelectElement>("[data-js-sort]");
     const empty = document.querySelector<HTMLElement>("[data-js-blog-empty]");
     if (!list) return;
@@ -121,17 +117,18 @@ const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
     const items = Array.from(
       list.querySelectorAll<HTMLElement>(".blog-list-item"),
     );
-    let activeTag = "";
+    // Cumulative tag filter: an empty set means "Visas tēmas" (show all);
+    // otherwise a card shows if it carries *any* selected tag (OR gate).
+    const activeTags = new Set<string>();
 
     function apply() {
-      const year = yearSel?.value ?? "";
       let visible = 0;
 
       items.forEach((el) => {
         const tags = (el.dataset.tags || "").split(",").filter(Boolean);
-        const matchesTag = !activeTag || tags.includes(activeTag);
-        const matchesYear = !year || el.dataset.year === year;
-        const show = matchesTag && matchesYear;
+        const show =
+          activeTags.size === 0 ||
+          [...activeTags].some((t) => tags.includes(t));
         el.classList.toggle("d-none", !show);
         if (show) visible++;
       });
@@ -152,24 +149,35 @@ const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
       sorted.forEach((el) => list.appendChild(el));
     }
 
-    function setActiveTag(tag: string) {
-      activeTag = tag;
+    // Reflect the active set onto the chips. The "Visas tēmas" chip (empty
+    // data-tag) lights up only when no specific tags are selected.
+    function syncTagButtons() {
       tagBar?.querySelectorAll<HTMLElement>("[data-tag]").forEach((btn) => {
-        const on = (btn.dataset.tag || "") === tag;
+        const tag = btn.dataset.tag || "";
+        const on = tag ? activeTags.has(tag) : activeTags.size === 0;
         btn.classList.toggle("active", on);
         btn.classList.toggle("btn-secondary", on);
         btn.classList.toggle("btn-invisible", !on);
+        btn.setAttribute("aria-pressed", String(on));
       });
     }
 
     tagBar?.addEventListener("click", (e) => {
       const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-tag]");
       if (!btn) return;
-      setActiveTag(btn.dataset.tag || "");
+      const tag = btn.dataset.tag || "";
+      // "Visas tēmas" clears everything; a specific tag toggles in/out.
+      if (!tag) {
+        activeTags.clear();
+      } else if (activeTags.has(tag)) {
+        activeTags.delete(tag);
+      } else {
+        activeTags.add(tag);
+      }
+      syncTagButtons();
       apply();
     });
 
-    yearSel?.addEventListener("change", apply);
     sortSel?.addEventListener("change", apply);
 
     // Phase 2: pull live view counts from the Cloudflare function to enable the
@@ -189,9 +197,10 @@ const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))].sort(
     // Allow deep-linking from an article's tag chips: /blogs?tag=treniņi
     const urlTag = new URLSearchParams(window.location.search).get("tag");
     if (urlTag && items.some((el) => (el.dataset.tags || "").split(",").includes(urlTag))) {
-      setActiveTag(urlTag);
+      activeTags.add(urlTag);
     }
 
+    syncTagButtons();
     apply();
   })();
 </script>

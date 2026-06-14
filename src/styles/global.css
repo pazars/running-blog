@@ -1404,17 +1404,36 @@ footer a:hover {
 }
 .blog-select-label {
   display: inline-flex;
+  position: relative;
+}
+/* The native dropdown arrow is glued to the right border with no padding, so
+   we hide it (appearance: none below) and draw our own chevron with breathing
+   room. --color-fg-muted is the same in light/dark, so no theme override. */
+.blog-select-label::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--color-fg-muted);
+  border-bottom: 1.5px solid var(--color-fg-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
 }
 .blog-select {
   background-color: var(--color-bg-subtle);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--border-radius);
-  padding: 4px 12px;
+  /* Extra right padding leaves room for the custom chevron above. */
+  padding: 4px 30px 4px 12px;
   font-family: var(--system-ui);
   font-size: var(--text-body-size-small);
   color: var(--color-fg-muted);
   cursor: pointer;
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
 }
 .blog-select:focus {
   border-color: var(--color-fg-emphasis);
