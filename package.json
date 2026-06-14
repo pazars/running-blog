@@ -19,7 +19,8 @@
     "@astrojs/sitemap": "^3.7.3",
     "@types/node": "^22.12.0",
     "lorem-ipsum": "^3.0.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.100.0"
   },
   "//engines": "Astro 6 dropped Node 18/20 and requires Node >=22.12. Keep this in sync with .nvmrc, which Cloudflare Pages reads to pin the build image's Node version.",
   "engines": {

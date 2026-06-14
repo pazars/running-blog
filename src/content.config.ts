@@ -1,12 +1,14 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection } from "astro:content";
+import { z } from "astro/zod";
 import { glob } from "astro/loaders";
 
-// Blog articles authored as Markdown in src/content/blogs/. The public URL is
+// Blog articles authored as Markdown in src/content/posts/. The public URL is
 // built from the frontmatter `date` + `slug` (see src/pages/blogs/[...slug].astro),
 // so the filename is irrelevant to the route — a single source of truth, with no
-// date baked into filenames.
-const blogs = defineCollection({
-  loader: glob({ base: "./src/content/blogs", pattern: "**/*.md" }),
+// date baked into filenames. (English code id `posts`; the public route stays
+// `/blogs`.)
+const posts = defineCollection({
+  loader: glob({ base: "./src/content/posts", pattern: "**/*.md" }),
   schema: z.object({
     title: z.string(),
     subtitle: z.string(),
@@ -31,11 +33,12 @@ const blogs = defineCollection({
 
 // Recommendations ("Iesaku") — external links Dāvis vouches for (podcasts,
 // YouTube channels, …), authored as frontmatter-only Markdown in
-// src/content/iesaku/. No body and no detail page: the listing page renders
-// each entry as a card (mirroring the blog list, minus the date) and filters
-// them client-side by `tags`.
-const iesaku = defineCollection({
-  loader: glob({ base: "./src/content/iesaku", pattern: "**/*.md" }),
+// src/content/recommendations/. No body and no detail page: the listing page
+// renders each entry as a card (mirroring the blog list, minus the date) and
+// filters them client-side by `tags`. (English code id `recommendations`; the
+// public route stays `/iesaku`.)
+const recommendations = defineCollection({
+  loader: glob({ base: "./src/content/recommendations", pattern: "**/*.md" }),
   schema: z.object({
     title: z.string(),
     // Shown as the card summary.
@@ -66,4 +69,4 @@ const iesaku = defineCollection({
   }),
 });
 
-export const collections = { blogs, iesaku };
+export const collections = { posts, recommendations };

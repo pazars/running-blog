@@ -7,7 +7,7 @@ import { toIsoDate, formatLatvianDate } from "../../utils/date";
 // catch-all param holds both segments; the date comes from frontmatter and the
 // slug is the url-title, so the route is rebuilt from the entry's data.
 export async function getStaticPaths() {
-  const posts = await getCollection("blogs", ({ data }) => !data.draft);
+  const posts = await getCollection("posts", ({ data }) => !data.draft);
   return posts.map((post) => ({
     params: { slug: `${toIsoDate(post.data.date)}/${post.data.slug}` },
     props: { post },

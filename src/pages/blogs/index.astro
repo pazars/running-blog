@@ -9,7 +9,7 @@ import { toIsoDate, formatLatvianDate } from "../../utils/date";
 
 // Newest first. Each card carries its metadata in data-* attributes so the
 // scoped script below can filter/sort entirely on the client (no fetch).
-const posts = (await getCollection("blogs", ({ data }) => !data.draft)).sort(
+const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
 

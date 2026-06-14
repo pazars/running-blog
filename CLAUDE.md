@@ -37,13 +37,13 @@ adapter or `output: "server"` without a deliberate reason.
 Lean on Astro's built-ins rather than reinventing them:
 
 - **Content collections** (`src/content.config.ts`) — blog posts are Markdown in
-  `src/content/blogs/`, loaded via the `glob()` loader and validated by a Zod
-  `schema`. Query with `getCollection("blogs")`; render bodies with `render()`.
+  `src/content/posts/`, loaded via the `glob()` loader and validated by a Zod
+  `schema`. Query with `getCollection("posts")`; render bodies with `render()`.
 - **`getStaticPaths`** drives blog routing. The public URL
   `/blogs/<YYYY-MM-DD>/<uri-title>` is rebuilt from each entry's frontmatter
   `date` + `slug` — **the filename is irrelevant** to the route. See
   `src/pages/blogs/[...slug].astro`.
-- **`Astro.site`** (set from `site.config.ts` in `astro.config.mjs`) backs
+- **`Astro.site`** (set from `src/site.config.ts` in `astro.config.mjs`) backs
   canonical URLs, absolute OG images, JSON-LD, and the `@astrojs/sitemap`
   integration. Keep it as the single origin source.
 - **Drafts**: `draft: true` frontmatter keeps a post out of `getCollection`

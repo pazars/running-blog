@@ -11,7 +11,7 @@ import { fetchOgImage } from "../utils/ogImage";
 // carries its tags + language in data-* attributes so the scoped script below
 // can filter entirely on the client (mirrors the blog list; the dropdown
 // filters by language instead of sorting).
-const items = (await getCollection("iesaku", ({ data }) => !data.draft)).sort(
+const items = (await getCollection("recommendations", ({ data }) => !data.draft)).sort(
   (a, b) => a.data.title.localeCompare(b.data.title, "lv"),
 );
 
