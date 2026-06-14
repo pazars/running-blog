@@ -26,19 +26,18 @@ export const newsletter = {
   submittingLabel: "Sūta…",
   unsubscribeNote: "No vēstkopas vari atteikties jebkurā brīdī",
   // Double opt-in: a successful submit means "now go confirm via email", not "done".
-  // {email} is filled in client-side with the address the visitor entered.
+  // Shown in the auto-dismissing success toast; {email} is filled in client-side with
+  // the address the visitor entered.
   pendingMessage:
     "Gandrīz! Nosūtījām apstiprinājuma saiti uz {email} — atver to un apstiprini pierakstīšanos.",
-  // Secondary line shown under the pending message.
+  // Secondary line shown inside the success toast, under the pending message (only for
+  // a fresh sign-up — not when the address was already on the list).
   pendingHint: "Nesaņēmi? Pārbaudi arī mēstuļu (spam) mapi.",
   alreadyMessage: "Tu jau esi pierakstījies vēstkopai.",
   errorMessage: "Neizdevās pierakstīties. Mēģini vēlreiz nedaudz vēlāk.",
   // Shown on HTTP 429 (rate limit) — distinct from the generic error so the user
   // knows to simply wait rather than that something is broken.
   rateLimitMessage: "Pārāk daudz mēģinājumu. Lūdzu, pamēģini vēlreiz pēc minūtes.",
-  // Header pop-up "done" panel — shown only once the visitor has CONFIRMED (via the
-  // /vestkopa/confirmed page) or was already on the list; never for a pending submit.
-  subscribedTitle: "Tu esi pierakstījies vēstkopai",
   // Cloudflare Turnstile public site key (bot protection on the form). Leave empty
   // to disable the widget — the form then submits without a token and the backend
   // skips the check (so local dev works). Set the real key once the widget exists in

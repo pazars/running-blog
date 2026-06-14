@@ -117,8 +117,10 @@
 
   dropdownPanels.forEach((panel) => {
     panel.addEventListener("click", (event) => {
-      // Don't auto-close if clicking inside a form (e.g. subscribe popup)
+      // Don't auto-close if clicking inside a form (e.g. subscribe popup) or the
+      // newsletter success toast (let its own timer / close logic run).
       if (event.target.closest("form")) return;
+      if (event.target.closest("[data-js-newsletter-toast]")) return;
       closeOpenDropdowns();
     });
   });
@@ -145,109 +147,146 @@
 
 // ===== Newsletter Form =====
 (function () {
-  // Double opt-in has two real states, so we track two flags instead of one:
-  //   newsletter-pending   = the email we sent a confirm link to (set on submit)
-  //   newsletter-confirmed = "true" once the user actually confirmed on the
-  //                          /vestkopa/confirmed page, or was already on the list.
-  // confirmed wins over pending, keeping the UI honest: "check your email" until
-  // confirmed, "you're subscribed" only after. (confirmed.astro also sets these.)
-  const PENDING_KEY = "newsletter-pending";
-  const CONFIRMED_KEY = "newsletter-confirmed";
-
-  const getFlag = (k) => {
-    try {
-      return localStorage.getItem(k);
-    } catch {
-      return null;
-    }
-  };
-  const setFlag = (k, v) => {
-    try {
-      localStorage.setItem(k, v);
-    } catch {}
-  };
-  const clearFlag = (k) => {
-    try {
-      localStorage.removeItem(k);
-    } catch {}
-  };
-
-  // Migrate the old single "newsletter-subscribed" flag so visitors who subscribed
-  // under the previous version aren't re-prompted.
-  if (getFlag("newsletter-subscribed") && !getFlag(CONFIRMED_KEY)) {
-    setFlag(CONFIRMED_KEY, "true");
-    clearFlag("newsletter-subscribed");
-  }
+  // Double opt-in: a submit only *stages* the address and emails a confirm link;
+  // the list isn't joined until that link is clicked. We deliberately keep NO client
+  // state. After a submit the form swaps for a short, auto-dismissing toast ("go
+  // confirm via email") with a draining timer bar, then reverts to the input. This
+  // avoids the cross-device dead end of a persisted "pending" flag (you might confirm
+  // on a different device) and never leaves the form fixated — reopening always offers
+  // the input. Abuse is bounded server-side (per-IP rate limit + the idempotent
+  // "already on the list" check, which sends no second email).
+  const TOAST_MS = 6000; // how long the success message stays before reverting
+  const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const fillEmail = (tmpl, email) => tmpl.replace("{email}", email || "");
-
-  // Settle a [data-js-hide-when-subscribed] form into its sibling done panel: hide
-  // the form, then reveal the confirmed panel (wins) or the pending panel (filled
-  // with the stored email). Standalone forms have no panels — they just get hidden.
-  // Returns true when a panel was actually shown.
-  const applyState = (section) => {
-    const confirmed = getFlag(CONFIRMED_KEY);
-    const pendingEmail = getFlag(PENDING_KEY);
-    if (!confirmed && !pendingEmail) return false;
-
-    const wrap = section.parentElement;
-    const doneEl = wrap && wrap.querySelector("[data-js-subscribe-done]");
-    const pendingEl = wrap && wrap.querySelector("[data-js-subscribe-pending]");
-
-    section.hidden = true;
-    if (confirmed) {
-      if (pendingEl) pendingEl.style.display = "none";
-      if (doneEl) doneEl.style.display = "";
-    } else if (pendingEl) {
-      if (doneEl) doneEl.style.display = "none";
-      const textEl = pendingEl.querySelector("[data-js-pending-text]");
-      if (textEl)
-        textEl.textContent = fillEmail(section.dataset.msgPending || "", pendingEmail);
-      pendingEl.style.display = "";
-    }
-    return Boolean(doneEl || pendingEl);
-  };
-
-  // On load, settle every "hide when subscribed" form into its panel / hidden state.
-  document
-    .querySelectorAll('[data-js-hide-when-subscribed="true"]')
-    .forEach((section) => applyState(section));
 
   document
     .querySelectorAll("[data-js-newsletter-submit]")
     .forEach((form) => {
+      const section = form.closest("[data-js-newsletter-form]");
+      const emailInput = form.querySelector("[data-js-newsletter-email]");
+      const btn = form.querySelector("[data-js-newsletter-btn]");
+      const status = section.querySelector("[data-js-newsletter-status]");
+      const toast = section.querySelector("[data-js-newsletter-toast]");
+      const toastText = toast && toast.querySelector("[data-js-toast-text]");
+      const toastHint = toast && toast.querySelector("[data-js-toast-hint]");
+      // Non-null only for the header pop-up (it lives in a dropdown panel). The
+      // standalone page form has no panel, so "close at the end" no-ops there.
+      const panel = section.closest("[data-js-dropdown-panel]");
+      const originalBtnText = btn.textContent;
+
+      // Cloudflare Turnstile widget for THIS form, if rendered. Reset issues a fresh,
+      // single-use token for the next submit.
+      const turnstileWidget = form.querySelector(".cf-turnstile");
+      const resetTurnstile = () => {
+        if (window.turnstile && turnstileWidget) {
+          try {
+            window.turnstile.reset(turnstileWidget);
+          } catch {}
+        }
+      };
+
+      // Cancel any running timer and hide the toast. Idempotent.
+      const clearToast = () => {
+        if (section._nlTimer) {
+          clearTimeout(section._nlTimer);
+          section._nlTimer = null;
+        }
+        if (toast) {
+          toast.hidden = true;
+          toast.classList.remove("is-running");
+        }
+      };
+
+      // Return the form to a fresh, usable state. closeDropdown closes the header
+      // pop-up (the end-of-timer behavior); the page form reverts in place and
+      // re-focuses the input if focus was still inside the toast.
+      const revert = ({ closeDropdown }) => {
+        clearToast();
+        emailInput.value = "";
+        emailInput.disabled = false;
+        btn.disabled = false;
+        btn.removeAttribute("aria-busy");
+        btn.style.minWidth = "";
+        btn.textContent = originalBtnText;
+        status.textContent = "";
+        status.classList.remove("is-error");
+        resetTurnstile();
+        // The form carries `d-flex` (display:flex !important), so it's hidden by
+        // toggling `d-none` (also !important, defined later → wins), not [hidden].
+        form.classList.remove("d-none");
+        if (closeDropdown && panel) {
+          panel.classList.remove("-show");
+        } else if (toast && toast.contains(document.activeElement)) {
+          emailInput.focus({ preventScroll: true });
+        }
+      };
+
+      // Swap the form for the toast, run the decorative timer bar, and schedule the
+      // revert. setTimeout is the source of truth; the CSS bar is fed the same
+      // duration via --toast-ms so the two can't drift.
+      const showToast = (text, hint) => {
+        if (!toast) {
+          // No toast element (shouldn't happen) — degrade to an inline message.
+          form.classList.add("d-none");
+          status.textContent = hint ? text + " " + hint : text;
+          return;
+        }
+        clearToast(); // guard against a re-submit stacking timers
+        toastText.textContent = text;
+        toastHint.textContent = hint || ""; // empty for "already"; :empty hides it
+        form.classList.add("d-none"); // see revert(): d-none beats the form's d-flex
+        toast.hidden = false;
+        toast.style.setProperty("--toast-ms", TOAST_MS + "ms");
+        if (!REDUCED.matches) {
+          toast.classList.remove("is-running");
+          void toast.offsetWidth; // reflow so the keyframe restarts cleanly
+          toast.classList.add("is-running");
+        }
+        toast.focus({ preventScroll: true });
+        section._nlTimer = setTimeout(() => revert({ closeDropdown: true }), TOAST_MS);
+      };
+
+      // For the pop-up, mirror the dropdown's own close triggers (outside-click and
+      // capture-phase Escape) so dismissing it mid-toast cancels the timer and resets
+      // state — no orphaned timer, and the next open shows a clean input.
+      if (panel) {
+        window.addEventListener(
+          "keydown",
+          (event) => {
+            if (event.key === "Escape" && toast && !toast.hidden) {
+              revert({ closeDropdown: false });
+            }
+          },
+          true,
+        );
+        window.addEventListener("click", (event) => {
+          if (!toast || toast.hidden) return;
+          const insideThis =
+            event.target.closest("[data-js-dropdown-panel]") === panel ||
+            event.target.closest("[data-js-dropdown-trigger]");
+          if (!insideThis) revert({ closeDropdown: false });
+        });
+      }
+
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const section = form.closest("[data-js-newsletter-form]");
-        const emailInput = form.querySelector("[data-js-newsletter-email]");
-        const btn = form.querySelector("[data-js-newsletter-btn]");
-        const status = section.querySelector("[data-js-newsletter-status]");
         const email = emailInput.value.trim();
-
         if (!email) return;
 
         // Copy comes from site.config via data-* attributes (single source of truth).
         const msgPending = section.dataset.msgPending || "";
+        const msgHint = section.dataset.msgHint || "";
         const msgAlready = section.dataset.msgAlready || msgPending;
         const msgError = section.dataset.msgError || "";
         const msgRateLimit = section.dataset.msgRatelimit || msgError;
-        const originalBtnText = btn.textContent;
 
-        // Cloudflare Turnstile token, if the widget is rendered in this form.
-        const turnstileWidget = form.querySelector(".cf-turnstile");
         const tokenInput = form.querySelector('[name="cf-turnstile-response"]');
         const turnstileToken = tokenInput ? tokenInput.value : "";
-        const resetTurnstile = () => {
-          if (window.turnstile && turnstileWidget) {
-            try {
-              window.turnstile.reset(turnstileWidget);
-            } catch {}
-          }
-        };
 
-        // Submitting state: lock the button width so it can't jump, keep a real
-        // label (not a bare "..."), and mark it busy for assistive tech.
+        // Submitting state: lock the button width so it can't jump, keep a real label
+        // (not a bare "..."), and mark it busy for assistive tech.
         const submittingLabel = btn.dataset.labelSubmitting || originalBtnText;
         btn.style.minWidth = btn.offsetWidth + "px";
         btn.disabled = true;
@@ -257,8 +296,9 @@
         status.textContent = "";
         status.classList.remove("is-error");
 
-        // Re-enable the form and show a message, resetting Turnstile so a fresh,
-        // single-use token is issued for the retry.
+        // Re-enable the form and show an inline error (the form stays put so the user
+        // can act/retry); reset Turnstile so a fresh token is issued. Errors never use
+        // the auto-dismissing toast — only the two success outcomes do.
         const fail = (message) => {
           btn.disabled = false;
           btn.removeAttribute("aria-busy");
@@ -286,27 +326,12 @@
             return;
           }
 
-          // Persist the real two-step state: "already" means they confirmed before;
-          // a fresh sign-up is only pending until they click the emailed link.
+          // Success: show the auto-dismissing toast in place. "already" means they were
+          // already on the list (no email sent) — so no spam-folder hint is shown.
           if (data.status === "already") {
-            setFlag(CONFIRMED_KEY, "true");
-            clearFlag(PENDING_KEY);
+            showToast(msgAlready, "");
           } else {
-            setFlag(PENDING_KEY, email);
-          }
-
-          // Show the result in place (no refresh). Forms with a done/pending panel
-          // (the header popup) swap to it; standalone forms get an inline message.
-          const wrap = section.parentElement;
-          const hasPanels =
-            wrap &&
-            wrap.querySelector("[data-js-subscribe-pending], [data-js-subscribe-done]");
-          if (hasPanels) {
-            applyState(section);
-          } else {
-            form.style.display = "none";
-            status.textContent =
-              data.status === "already" ? msgAlready : fillEmail(msgPending, email);
+            showToast(fillEmail(msgPending, email), msgHint);
           }
         } catch {
           fail(msgError); // network / unexpected failure

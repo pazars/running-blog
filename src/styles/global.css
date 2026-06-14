@@ -1215,8 +1215,61 @@ footer a:hover {
   flex-basis: 100%;
   margin-top: 10px;
 }
-.newsletter-form-section[hidden] {
+/* ===== Newsletter success toast =====
+   Replaces the form in place for ~6s after a successful submit, then JS reverts to
+   the input. The form is hidden via `d-none` (it carries `d-flex !important`); the
+   toast itself has no utility class, so the `hidden` attribute governs it. */
+.newsletter-toast {
+  position: relative;
+  overflow: hidden; /* clip the timer bar to the rounded corners */
+  min-height: 1.5em; /* hold a little height so the swap doesn't visibly collapse */
+  border-radius: var(--border-radius);
+}
+.newsletter-toast[hidden] {
   display: none;
+}
+.newsletter-toast:focus {
+  outline: none; /* programmatic focus target only (tabindex="-1") */
+}
+.newsletter-toast-text {
+  margin: 0;
+  line-height: 1.4;
+  font-size: var(--text-body-size-small);
+}
+/* The spam-folder hint only applies to a fresh sign-up; hide it for "already". */
+.newsletter-toast [data-js-toast-hint]:empty {
+  display: none;
+}
+/* Draining timer bar: a thin fill scaled along X (GPU-composited, no layout/paint). */
+.newsletter-toast-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background-color: var(--color-fg-emphasis);
+  border-radius: var(--border-radius);
+}
+/* Runs only while JS marks the toast running; the duration comes from --toast-ms so
+   the bar and the setTimeout-driven revert stay in lockstep. Linear = honest countdown. */
+.newsletter-toast.is-running .newsletter-toast-bar {
+  animation: newsletter-toast-fill var(--toast-ms, 6000ms) linear forwards;
+}
+@keyframes newsletter-toast-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .newsletter-toast.is-running .newsletter-toast-bar {
+    animation: none;
+    transform: scaleX(1); /* static full bar instead of an animated drain */
+  }
 }
 
 /* ===== Subscribe Popup (Header Dropdown) ===== */
@@ -1232,8 +1285,9 @@ footer a:hover {
 .subscribe-popup .newsletter-note {
   margin-top: 5px;
 }
-.subscribe-popup-done {
-  padding: 14px 16px;
+/* Scale the toast text down to the popup's smaller type (the hint reuses .newsletter-note). */
+.subscribe-popup .newsletter-toast-text {
+  font-size: var(--text-body-size-extra-small);
 }
 .subscribe-popup-desc {
   font-size: var(--text-body-size-small);

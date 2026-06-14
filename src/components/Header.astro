@@ -154,8 +154,8 @@ const {
           <div
             class="subscribe-popup"
             data-js-newsletter-form
-            data-js-hide-when-subscribed="true"
             data-msg-pending={newsletter.pendingMessage}
+            data-msg-hint={newsletter.pendingHint}
             data-msg-already={newsletter.alreadyMessage}
             data-msg-error={newsletter.errorMessage}
             data-msg-ratelimit={newsletter.rateLimitMessage}
@@ -189,13 +189,11 @@ const {
             </form>
             <p class="newsletter-note">{newsletter.unsubscribeNote}</p>
             <div class="newsletter-status" data-js-newsletter-status aria-live="polite"></div>
-          </div>
-          <div class="subscribe-popup-done" data-js-subscribe-pending style="display:none;">
-            <p class="subscribe-popup-desc" data-js-pending-text></p>
-            <p class="newsletter-note">{newsletter.pendingHint}</p>
-          </div>
-          <div class="subscribe-popup-done" data-js-subscribe-done style="display:none;">
-            <p class="subscribe-popup-desc">{newsletter.subscribedTitle}</p>
+            <div class="newsletter-toast" data-js-newsletter-toast hidden tabindex="-1">
+              <p class="newsletter-toast-text" data-js-toast-text aria-live="polite"></p>
+              <p class="newsletter-note" data-js-toast-hint></p>
+              <span class="newsletter-toast-bar" data-js-toast-bar aria-hidden="true"></span>
+            </div>
           </div>
         </div>
       </div>
