@@ -561,6 +561,13 @@ nav > .link {
   font-weight: var(--font-weight-medium);
   text-decoration: none;
 }
+/* Optically center the label: the font's ascent outweighs its descender
+   reserve, so a symmetric box lifts the text a hair toward the top. Split the
+   8px vertical padding 9/7 to nudge it back down ~1px (total height unchanged). */
+nav > .link > .item {
+  padding-top: 9px;
+  padding-bottom: 7px;
+}
 nav > .link.active {
   background-color: var(--color-bg-default);
   box-shadow:
