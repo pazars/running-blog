@@ -118,12 +118,12 @@ typed bindings). Not worth it for one view counter.
   so they survive `cf-typegen` regen.
 - Form copy/messages live in `src/site.config.ts` and reach the static
   `public/script.js` via `data-msg-*` attributes (data-driven DOM).
-- **Bot protection** is optional Cloudflare Turnstile, off until configured: the
-  public site key is `newsletter.turnstileSiteKey` in `src/site.config.ts` (empty =
-  widget not rendered, `BaseLayout` skips `api.js`), the secret is
-  `TURNSTILE_SECRET_KEY` (Pages secret). `subscribe.ts` verifies via `_turnstile.ts`
-  only when the secret is set, so dev/pre-setup keeps working. Test with Cloudflare's
-  dummy keys.
+- **Bot protection** is optional Cloudflare Turnstile, currently **configured**: a
+  public site key is set in `newsletter.turnstileSiteKey` in `src/site.config.ts`, so
+  the widget renders and `BaseLayout` loads `api.js` (clear the key to disable). The
+  secret is `TURNSTILE_SECRET_KEY` (Pages secret); `subscribe.ts` verifies via
+  `_turnstile.ts` only when the secret is set, so dev/pre-setup keeps working even with
+  the widget shown. Test with Cloudflare's dummy keys.
 - **Rate limit**: `subscribe.ts` calls the optional `SUBSCRIBE_RATE_LIMITER`
   binding (`[[ratelimits]]` in `wrangler.toml`, per-IP, 5/60s) and returns 429 when
   tripped; it's guarded (`if (env.SUBSCRIBE_RATE_LIMITER)`) so it no-ops where the

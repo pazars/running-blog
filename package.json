@@ -1,13 +1,15 @@
 {
-  "name": "personal-astro-blog",
+  "name": "davispazars-blog",
   "type": "module",
   "version": "0.0.1",
+  "private": true,
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
     "cf-typegen": "wrangler types",
+    "check:functions": "tsc -p functions/tsconfig.json",
     "test": "vitest run"
   },
   "dependencies": {
@@ -19,6 +21,7 @@
     "@astrojs/sitemap": "^3.7.3",
     "@types/node": "^22.12.0",
     "lorem-ipsum": "^3.0.0",
+    "typescript": "^6.0.3",
     "vitest": "^3.2.4",
     "wrangler": "^4.100.0"
   },

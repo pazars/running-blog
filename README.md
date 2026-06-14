@@ -1,4 +1,4 @@
-# personal-astro-blog
+# davispazars.lv
 
 Astro static site + Cloudflare Pages Functions (D1-backed view counts) for
 [davispazars.lv](https://davispazars.lv).
@@ -160,8 +160,10 @@ One-time Resend setup:
 ### Bot protection (Cloudflare Turnstile)
 
 The form is optionally guarded by [Turnstile](https://developers.cloudflare.com/turnstile/).
-It's **off until configured** — with no site key the widget isn't rendered and the
-backend skips the check, so local dev and the pre-setup state just work. To enable it:
+A site key is **currently configured** (`src/site.config.ts` → `newsletter.turnstileSiteKey`),
+so the widget renders; clear that key to disable it. The backend skips the check whenever
+`TURNSTILE_SECRET_KEY` is unset, so local dev still works even with the widget shown. To
+(re)configure:
 
 1. Create a Turnstile widget in the Cloudflare dashboard; allow the hostnames
    `davispazars.lv`, your `*.pages.dev` preview host, and `localhost`.

@@ -30,6 +30,11 @@ jobs:
       # Static build must succeed (also catches Astro / type breakage).
       - run: npm run build
 
+      # Type-check the Pages Functions (their own workerd tsconfig, excluded from the
+      # Astro build). cf-typegen first to generate the gitignored Env/PagesFunction types.
+      - run: npm run cf-typegen
+      - run: npm run check:functions
+
       # Newsletter double opt-in tests. Token + validation cases always run; the
       # live Resend cases hit a TEST key and the delivered@resend.dev simulator and
       # self-skip when these are unset (e.g. PRs from forks don't receive secrets).
