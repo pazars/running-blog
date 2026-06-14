@@ -442,6 +442,7 @@ header > .brand > .wrapper > .image-container > .image {
 }
 header > .brand > .wrapper > .info {
   position: relative;
+  text-decoration: none;
 }
 header > .brand > .wrapper > .info > .title {
   font-size: var(--text-body-size-medium);
