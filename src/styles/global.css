@@ -1459,6 +1459,75 @@ footer a:hover {
   margin-top: 32px;
 }
 
+/* Recommendation ("Iesaku") cards: the blog's featured-card layout, but dateless
+   and with platform brand icons overlaid on the thumbnail (instead of a chip row
+   below) so a card's height isn't padded by its platform count. */
+.rec-card {
+  position: relative;
+}
+.rec-card:hover {
+  border-color: var(--color-border-default);
+  background-color: var(--color-bg-subtle);
+}
+.rec-card .image {
+  transition: transform 0.2s;
+}
+.rec-card:hover .image {
+  transform: scale(0.98);
+}
+/* Unlike a blog summary (a teaser linking to the full article), a recommendation
+   description IS the whole content — there's no detail page — so show it in full
+   instead of clamping to 4 lines. The card grows to fit. */
+.featured-card.rec-card > .info > .summary {
+  display: block;
+  -webkit-line-clamp: none;
+  overflow: visible;
+}
+.rec-card-media {
+  position: relative;
+  overflow: hidden;
+}
+/* Stretched primary link, scoped to the text column (not the thumbnail) so the
+   whole copy block opens links[0] while clicks near a platform icon can never
+   fall through to it. */
+.rec-card > .info {
+  position: relative;
+}
+.rec-card-link {
+  position: absolute;
+  inset: 0;
+}
+.rec-card-platforms {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 6px;
+}
+/* No transform on hover — a scale here makes the icon edge chase the cursor and
+   jitter; the background tint is enough feedback. */
+.rec-card-platform {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: background-color 0.15s;
+}
+.rec-card-platform:hover {
+  background-color: rgba(0, 0, 0, 0.82);
+}
+.rec-card-platform svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
 /* ===== Article Page ===== */
 .article-subtitle {
   font-size: var(--text-body-size-large);

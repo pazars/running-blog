@@ -29,4 +29,41 @@ const blogs = defineCollection({
 // NOTE: view counts are intentionally NOT stored in frontmatter — they are
 // dynamic and live in a Cloudflare D1 table, populated at runtime (Phase 2).
 
-export const collections = { blogs };
+// Recommendations ("Iesaku") — external links Dāvis vouches for (podcasts,
+// YouTube channels, …), authored as frontmatter-only Markdown in
+// src/content/iesaku/. No body and no detail page: the listing page renders
+// each entry as a card (mirroring the blog list, minus the date) and filters
+// them client-side by `tags`.
+const iesaku = defineCollection({
+  loader: glob({ base: "./src/content/iesaku", pattern: "**/*.md" }),
+  schema: z.object({
+    title: z.string(),
+    // Shown as the card summary.
+    description: z.string(),
+    // Category tags used by the listing-page filter (lowercase, like blogs).
+    tags: z.array(z.string()).default([]),
+    // Content language, used by the listing-page language dropdown.
+    language: z.enum(["lv", "en"]),
+    // Where the recommendation lives. The FIRST link is the primary one: it's
+    // the whole-card target and the source the thumbnail is fetched from. Each
+    // link renders as a brand icon overlaid on the card thumbnail (e.g. a
+    // podcast on Spotify + Apple). `platform` keys the icon/label registry in
+    // RecommendationCard.astro; `min(1)` guarantees a primary link.
+    links: z
+      .array(
+        z.object({
+          platform: z.enum(["spotify", "apple-podcasts", "youtube"]),
+          url: z.url(),
+        }),
+      )
+      .min(1),
+    // Optional thumbnail override — a remote URL or a "/"-rooted public path.
+    // When omitted, the thumbnail is fetched from links[0].url at build time.
+    thumbnail: z.string().optional(),
+    thumbnailAlt: z.string().optional(),
+    // Keeps unfinished entries out of the build.
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { blogs, iesaku };
