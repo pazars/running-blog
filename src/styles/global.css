@@ -1239,9 +1239,13 @@ footer a:hover {
   }
 }
 /* ===== Newsletter success toast =====
-   Replaces the form in place for ~6s after a successful submit, then JS reverts to
-   the input. The form is hidden via `d-none` (it carries `d-flex !important`); the
-   toast itself has no utility class, so the `hidden` attribute governs it. */
+   Replaces the form area in place for ~6s after a successful submit, then JS reverts.
+   While `.is-toasting` is on the form wrapper, every direct child *except* the toast is
+   hidden (form, description, unsubscribe note, status) so the notification stands alone
+   with no surrounding distractions. !important beats the form's `d-flex !important`. */
+[data-js-newsletter-form].is-toasting > :not([data-js-newsletter-toast]) {
+  display: none !important;
+}
 .newsletter-toast {
   position: relative;
   overflow: hidden; /* clip the timer bar to the rounded corners */

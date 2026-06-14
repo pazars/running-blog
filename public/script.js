@@ -212,8 +212,9 @@
         status.textContent = "";
         status.classList.remove("is-error");
         resetTurnstile();
-        // The form carries `d-flex` (display:flex !important), so it's hidden by
-        // toggling `d-none` (also !important, defined later → wins), not [hidden].
+        // Reveal the form area again: drop the toasting state (which hid everything
+        // but the toast) and clear any fallback d-none left on the form.
+        section.classList.remove("is-toasting");
         form.classList.remove("d-none");
         if (closeDropdown && panel) {
           panel.classList.remove("-show");
@@ -235,7 +236,9 @@
         clearToast(); // guard against a re-submit stacking timers
         toastText.textContent = text;
         toastHint.textContent = hint || ""; // empty for "already"; :empty hides it
-        form.classList.add("d-none"); // see revert(): d-none beats the form's d-flex
+        // Hide everything in the form area but the toast (form, description, note,
+        // status) so the notification stands alone — see the .is-toasting CSS rule.
+        section.classList.add("is-toasting");
         toast.hidden = false;
         toast.style.setProperty("--toast-ms", TOAST_MS + "ms");
         if (!REDUCED.matches) {
