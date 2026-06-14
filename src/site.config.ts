@@ -13,6 +13,10 @@ export const site = {
     { label: "Instagram", href: "https://www.instagram.com/pazars/" },
     { label: "ITRA", href: "https://itra.run/RunnerSpace/pazars.davis.5907661" },
   ],
+  // Latvian athletics federation results profile — linked from the Sasniegumi
+  // intro only. Kept here alongside the other profile links, but deliberately
+  // NOT in `socials`, so it stays out of the footer.
+  athleticsProfile: "https://athletics.lv/lv/person/71830",
 };
 
 // Newsletter copy shared between the on-page form and the header pop-up,
