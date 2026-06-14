@@ -45,7 +45,7 @@ export const newsletter = {
   // the Cloudflare dashboard; configure that widget to allow davispazars.lv, the
   // *.pages.dev preview hosts, and localhost. The matching SECRET is a Pages secret
   // (TURNSTILE_SECRET_KEY), never committed.
-  turnstileSiteKey: "",
+  turnstileSiteKey: "0x4AAAAAADkV-2QK6RDaJjpK",
 };
 
 // Copy for the standalone landing pages the double opt-in confirm flow redirects
