@@ -16,8 +16,12 @@ import { getContact, sendTemplate } from "./_resend";
 import { signToken } from "./_token";
 import { verifyTurnstile } from "./_turnstile";
 
-// Variable the Resend confirm-email template expects (referenced as {{confirm_url}}
+// Variable the Resend confirm-email template expects (referenced as {{{confirm_url}}}
 // in the dashboard). The template owns the subject + body/markup; we only fill this.
+// Declare it in the template's Inspector with a fallback value (e.g.
+// https://davispazars.lv) so a missing var degrades to a safe link instead of an empty
+// href or a blocked send. Source markup lives in emails/newsletter-confirm.html. No
+// unsubscribe link here — the address isn't on the list until the confirm click.
 const CONFIRM_URL_VAR = "confirm_url";
 
 const json = (data: unknown, status = 200) =>

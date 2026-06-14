@@ -11,7 +11,7 @@ export type Contact = { id: string; email: string; unsubscribed: boolean };
 
 // A contacts.get error means "not in this audience" -> treat as absent. Checked a
 // few ways so it's robust across SDK error shapes (some include statusCode).
-const isNotFound = (error: { name?: string; statusCode?: number; message?: string }): boolean =>
+const isNotFound = (error: { name?: string; statusCode?: number | null; message?: string }): boolean =>
   error?.statusCode === 404 ||
   error?.name === "not_found" ||
   /not[ _]?found/i.test(`${error?.name ?? ""} ${error?.message ?? ""}`);
@@ -38,6 +38,21 @@ export async function addContact(
 ): Promise<void> {
   const { error } = await resend.contacts.create({ audienceId, email, unsubscribed: false });
   if (error) throw new Error(`Resend contacts.create: ${error.message ?? error.name}`);
+}
+
+// Flag a contact as unsubscribed (suppress, don't delete) so Resend honors the
+// opt-out and the address can't be silently re-added later. A not-found contact is
+// treated as success: someone can click "unsubscribe" in the confirm email before
+// ever confirming, so there may be no contact to update — that's a no-op, not an error.
+export async function setUnsubscribed(
+  resend: Resend,
+  audienceId: string,
+  email: string,
+): Promise<void> {
+  const { error } = await resend.contacts.update({ audienceId, email, unsubscribed: true });
+  if (error && !isNotFound(error)) {
+    throw new Error(`Resend contacts.update: ${error.message ?? error.name}`);
+  }
 }
 
 // Remove a contact from an audience. An already-gone contact is treated as success.

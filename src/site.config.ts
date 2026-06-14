@@ -24,7 +24,7 @@ export const site = {
 // the static public/script.js via data-* attributes on the form (data-driven DOM),
 // so this stays the single source of truth even though the handler isn't a module.
 export const newsletter = {
-  subscribeButton: "Abonēt",
+  subscribeButton: "Pierakstīties",
   // Button label while the request is in flight (replaces "Abonēt" — a real word,
   // not a bare "…"; the button width is locked client-side so it doesn't jump).
   submittingLabel: "Sūta…",
@@ -33,7 +33,7 @@ export const newsletter = {
   // Shown in the auto-dismissing success toast; {email} is filled in client-side with
   // the address the visitor entered.
   pendingMessage:
-    "Gandrīz! Nosūtījām apstiprinājuma saiti uz {email} — atver to un apstiprini pierakstīšanos.",
+    "Lai pabeigtu pierakstīšanās procesu, lūdzu, uzklikšķini saitei e-pastā, ko tikko tev nosūtīja.",
   // Secondary line shown inside the success toast, under the pending message (only for
   // a fresh sign-up — not when the address was already on the list).
   pendingHint: "Nesaņēmi? Pārbaudi arī mēstuļu (spam) mapi.",
@@ -41,13 +41,13 @@ export const newsletter = {
   errorMessage: "Neizdevās pierakstīties. Mēģini vēlreiz nedaudz vēlāk.",
   // Shown on HTTP 429 (rate limit) — distinct from the generic error so the user
   // knows to simply wait rather than that something is broken.
-  rateLimitMessage: "Pārāk daudz mēģinājumu. Lūdzu, pamēģini vēlreiz pēc minūtes.",
-  // Cloudflare Turnstile public site key (bot protection on the form). Leave empty
-  // to disable the widget — the form then submits without a token and the backend
-  // skips the check (so local dev works). Set the real key once the widget exists in
-  // the Cloudflare dashboard; configure that widget to allow davispazars.lv, the
-  // *.pages.dev preview hosts, and localhost. The matching SECRET is a Pages secret
-  // (TURNSTILE_SECRET_KEY), never committed.
+  rateLimitMessage: "Serverim klājas grūti. Lūdzu, pamēģini vēlreiz nedaudz vēlāk.",
+  // Cloudflare Turnstile public site key (bot protection on the form). A configured
+  // key makes the widget render; leave it empty to disable — the form then submits
+  // without a token and the backend skips the check (so local dev works). The widget
+  // must allow davispazars.lv, the *.pages.dev preview hosts, and localhost. The
+  // matching SECRET is a Pages secret (TURNSTILE_SECRET_KEY), never committed; without
+  // it the backend skips verification even when the widget renders.
   turnstileSiteKey: "0x4AAAAAADkV-2QK6RDaJjpK",
 };
 
@@ -70,6 +70,14 @@ export const newsletterPages = {
     body: "Šo apstiprināšanas saiti neizdevās pārbaudīt — tā var būt novecojusi vai jau izmantota. Pieraksties vēlreiz, un mēs nosūtīsim jaunu saiti.",
     linkText: "Pierakstīties vēlreiz",
     linkHref: "/vestkopa",
+  },
+  // Shown after a successful unsubscribe click — route /vestkopa/unsubscribe.
+  // Deliberately "no-BS": confirm it's done, offer one way back, ask nothing else.
+  unsubscribe: {
+    title: "Esi atrakstījies",
+    body: "Tava e-pasta adrese ir izņemta no vēstkopas adresātu saraksta. Turpmāk vairs nesaņemsi e-pastus.",
+    linkText: "Atpakaļ uz blogu",
+    linkHref: "/blogs",
   },
 };
 
