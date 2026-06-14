@@ -33,10 +33,10 @@ export const newsletter = {
   // Shown in the auto-dismissing success toast; {email} is filled in client-side with
   // the address the visitor entered.
   pendingMessage:
-    "Lai pabeigtu pierakstīšanās procesu, lūdzu, uzklikšķini saitei e-pastā, ko tikko tev nosūtīja.",
+    "Tev tikko nosūtīts e-pasts ar apstiprinājuma e-pastu.",
   // Secondary line shown inside the success toast, under the pending message (only for
   // a fresh sign-up — not when the address was already on the list).
-  pendingHint: "Nesaņēmi? Pārbaudi arī mēstuļu (spam) mapi.",
+  pendingHint: "Nesaņēmi? Pārbaudi arī spam mapi.",
   alreadyMessage: "Tu jau esi pierakstījies vēstkopai.",
   errorMessage: "Neizdevās pierakstīties. Mēģini vēlreiz nedaudz vēlāk.",
   // Shown on HTTP 429 (rate limit) — distinct from the generic error so the user
@@ -59,8 +59,8 @@ export const newsletter = {
 export const newsletterPages = {
   // Shown after a valid confirm click — route /vestkopa/confirmed.
   confirmed: {
-    title: "Pierakstīšanās apstiprināta",
-    body: "Paldies! Tava e-pasta adrese ir apstiprināta un pievienota vēstkopai. Rakstu kopsavilkumus saņemsi ne biežāk kā reizi dažās nedēļās.",
+    title: "Pierakstīšanās noritēja veiksmīgi",
+    body: "Tava e-pasta adrese ir apstiprināta.\n Turpmāk saņemsi jaunāko rakstu kopsavilkumus.",
     linkText: "Atpakaļ uz blogu",
     linkHref: "/blogs",
   },
