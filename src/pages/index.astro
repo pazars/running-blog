@@ -9,31 +9,12 @@ import { site } from "../site.config";
 import { LoremIpsum } from "lorem-ipsum";
 import { getCollection } from "astro:content";
 import { toIsoDate } from "../utils/date";
+import { fetchOgImage } from "../utils/ogImage";
 
 // Placeholder copy for the featured post until a real article is wired in.
 const lorem = new LoremIpsum();
 const loremTitle = lorem.generateWords(8).replace(/^\w/, (c) => c.toUpperCase());
 const loremSummary = lorem.generateSentences(6);
-
-// Read a page's current og:image at build time so linked projects always show
-// their live share image. Falls back to the last known URL if the fetch fails.
-async function fetchOgImage(pageUrl: string, fallback: string): Promise<string> {
-  try {
-    const res = await fetch(pageUrl);
-    if (!res.ok) return fallback;
-    const html = await res.text();
-    const match =
-      html.match(
-        /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i,
-      ) ||
-      html.match(
-        /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
-      );
-    return match?.[1] ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
 
 const pasaulesTureImage = await fetchOgImage(
   "https://pasaulesture.lv/",
