@@ -6,80 +6,45 @@ import ProjectCard from "../components/ProjectCard.astro";
 import FeaturedPost from "../components/FeaturedPost.astro";
 import Footer from "../components/Footer.astro";
 import { site } from "../site.config";
-import { LoremIpsum } from "lorem-ipsum";
 import { getCollection } from "astro:content";
-import { toIsoDate } from "../utils/date";
+import { toIsoDate, formatLatvianDate } from "../utils/date";
 import { fetchOgImage } from "../utils/ogImage";
-
-// Placeholder copy for the featured post until a real article is wired in.
-const lorem = new LoremIpsum();
-const loremTitle = lorem.generateWords(8).replace(/^\w/, (c) => c.toUpperCase());
-const loremSummary = lorem.generateSentences(6);
 
 const pasaulesTureImage = await fetchOgImage(
   "https://pasaulesture.lv/",
   "https://pasaulesture.lv/events/egipte-malta/og/og-image-lv.jpg",
 );
 
-// Real (placeholder-content) articles from the blog collection, newest first.
-// The home page keeps its placeholder cards but links them to actual article
-// pages, so the flow works end to end.
+// Blog articles, newest first. The featured "Jaunākais raksts" card is derived
+// entirely from the latest published entry's frontmatter — publishing a post
+// (draft: false) updates the home page automatically, no manual wiring.
 const articles = (await getCollection("posts", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
-const articleHref = (i: number) => {
-  if (!articles.length) return "#";
-  const a = articles[i % articles.length];
-  return `/blogs/${toIsoDate(a.data.date)}/${a.data.slug}`;
+
+const latest = articles[0];
+const latestPost = latest && {
+  href: `/blogs/${toIsoDate(latest.data.date)}/${latest.data.slug}`,
+  title: latest.data.title,
+  date: toIsoDate(latest.data.date),
+  dateLabel: formatLatvianDate(latest.data.date),
+  summary: latest.data.summary,
+  imageUrl: latest.data.thumbnail,
+  imageAlt: latest.data.thumbnailAlt ?? latest.data.title,
 };
 
-const latestPost = {
-  href: articleHref(0),
-  title: loremTitle,
-  date: "2026-05-28",
-  dateLabel: "2026. gada 28. maijs",
-  summary: loremSummary,
-  imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=Jaunākais",
-};
-
-const recentShips = [
-  {
-    href: "#",
-    title: "Overhauled the onboarding experience for new users",
-    role: "Project lead",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=01",
-  },
-  {
-    href: "#",
-    title: "Real-time collaboration engine for documents",
-    role: "Contributor",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=02",
-  },
-  {
-    href: "#",
-    title: "Accessibility audit and remediation across the platform",
-    role: "Contributor",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=03",
-  },
-  {
-    href: "#",
-    title: "Dark mode and theming system",
-    role: "Contributor",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=04",
-  },
-  {
-    href: "#",
-    title: "Notifications redesign for mobile and web",
-    role: "Project lead",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=05",
-  },
-  {
-    href: "#",
-    title: "Search infrastructure and ranking improvements",
-    role: "Project lead",
-    imageUrl: "https://placehold.co/1110x773/e8eaf0/555560?text=06",
-  },
-];
+// "Pēdējie raksti" — the posts after the featured one, also derived from the
+// collection. The section only renders once there are enough posts to fill it
+// (see the guard in the template), so it stays hidden while the blog is small.
+// Minimum posts (beyond the featured one) before the grid looks intentional.
+const RECENT_POSTS_MIN = 2;
+const recentPosts = articles.slice(1).map((a) => ({
+  href: `/blogs/${toIsoDate(a.data.date)}/${a.data.slug}`,
+  title: a.data.title,
+  role: formatLatvianDate(a.data.date),
+  imageUrl: a.data.thumbnail,
+  imageAlt: a.data.thumbnailAlt ?? a.data.title,
+}));
 
 const sideProjects = [
     {
@@ -134,34 +99,42 @@ const sideProjects = [
     </section>
 
     <!-- Latest article -->
-    <section>
-      <SectionHeader id="latest-post" title="Jaunākais raksts" />
-      <FeaturedPost
-        href={latestPost.href}
-        title={latestPost.title}
-        date={latestPost.date}
-        dateLabel={latestPost.dateLabel}
-        summary={latestPost.summary}
-        imageUrl={latestPost.imageUrl}
-      />
-    </section>
+    {
+      latestPost && (
+        <section>
+          <SectionHeader id="latest-post" title="Jaunākais raksts" />
+          <FeaturedPost
+            href={latestPost.href}
+            title={latestPost.title}
+            date={latestPost.date}
+            dateLabel={latestPost.dateLabel}
+            summary={latestPost.summary}
+            imageUrl={latestPost.imageUrl}
+            imageAlt={latestPost.imageAlt}
+          />
+        </section>
+      )
+    }
 
-    <!-- Recent ships -->
-    <!-- <section>
-      <SectionHeader id="recent-ships" title="Pēdējie raksti" />
-      <div class="content-grid -equal mb-3">
-        {
-          recentShips.map((project, i) => (
-            <ProjectCard
-              href={articleHref(i)}
-              title={project.title}
-              role={project.role}
-              imageUrl={project.imageUrl}
-            />
-          ))
-        }
-      </div>
-    </section> -->
+    <!-- Recent posts -->
+    {
+      recentPosts.length >= RECENT_POSTS_MIN && (
+        <section>
+          <SectionHeader id="recent-posts" title="Pēdējie raksti" />
+          <div class="content-grid -equal mb-3">
+            {recentPosts.map((post) => (
+              <ProjectCard
+                href={post.href}
+                title={post.title}
+                role={post.role}
+                imageUrl={post.imageUrl}
+                imageAlt={post.imageAlt}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
 
     <!-- Side projects -->
     <section>
