@@ -112,6 +112,25 @@ npx wrangler d1 execute personal-blog-views --remote --file=./schema.sql
 npx wrangler d1 execute personal-blog-views-preview --remote --file=./schema.sql
 ```
 
+## View counts
+
+`functions/api/views/[slug].ts` serves `GET` (read) and `POST` (increment) per slug;
+`functions/api/views/index.ts` returns all counts for the listing page. The `POST` is
+**unauthenticated by design** — it's fired by every anonymous reader's browser, so
+there's no client to authenticate and no token the server could hand out that an
+attacker wouldn't also receive. `public/script.js` claims a per-slug `localStorage`
+slot before posting so a real visitor isn't double-counted, but that is a UX dedup,
+**not** a security control: anyone can `curl -X POST /api/views/<slug>` — or loop it
+from any web page (CORS blocks reading the *response*, not the write itself) — to
+inflate a count. The blast radius is a meaningless number, not data exposure or
+access.
+
+To keep counts roughly honest, add a **WAF Rate Limiting rule** as the edge-level
+backstop (same mechanism as the newsletter one below): Cloudflare dashboard → Security
+→ WAF → Rate limiting rules, match `starts_with(http.request.uri.path, "/api/views/")
+and http.request.method eq "POST"`, e.g. 10 requests / 1 min per IP → *Block*. It runs
+*before* the Function. This is account/zone config, not committed code.
+
 ## Secrets / vars
 
 The view counter needs none. The **newsletter** (see below) needs five Resend keys,
