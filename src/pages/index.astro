@@ -9,6 +9,7 @@ import { site } from "../site.config";
 import { getCollection } from "astro:content";
 import { toIsoDate, formatLatvianDate } from "../utils/date";
 import { fetchOgImage } from "../utils/ogImage";
+import { cardThumbnail } from "../utils/postImages";
 
 const pasaulesTureImage = await fetchOgImage(
   "https://pasaulesture.lv/",
@@ -22,6 +23,14 @@ const articles = (await getCollection("posts", ({ data }) => !data.draft)).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
 
+// Optimize every post thumbnail once, keyed by entry id (same pattern as
+// blogs/index.astro), then look it up for both the featured and recent slots.
+const thumbnails = new Map(
+  await Promise.all(
+    articles.map(async (a) => [a.id, await cardThumbnail(a.data.thumbnail)] as const),
+  ),
+);
+
 const latest = articles[0];
 const latestPost = latest && {
   href: `/blogs/${toIsoDate(latest.data.date)}/${latest.data.slug}`,
@@ -29,7 +38,7 @@ const latestPost = latest && {
   date: toIsoDate(latest.data.date),
   dateLabel: formatLatvianDate(latest.data.date),
   summary: latest.data.summary,
-  imageUrl: latest.data.thumbnail,
+  imageUrl: thumbnails.get(latest.id)!,
   imageAlt: latest.data.thumbnailAlt ?? latest.data.title,
 };
 
@@ -42,7 +51,7 @@ const recentPosts = articles.slice(1).map((a) => ({
   href: `/blogs/${toIsoDate(a.data.date)}/${a.data.slug}`,
   title: a.data.title,
   role: formatLatvianDate(a.data.date),
-  imageUrl: a.data.thumbnail,
+  imageUrl: thumbnails.get(a.id)!,
   imageAlt: a.data.thumbnailAlt ?? a.data.title,
 }));
 

@@ -5,7 +5,7 @@ summary: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Kā es plāno
 slug: "ziemas-treninu-uzturs"
 date: 2026-01-20
 tags: ["uzturs", "treniņi"]
-thumbnail: "https://placehold.co/1110x773/e8eaf0/555560?text=Ziema"
+thumbnail: "../../assets/thumb-ziemas-uzturs.jpg"
 thumbnailAlt: "Termoss un cimdi sniegā"
 ---
 

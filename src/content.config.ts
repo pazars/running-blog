@@ -9,23 +9,29 @@ import { glob } from "astro/loaders";
 // `/blogs`.)
 const posts = defineCollection({
   loader: glob({ base: "./src/content/posts", pattern: "**/*.md" }),
-  schema: z.object({
-    title: z.string(),
-    subtitle: z.string(),
-    summary: z.string(),
-    // URL slug segment (the "uri-title"). Url-safe kebab-case.
-    slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-    // "2026-05-28" -> Date.
-    date: z.coerce.date(),
-    // Keyword tags used by the listing-page filter.
-    tags: z.array(z.string()).default([]),
-    // Remote thumbnail URL (matches the site's existing image style).
-    // Zod 4 (Astro 6): top-level format validator, replacing z.string().url().
-    thumbnail: z.url(),
-    thumbnailAlt: z.string().optional(),
-    // Keeps unfinished drafts out of the build.
-    draft: z.boolean().default(false),
-  }),
+  // Function-form schema so the `image()` helper is available: it resolves a
+  // frontmatter path (relative to the post file, e.g. ../../assets/foo.jpg) to
+  // an ImageMetadata object and pulls the file into Astro's image pipeline. The
+  // thumbnail is therefore optimized at build time and reused — via getImage()
+  // in src/pages/blogs/[...slug].astro — as the responsive hero, the listing
+  // cards, and a dedicated JPEG Open Graph share image.
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      subtitle: z.string(),
+      summary: z.string(),
+      // URL slug segment (the "uri-title"). Url-safe kebab-case.
+      slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+      // "2026-05-28" -> Date.
+      date: z.coerce.date(),
+      // Keyword tags used by the listing-page filter.
+      tags: z.array(z.string()).default([]),
+      // Local hero/thumbnail image, optimized at build time.
+      thumbnail: image(),
+      thumbnailAlt: z.string().optional(),
+      // Keeps unfinished drafts out of the build.
+      draft: z.boolean().default(false),
+    }),
 });
 
 // NOTE: view counts are intentionally NOT stored in frontmatter — they are

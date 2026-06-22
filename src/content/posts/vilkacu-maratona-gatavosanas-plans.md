@@ -5,7 +5,7 @@ summary: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Kā es sadalu
 slug: "vilkacu-maratona-gatavosanas-plans"
 date: 2026-05-28
 tags: ["treniņi", "sacensības"]
-thumbnail: "https://placehold.co/1110x773/e8eaf0/555560?text=Vilkacu+maratons"
+thumbnail: "../../assets/thumb-vilkacu-maratons.jpg"
 thumbnailAlt: "Taka mežā agrā rītā"
 ---
 
