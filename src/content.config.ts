@@ -29,6 +29,10 @@ const posts = defineCollection({
       // Local hero/thumbnail image, optimized at build time.
       thumbnail: image(),
       thumbnailAlt: z.string().optional(),
+      // Optional photo credit, shown as a caption below the hero image on the
+      // post page only (never on the listing card). Author writes the full
+      // string, e.g. "Foto: Jānis Bērziņš".
+      thumbnailAttribution: z.string().optional(),
       // Keeps unfinished drafts out of the build.
       draft: z.boolean().default(false),
     }),

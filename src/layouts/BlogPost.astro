@@ -16,6 +16,8 @@ interface Props {
   /** Local hero image, rendered responsively via <Image>. */
   heroImage?: ImageMetadata;
   imageAlt?: string;
+  /** Optional photo credit, shown as a caption below the hero image. */
+  imageAttribution?: string;
   /** Human-readable date label, e.g. "2026. gada 28. maijs". */
   date?: string;
   /** ISO date for the <time datetime> attribute, e.g. "2026-05-28". */
@@ -31,6 +33,7 @@ const {
   image,
   heroImage,
   imageAlt = title,
+  imageAttribution,
   date,
   isoDate,
   viewKey,
@@ -69,6 +72,7 @@ const {
         heroImage && (
           <figure class="article-hero-image work-hero-image rounded">
             <Image src={heroImage} alt={imageAlt} loading="eager" fetchpriority="high" />
+            {imageAttribution && <figcaption>{imageAttribution}</figcaption>}
           </figure>
         )
       }
