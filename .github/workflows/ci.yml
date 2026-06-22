@@ -30,6 +30,12 @@ jobs:
       # Static build must succeed (also catches Astro / type breakage).
       - run: npm run build
 
+      # Type-check the Astro app (pages, components, content collections) with
+      # astro check. Self-contained (runs its own `astro sync`, no network);
+      # @astrojs/check + typescript come from `npm ci`. Fails CI only on errors
+      # (warnings/hints don't), so it gates real type breakage without flaking.
+      - run: npm run check:astro
+
       # Type-check the Pages Functions (their own workerd tsconfig, excluded from the
       # Astro build). cf-typegen first to generate the gitignored Env/PagesFunction types.
       - run: npm run cf-typegen
