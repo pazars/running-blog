@@ -1431,3 +1431,54 @@ footer a:hover {
 .article-body > :first-child {
   margin-top: 0;
 }
+
+/* Pull-quote: an accent rule on the inline-start edge. Inherits the larger
+   blockquote type set above; tokens carry it through dark mode. */
+.article-body blockquote {
+  margin: 28px 0;
+  padding: 4px 0 4px 20px;
+  border-inline-start: var(--border-width) solid var(--color-fg-emphasis);
+  color: var(--color-fg-muted);
+  font-style: italic;
+}
+
+/* Figure + photo credit, produced from a Markdown image title by
+   src/plugins/rehype-figcaption.mjs. The <img> keeps Astro's optimized src. */
+.article-figure {
+  margin: 28px 0;
+}
+.article-figure figcaption {
+  margin-top: 8px;
+  font-size: var(--text-body-size-small);
+  color: var(--color-fg-muted);
+  text-align: center;
+}
+
+/* Tables (GFM). display:block lets a wide table scroll on narrow screens
+   instead of overflowing the page. */
+.article-body table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  margin: 28px 0;
+  border-collapse: collapse;
+  font-size: var(--text-body-size-small);
+}
+@media (min-width: 1012px) {
+  .article-body table {
+    font-size: var(--text-body-size-medium);
+  }
+}
+.article-body th,
+.article-body td {
+  padding: 8px 14px;
+  text-align: left;
+  border-bottom: var(--border-width) solid var(--color-line-default);
+}
+.article-body th {
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-bg-subtle);
+}
+.article-body tbody tr:last-child td {
+  border-bottom: 0;
+}

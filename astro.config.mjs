@@ -1,7 +1,12 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+// `unified` is the default Markdown processor; imported from @astrojs/markdown-remark
+// (a hard dependency of astro, so it ships with it — not declared separately to
+// avoid version drift from astro's pin).
+import { unified } from '@astrojs/markdown-remark';
 import { site } from './src/site.config.ts';
+import rehypeFigcaption from './src/plugins/rehype-figcaption.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -18,5 +23,14 @@ export default defineConfig({
   image: {
     layout: "constrained",
     responsiveStyles: true,
+  },
+  markdown: {
+    // As of Astro 6.4 the markdown.{remark,rehype}Plugins keys are deprecated;
+    // plugins now extend a `unified()` processor (Astro's default pipeline —
+    // GFM, Shiki, heading IDs all retained, gfm/smartypants still default true).
+    // This adds <figure>/<figcaption> for Markdown images that carry a title
+    // (a photo credit) without dropping to raw HTML, which would skip image
+    // optimization.
+    processor: unified({ rehypePlugins: [rehypeFigcaption] }),
   },
 });
