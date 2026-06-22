@@ -1421,8 +1421,18 @@ footer a:hover {
   font-size: var(--text-body-size-large);
   margin-top: 8px;
 }
+/* Blog post hero. The default section:first-child rule gives 80px top/bottom
+   padding — too much here. Match the site's header->content rhythm (header mb
+   16 + 40 = 56px, like .section-hero.-no-eyebrow) and mirror that 56px below
+   the subtitle, so the hero text sits symmetrically between header and image.
+   Selector is `section.article-hero` to outrank section:first-child by equal
+   specificity + source order (same trick as section.section-hero above). */
+section.article-hero {
+  padding-top: 40px;
+  padding-bottom: 0;
+}
 .article-hero-image {
-  margin: 24px 0 8px;
+  margin: 56px 0 32px;
 }
 .article-body :is(h2, h3) {
   margin-top: 32px;
@@ -1447,7 +1457,8 @@ footer a:hover {
 .article-figure {
   margin: 28px 0;
 }
-.article-figure figcaption {
+.article-figure figcaption,
+.article-hero-image figcaption {
   margin-top: 8px;
   font-size: var(--text-body-size-small);
   color: var(--color-fg-muted);
