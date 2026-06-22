@@ -40,9 +40,9 @@ Es patiesībā biju ļoti pārsteigts, cik strauji progresēju uz velo vien daž
 
 Normāla skriešana atsākās tikai maijā. Pa šo mēnesi paspēju dažas reizes aizbraukt uz Siguldu paskriet pa Pilsētas trasi, noskriet lūša distanci Augstrozes Stirnu Bukā un nedēļu pirms Vilkaču maratona izskriet 6 apļus pa sacensību trasi. Visi šie treniņi bija ārkārtīgi vērtīgi:
 
-- Pilsētas trase bija sezonas uguns kristības augšstilbiem, kas pēc tam bija stīvi pilnu nedēļu, bet uzreiz pēc tam tolerēja noskrējienus bez problēmām.
+- Pilsētas trase Siguldā bija sezonas uguns kristības augšstilbiem, kas pēc tam bija stīvi pilnu nedēļu, bet uzreiz pēc tam tolerēja noskrējienus bez problēmām.
 - Stirnu Buka intensitāte atgrieza manu tempu pa taisnēm tuvu līmenim, kāds bija pirms slimošanas.
-- Trases izpēte ļāva vismaz nedaudz nokalibrēties un saprast, kas mani sagaida.
+- Vilkaču maratona trases izpēte ļāva vismaz nedaudz nokalibrēties un saprast, kas mani sagaida.
 
 Kaut kur pa vidu šim visam vēl bija nedēļa ar pasīvajiem karstuma treniņiem, kas izpaudās kā 20min vannas +40-42 grādos katru dienu.
 
