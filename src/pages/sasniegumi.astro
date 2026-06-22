@@ -1,0 +1,180 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+import ListItem from "../components/ListItem.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../site.config";
+
+// Sacensību rezultāti pa disciplīnām. Katra ieraksta `title` ir sacensību
+// nosaukums, `description` — distance, laiks, vieta u.tml., `trailing` — gads.
+// Šie ir vietturi, ko vēlāk vari aizstāt ar īstajiem rezultātiem.
+const trailRunning = [
+  {
+    title: "Vilkaču maratons 🏆",
+    description: "42km · 2200m · 04:19:22",
+    trailing: "2026",
+  },
+  {
+    title: "Siguldas kalnu maratons 🏆",
+    description: "35km · 1400m · 03:23:37",
+    trailing: "2025",
+  },
+];
+
+const roadRunning = [
+  {
+    title: "Kauņas maratons",
+    description: "42.2km · 02:47:13",
+    trailing: "2025",
+  },
+  {
+    title: "Liepājas pusmaratons",
+    description: "21.1km · 01:16:25",
+    trailing: "2025",
+  },
+  {
+    title: "Latvijas čempionāts 5km",
+    description: "5km · 16:28",
+    trailing: "2025",
+  },
+];
+
+const cycling = [
+  {
+    title: "The Transcontinental Race",
+    description: "4060km · 38480m · 11d22h17m",
+    trailing: "2024",
+  },
+  {
+    title: "Ultra Gravel Latvija 🥈",
+    description: "583km · 2764m · 24h41m",
+    trailing: "2024",
+  },
+  {
+    title: "Lame Maa 1500 🏆",
+    description: "1603km · 2920m · 3d11h16m",
+    trailing: "2022",
+  },
+  {
+    title: "Hydra Epic",
+    description: "1600km · 13650m · 8d9h26m",
+    trailing: "2022",
+  },
+];
+
+// Profile links for the "broader results" line in the intro. ITRA already lives
+// in site.socials (and shows in the footer); the athletics.lv profile is
+// config-only and intentionally absent from the footer.
+const itraHref = site.socials.find((s) => s.label === "ITRA")?.href;
+const athleticsHref = site.athleticsProfile;
+---
+
+<BaseLayout
+  description="Sasniegumi sportā par kuriem lepojos visvairāk"
+>
+  <Header
+    name={site.name}
+    role={site.role}
+    activePage="sasniegumi"
+  />
+
+  <main>
+    <!-- Intro -->
+    <section class="section-hero -no-eyebrow">
+      <p>
+        Patiesībā vislielākais prieks man ir par paša izaugsmi līdz ar sportu nevis par kādu konkrētu sacensību.
+        Ja es atskatos uz sevi pirms 5 gadiem, tad es ne pavisam neesmu tas pats cilvēks, un liela daļa pozitīvo pārmaiņu ir pateicoties sportam.
+      </p>
+      <p>
+        Protams, ir arī notikumi, kas iespiedušies atmiņā stiprāk kā citi, un tos tad arī šeit var aplūkot.
+        Plašāks rezultātu saraksts atrodams manā <span class="external-link"><a href={itraHref} target="_blank" rel="noopener">ITRA</a><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon" aria-hidden="true"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>
+        un Latvijas vieglatlētikas savienības <span class="external-link"><a href={athleticsHref} target="_blank" rel="noopener">athletics.lv</a><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon" aria-hidden="true"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span> profilā.
+      </p>
+    </section>
+
+    <!-- Taku skriešana -->
+    <section class="race-section">
+      <SectionHeader id="taku-skriesana" title="Taku skriešana" />
+      <div class="list-container">
+        {
+          trailRunning.map((item) => (
+            <ListItem
+              title={item.title}
+              description={item.description}
+              trailing={item.trailing}
+            />
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Šosejas skriešana -->
+    <section class="race-section">
+      <SectionHeader id="sosejas-skriesana" title="Šosejas skriešana" />
+      <div class="list-container">
+        {
+          roadRunning.map((item) => (
+            <ListItem
+              title={item.title}
+              description={item.description}
+              trailing={item.trailing}
+            />
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- Riteņbraukšana -->
+    <section class="race-section">
+      <SectionHeader id="ritenbrauksana" title="Riteņbraukšana" />
+      <div class="list-container">
+        {
+          cycling.map((item) => (
+            <ListItem
+              title={item.title}
+              description={item.description}
+              trailing={item.trailing}
+            />
+          ))
+        }
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* Tighten the gap between the discipline sections: 28px top/bottom instead of
+     the default section 40px, so consecutive sections sit 56px apart (not 80). */
+  .race-section {
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  /* Let the last section sit flush so only the footer's own 120px margin spaces
+     it from the content — matching the blog listing, whose section-hero has no
+     bottom padding. */
+  main > section:last-child {
+    padding-bottom: 0;
+  }
+
+  /* The hero's first paragraph carries the default 16px top margin, which would
+     push it lower than the blog's (margin-less) filter row sits. Drop it so the
+     header-to-content distance matches the blog listing exactly. */
+  section.section-hero > p:first-child {
+    margin-top: 0;
+  }
+
+  /* Inline external-link arrow, mirroring the footer's trailingIcon. Wrapped so
+     the link text and arrow stay on one line, and the arrow nudged to sit
+     centered against the text. */
+  .external-link {
+    white-space: nowrap;
+  }
+  .external-link .trailingIcon {
+    margin-left: 3px;
+    vertical-align: -0.125em;
+  }
+</style>

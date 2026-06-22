@@ -33,13 +33,11 @@
 :root {
   /* Colors - Light mode (default) */
   --color-fg-default: #090e24;
-  --color-fg-soft: #d0d1d1;
   --color-fg-muted: #757676;
   --color-fg-emphasis: #283cff;
   --color-fg-inverse: #ffffff;
   --color-bg-default: #ffffff;
   --color-bg-inverse: var(--color-fg-default);
-  --color-bg-inverse-subtle: #555560;
   --color-bg-subtle: #f6f7f9;
   --color-bg-emphasis: rgb(241, 242, 246);
   --color-bg-success: #1dab62;
@@ -47,16 +45,11 @@
   --color-line-emphasis: #757676;
   --color-border-default: #e7eaf1;
   --color-border-subtle: rgba(0, 0, 0, 0.075);
-  --color-border-soft: rgba(222, 222, 222, 0.22);
   --color-border-onOff: rgba(0, 0, 0, 0.075);
-  --color-border-strong: #c7cad0;
-  --color-border-emphasis: var(--color-fg-emphasis);
   --color-border-danger: #e5371b;
-  --shadow-avatar: 0 0 0 1px rgba(31, 35, 40, 0.15);
 
   /* Sizing */
   --border-rounded: 12px;
-  --border-rounded-sm: 4px;
   --border-rounded-lg: 20px;
   --border-width: 1.5px;
   --body-padding: 20px;
@@ -71,7 +64,6 @@
   --text-body-size-small: 14px;
   --text-body-size-extra-small: 12px;
   --text-body-size-extra-large-mobile: 22px;
-  --font-weight-light: 300;
   --font-weight-default: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -88,7 +80,6 @@
 
   /* Animation */
   --ease-in-quad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
-  --ease-in-out-circ: cubic-bezier(0.785, 0.135, 0.15, 0.86);
 
   /* Images */
   --image-min-height: 120px;
@@ -108,19 +99,15 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-fg-default: #e2e8f0;
-    --color-fg-soft: #3c3d3d;
     --color-bg-default: #121212;
     --color-bg-inverse: #303036;
-    --color-bg-inverse-subtle: #414149;
     --color-bg-subtle: #1c1c1c;
     --color-bg-emphasis: #1f1f22;
     --color-line-default: rgba(255, 255, 255, 0.204);
     --color-line-emphasis: rgba(255, 255, 255, 0.392);
     --color-border-default: rgba(255, 255, 255, 0.141);
     --color-border-subtle: rgba(255, 255, 255, 0.086);
-    --color-border-soft: rgba(255, 255, 255, 0.071);
     --color-border-onOff: rgba(255, 255, 255, 0.031);
-    --shadow-avatar: 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
   img {
     filter: brightness(0.9) contrast(1.2);
@@ -242,9 +229,7 @@ section.section-hero.-no-eyebrow {
 .flex-column { flex-direction: column !important; }
 .flex-items-center { align-items: center !important; }
 .flex-items-start { align-items: flex-start; }
-.flex-justify-start { justify-content: flex-start; }
 .flex-justify-end { justify-content: flex-end; }
-.flex-justify-center { justify-content: center; }
 .flex-justify-between { justify-content: space-between; }
 .flex-0 { flex: 0 !important; }
 .flex-1 { flex: 1; }
@@ -253,11 +238,8 @@ section.section-hero.-no-eyebrow {
 .gap-2 { gap: 8px; }
 .gap-3 { gap: 12px; }
 .gap-4 { gap: 16px; }
-.gap-5 { gap: 20px; }
-.gap-6 { gap: 24px; }
 
 .m-0 { margin: 0 !important; }
-.mt-0 { margin-top: 0 !important; }
 .mb-0 { margin-bottom: 0 !important; }
 .mr-1 { margin-right: 4px !important; }
 .ml-2 { margin-left: 8px !important; }
@@ -266,10 +248,8 @@ section.section-hero.-no-eyebrow {
 .mb-3 { margin-bottom: 12px !important; }
 .mb-4 { margin-bottom: 16px !important; }
 .mb-6 { margin-bottom: 32px !important; }
-.mb-7 { margin-bottom: 40px !important; }
 .my-0 { margin-top: 0 !important; margin-bottom: 0 !important; }
 .pt-3 { padding-top: 12px !important; }
-.py-2 { padding-top: 8px !important; padding-bottom: 8px !important; }
 .py-3 { padding-top: 12px !important; padding-bottom: 12px !important; }
 .px-3 { padding-left: 12px !important; padding-right: 12px !important; }
 .pt-7 { padding-top: 40px !important; }
@@ -278,11 +258,6 @@ section.section-hero.-no-eyebrow {
 @media (min-width: 768px) {
   .mr-md-6 { margin-right: 40px !important; }
 }
-@media (min-width: 544px) {
-  .d-md-block { display: block !important; }
-  .d-md-none { display: none !important; }
-}
-
 .full-width { width: 100%; }
 
 /* ===== Typography ===== */
@@ -315,10 +290,7 @@ h2,
 }
 
 .color-fg-muted { color: var(--color-fg-muted) !important; }
-.color-fg-emphasis { color: var(--color-fg-emphasis) !important; }
-.color-fg-default { color: var(--color-fg-default) !important; }
 .text-small { font-size: var(--text-body-size-small); }
-.text-semibold { font-weight: var(--font-weight-semibold) !important; }
 .bg-subtle { background-color: var(--color-bg-subtle); }
 
 .h3 {
@@ -347,9 +319,6 @@ h2,
 }
 .rounded {
   border-radius: var(--border-rounded);
-}
-.rounded-lg {
-  border-radius: var(--border-rounded-lg);
 }
 
 /* ===== Buttons ===== */
@@ -411,7 +380,6 @@ h2,
   color: var(--color-fg-default);
   border-color: transparent;
 }
-.align-left { text-align: left; }
 
 /* ===== Header ===== */
 header {
@@ -432,6 +400,8 @@ header > .brand > .wrapper > .image-container {
   width: 40px;
   max-width: 40px;
   overflow: hidden;
+  /* Circular profile picture (matches the favicon). */
+  border-radius: 50%;
   z-index: 1000;
 }
 header > .brand > .wrapper > .image-container > .image {
@@ -440,6 +410,7 @@ header > .brand > .wrapper > .image-container > .image {
 }
 header > .brand > .wrapper > .info {
   position: relative;
+  text-decoration: none;
 }
 header > .brand > .wrapper > .info > .title {
   font-size: var(--text-body-size-medium);
@@ -473,10 +444,6 @@ header > .brand > .wrapper:active > .image-container {
 @media (max-width: 543px) {
   header > .brand {
     max-width: calc(100% - 88px);
-  }
-
-  header > .brand > .wrapper > .image-container {
-    border-radius: var(--border-rounded);
   }
 
   header > .brand > .wrapper > .info > .desc {
@@ -561,6 +528,13 @@ nav > .link {
   border-radius: var(--border-radius-lg);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
+}
+/* Optically center the label: the font's ascent outweighs its descender
+   reserve, so a symmetric box lifts the text a hair toward the top. Split the
+   8px vertical padding 9/7 to nudge it back down ~1px (total height unchanged). */
+nav > .link > .item {
+  padding-top: 9px;
+  padding-bottom: 7px;
 }
 nav > .link.active {
   background-color: var(--color-bg-default);
@@ -683,44 +657,6 @@ nav > .link.active {
 .dropdown-container > .panel.-show {
   display: block;
   z-index: 1000;
-}
-.dropdown-items > .list {
-  list-style: none;
-  margin: 0;
-  padding: 8px;
-}
-.dropdown-items > .list > .header,
-.dropdown-items > .list .footer {
-  background-color: var(--color-bg-subtle);
-  color: var(--color-fg-muted);
-  padding: 6px 18px;
-  margin: -8px -8px 8px;
-  font-size: var(--text-body-size-extra-small);
-  border-bottom: 0.8px solid var(--color-border-subtle);
-  text-decoration: none;
-}
-.dropdown-items > .list > .footer {
-  margin-bottom: -8px;
-  margin-top: 8px;
-  border-top: 0.8px solid var(--color-border-subtle);
-  border-bottom: none;
-}
-.dropdown-items > .list > .item {
-  width: 100%;
-  display: inline-block;
-  border-radius: 6px;
-}
-.dropdown-items > .list > .item > .content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  text-decoration: none;
-  border-radius: 6px;
-  width: 100%;
-}
-.dropdown-items > .list > .item > .content:hover {
-  background-color: var(--color-bg-subtle);
 }
 
 /* ===== Tooltip ===== */
@@ -852,21 +788,6 @@ nav > .link.active {
     transform: scale(0.9);
     box-shadow: 0 0 #1dab6200;
   }
-}
-
-/* ===== Avatar (inline company logo) ===== */
-.avatar-link {
-  text-decoration: underline;
-  text-decoration-color: var(--color-line-default);
-}
-.avatar-link > .avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  vertical-align: middle;
-  margin-right: 2px;
-  display: inline;
-  box-shadow: var(--shadow-avatar);
 }
 
 /* ===== List Items ===== */
@@ -1204,8 +1125,101 @@ footer a:hover {
   color: var(--color-fg-muted);
   min-height: 1.5em;
 }
-.newsletter-form-section[hidden] {
+.newsletter-status.is-error {
+  color: var(--color-border-danger);
+}
+/* Turnstile widget sits on its own row below the input/button (the forms are flex). */
+.newsletter-form,
+.subscribe-popup-form {
+  flex-wrap: wrap;
+}
+.newsletter-form .cf-turnstile,
+.subscribe-popup-form .cf-turnstile {
+  flex-basis: 100%;
+  margin-top: 10px;
+}
+/* The widget is a cross-origin iframe (challenges.cloudflare.com), so only its outer
+   box is ours to style — internals and branding are off-limits. Match the input/button
+   corner radius and fade it in when api.js injects it. With appearance="interaction-only"
+   that's only on the rare occasion a real challenge is shown. */
+.cf-turnstile iframe {
+  border-radius: var(--border-rounded);
+  animation: newsletter-turnstile-in 240ms ease-out both;
+}
+@keyframes newsletter-turnstile-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cf-turnstile iframe {
+    animation: none;
+  }
+}
+/* ===== Newsletter success toast =====
+   Replaces the form area in place for ~6s after a successful submit, then JS reverts.
+   While `.is-toasting` is on the form wrapper, every direct child *except* the toast is
+   hidden (form, description, unsubscribe note, status) so the notification stands alone
+   with no surrounding distractions. !important beats the form's `d-flex !important`. */
+[data-js-newsletter-form].is-toasting > :not([data-js-newsletter-toast]) {
+  display: none !important;
+}
+.newsletter-toast {
+  position: relative;
+  overflow: hidden; /* clip the timer bar to the rounded corners */
+  min-height: 1.5em; /* hold a little height so the swap doesn't visibly collapse */
+  border-radius: var(--border-radius);
+}
+.newsletter-toast[hidden] {
   display: none;
+}
+.newsletter-toast:focus {
+  outline: none; /* programmatic focus target only (tabindex="-1") */
+}
+.newsletter-toast-text {
+  margin: 0;
+  line-height: 1.4;
+  font-size: var(--text-body-size-small);
+}
+/* The spam-folder hint only applies to a fresh sign-up; hide it for "already". */
+.newsletter-toast [data-js-toast-hint]:empty {
+  display: none;
+}
+/* Draining timer bar: a thin fill scaled along X (GPU-composited, no layout/paint). */
+.newsletter-toast-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background-color: var(--color-fg-emphasis);
+  border-radius: var(--border-radius);
+}
+/* Runs only while JS marks the toast running; the duration comes from --toast-ms so
+   the bar and the setTimeout-driven revert stay in lockstep. Linear = honest countdown. */
+.newsletter-toast.is-running .newsletter-toast-bar {
+  animation: newsletter-toast-fill var(--toast-ms, 6000ms) linear forwards;
+}
+@keyframes newsletter-toast-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .newsletter-toast.is-running .newsletter-toast-bar {
+    animation: none;
+    transform: scaleX(1); /* static full bar instead of an animated drain */
+  }
 }
 
 /* ===== Subscribe Popup (Header Dropdown) ===== */
@@ -1221,8 +1235,9 @@ footer a:hover {
 .subscribe-popup .newsletter-note {
   margin-top: 5px;
 }
-.subscribe-popup-done {
-  padding: 14px 16px;
+/* Scale the toast text down to the popup's smaller type (the hint reuses .newsletter-note). */
+.subscribe-popup .newsletter-toast-text {
+  font-size: var(--text-body-size-extra-small);
 }
 .subscribe-popup-desc {
   font-size: var(--text-body-size-small);
@@ -1250,40 +1265,13 @@ footer a:hover {
   margin-top: 6px;
 }
 
-/* ===== Work Detail Pages ===== */
-.work-hero {
-  padding-bottom: 24px;
-}
-
-.work-role {
-  font-size: var(--text-body-size-medium);
-  margin: 0;
-}
-
+/* ===== Article hero image (shared by the blog post layout) ===== */
 .work-hero-image {
   overflow: hidden;
   margin-bottom: 0;
 }
 
 .work-hero-image > img {
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--color-border-onOff);
-}
-
-.work-gallery {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 40px 0;
-}
-
-.work-gallery figure {
-  border-radius: var(--border-rounded);
-  overflow: hidden;
-}
-
-.work-gallery img {
   width: 100%;
   height: auto;
   border: 1px solid var(--color-border-onOff);
@@ -1312,17 +1300,36 @@ footer a:hover {
 }
 .blog-select-label {
   display: inline-flex;
+  position: relative;
+}
+/* The native dropdown arrow is glued to the right border with no padding, so
+   we hide it (appearance: none below) and draw our own chevron with breathing
+   room. --color-fg-muted is the same in light/dark, so no theme override. */
+.blog-select-label::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--color-fg-muted);
+  border-bottom: 1.5px solid var(--color-fg-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
 }
 .blog-select {
   background-color: var(--color-bg-subtle);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--border-radius);
-  padding: 4px 12px;
+  /* Extra right padding leaves room for the custom chevron above. */
+  padding: 4px 30px 4px 12px;
   font-family: var(--system-ui);
   font-size: var(--text-body-size-small);
   color: var(--color-fg-muted);
   cursor: pointer;
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
 }
 .blog-select:focus {
   border-color: var(--color-fg-emphasis);
@@ -1340,13 +1347,92 @@ footer a:hover {
   margin-top: 32px;
 }
 
+/* Recommendation ("Iesaku") cards: the blog's featured-card layout, but dateless
+   and with platform brand icons overlaid on the thumbnail (instead of a chip row
+   below) so a card's height isn't padded by its platform count. */
+.rec-card {
+  position: relative;
+}
+.rec-card:hover {
+  border-color: var(--color-border-default);
+  background-color: var(--color-bg-subtle);
+}
+.rec-card .image {
+  transition: transform 0.2s;
+}
+.rec-card:hover .image {
+  transform: scale(0.98);
+}
+/* Unlike a blog summary (a teaser linking to the full article), a recommendation
+   description IS the whole content — there's no detail page — so show it in full
+   instead of clamping to 4 lines. The card grows to fit. */
+.featured-card.rec-card > .info > .summary {
+  display: block;
+  -webkit-line-clamp: none;
+  overflow: visible;
+}
+.rec-card-media {
+  position: relative;
+  overflow: hidden;
+}
+/* Stretched primary link, scoped to the text column (not the thumbnail) so the
+   whole copy block opens links[0] while clicks near a platform icon can never
+   fall through to it. */
+.rec-card > .info {
+  position: relative;
+}
+.rec-card-link {
+  position: absolute;
+  inset: 0;
+}
+.rec-card-platforms {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  gap: 6px;
+}
+/* No transform on hover — a scale here makes the icon edge chase the cursor and
+   jitter; the background tint is enough feedback. */
+.rec-card-platform {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: background-color 0.15s;
+}
+.rec-card-platform:hover {
+  background-color: rgba(0, 0, 0, 0.82);
+}
+.rec-card-platform svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
 /* ===== Article Page ===== */
 .article-subtitle {
   font-size: var(--text-body-size-large);
   margin-top: 8px;
 }
+/* Blog post hero. The default section:first-child rule gives 80px top/bottom
+   padding — too much here. Match the site's header->content rhythm (header mb
+   16 + 40 = 56px, like .section-hero.-no-eyebrow) and mirror that 56px below
+   the subtitle, so the hero text sits symmetrically between header and image.
+   Selector is `section.article-hero` to outrank section:first-child by equal
+   specificity + source order (same trick as section.section-hero above). */
+section.article-hero {
+  padding-top: 40px;
+  padding-bottom: 0;
+}
 .article-hero-image {
-  margin: 24px 0 8px;
+  margin: 56px 0 32px;
 }
 .article-body :is(h2, h3) {
   margin-top: 32px;
@@ -1354,4 +1440,56 @@ footer a:hover {
 }
 .article-body > :first-child {
   margin-top: 0;
+}
+
+/* Pull-quote: an accent rule on the inline-start edge. Inherits the larger
+   blockquote type set above; tokens carry it through dark mode. */
+.article-body blockquote {
+  margin: 28px 0;
+  padding: 4px 0 4px 20px;
+  border-inline-start: var(--border-width) solid var(--color-fg-emphasis);
+  color: var(--color-fg-muted);
+  font-style: italic;
+}
+
+/* Figure + photo credit, produced from a Markdown image title by
+   src/plugins/rehype-figcaption.mjs. The <img> keeps Astro's optimized src. */
+.article-figure {
+  margin: 28px 0;
+}
+.article-figure figcaption,
+.article-hero-image figcaption {
+  margin-top: 8px;
+  font-size: var(--text-body-size-small);
+  color: var(--color-fg-muted);
+  text-align: center;
+}
+
+/* Tables (GFM). display:block lets a wide table scroll on narrow screens
+   instead of overflowing the page. */
+.article-body table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  margin: 28px 0;
+  border-collapse: collapse;
+  font-size: var(--text-body-size-small);
+}
+@media (min-width: 1012px) {
+  .article-body table {
+    font-size: var(--text-body-size-medium);
+  }
+}
+.article-body th,
+.article-body td {
+  padding: 8px 14px;
+  text-align: left;
+  border-bottom: var(--border-width) solid var(--color-line-default);
+}
+.article-body th {
+  font-weight: var(--font-weight-semibold);
+  background: var(--color-bg-subtle);
+}
+.article-body tbody tr:last-child td {
+  border-bottom: 0;
 }

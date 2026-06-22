@@ -1,0 +1,67 @@
+---
+import { newsletter } from "../site.config";
+
+interface Props {
+  description?: string;
+  showBorder?: boolean;
+  // When true, render the fuller unsubscribe explanation (`newsletter.unsubscribeInfo`)
+  // under the short note. Used only on the /vestkopa page, not the header pop-up.
+  showUnsubscribeInfo?: boolean;
+}
+
+const {
+  description = "Vēlies saņemt paziņojumus par jaunākajiem bloga rakstiem? Piesakies vēstkopai!",
+  showBorder = false,
+  showUnsubscribeInfo = false,
+} = Astro.props;
+---
+
+<section
+  class={`newsletter-form-section ${showBorder ? "border-top" : ""}`}
+  data-js-newsletter-form
+  data-msg-pending={newsletter.pendingMessage}
+  data-msg-hint={newsletter.pendingHint}
+  data-msg-already={newsletter.alreadyMessage}
+  data-msg-error={newsletter.errorMessage}
+  data-msg-ratelimit={newsletter.rateLimitMessage}
+>
+  <p>{description}</p>
+  <form class="newsletter-form d-flex gap-2" data-js-newsletter-submit>
+    <input
+      type="email"
+      name="email"
+      placeholder="tavs@epasts.lv"
+      required
+      autocomplete="email"
+      class="newsletter-input flex-1"
+      data-js-newsletter-email
+    />
+    <button
+      type="submit"
+      class="newsletter-btn btn-secondary"
+      data-js-newsletter-btn
+      data-label-submitting={newsletter.submittingLabel}
+    >
+      {newsletter.subscribeButton}
+    </button>
+    {
+      newsletter.turnstileSiteKey && (
+        <div
+          class="cf-turnstile"
+          data-sitekey={newsletter.turnstileSiteKey}
+          data-theme="auto"
+          data-appearance="interaction-only"
+        />
+      )
+    }
+  </form>
+  <p class="newsletter-note">
+    {showUnsubscribeInfo ? newsletter.unsubscribeInfo : newsletter.unsubscribeNote}
+  </p>
+  <div class="newsletter-status" data-js-newsletter-status aria-live="polite"></div>
+  <div class="newsletter-toast" data-js-newsletter-toast hidden tabindex="-1">
+    <p class="newsletter-toast-text" data-js-toast-text aria-live="polite"></p>
+    <p class="newsletter-note" data-js-toast-hint></p>
+    <span class="newsletter-toast-bar" data-js-toast-bar aria-hidden="true"></span>
+  </div>
+</section>

@@ -1,0 +1,50 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  trailing?: string;
+  href?: string;
+  external?: boolean;
+}
+
+const { title, description, trailing, href, external = false } = Astro.props;
+
+const Tag = href ? "a" : "div";
+// Outbound links open in a new tab; noopener (not noreferrer) keeps the referrer.
+const opensNewTab = Boolean(href) && external;
+---
+
+<Tag
+  href={href}
+  class="list-item item"
+  target={opensNewTab ? "_blank" : undefined}
+  rel={opensNewTab ? "noopener" : undefined}
+>
+  <div class="content">
+    <p class="h3 title my-0">{title}</p>
+    {description && <div class="description">{description}</div>}
+  </div>
+  <div class="trailing d-flex flex-items-center">
+    {trailing && <div class="text">{trailing}</div>}
+    {
+      external && (
+        <div class="icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M7 7h10v10" />
+            <path d="M7 17 17 7" />
+          </svg>
+        </div>
+      )
+    }
+  </div>
+</Tag>

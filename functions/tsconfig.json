@@ -1,0 +1,29 @@
+{
+  // Pages Functions run on the Cloudflare (workerd) runtime, NOT the browser,
+  // so they get their own tsconfig instead of the Astro app's. The generated
+  // ../worker-configuration.d.ts supplies the workerd globals, the typed `Env`
+  // (DB: D1Database), and `PagesFunction` — regenerate it with `npm run
+  // cf-typegen` after changing bindings in wrangler.toml. `lib` is esnext-only
+  // (no DOM) so workerd's Request/Response don't clash with the DOM lib the
+  // Astro/browser code uses; the root tsconfig excludes this dir for the same
+  // reason.
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["esnext"],
+    "types": [],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true
+  },
+  // ../worker-configuration.d.ts is in `include` (not `files`) so a fresh clone
+  // that hasn't run `npm run cf-typegen` yet fails softly (missing `Env`)
+  // instead of erroring that the file doesn't exist.
+  "include": ["**/*.ts", "../worker-configuration.d.ts"],
+  // Vitest specs run under Node (vitest globals + process.env), not the workerd
+  // runtime, so keep them out of this DOM-less typecheck — vitest type-checks them
+  // via its own config.
+  "exclude": ["**/*.test.ts"]
+}

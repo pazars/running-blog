@@ -1,15 +1,32 @@
 {
-  "name": "personal-astro-blog",
+  "name": "davispazars-blog",
   "type": "module",
   "version": "0.0.1",
+  "private": true,
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "cf-typegen": "wrangler types",
+    "check:astro": "astro check",
+    "check:functions": "tsc -p functions/tsconfig.json",
+    "template:sync": "node scripts/sync-confirm-template.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
-    "astro": "^6.4.5"
+    "astro": "^6.4.5",
+    "jose": "^6.2.3",
+    "resend": "^6.12.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/sitemap": "^3.7.3",
+    "@types/node": "^22.12.0",
+    "lorem-ipsum": "^3.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.100.0"
   },
   "//engines": "Astro 6 dropped Node 18/20 and requires Node >=22.12. Keep this in sync with .nvmrc, which Cloudflare Pages reads to pin the build image's Node version.",
   "engines": {

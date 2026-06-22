@@ -1,41 +1,26 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../site.config";
 ---
 
-<BaseLayout title="404 — lapa nav atrasta">
-  <main class="not-found">
-    <h1>404</h1>
-    <p class="color-fg-muted">Šī lapa neeksistē.</p>
-    <a href="/">← Uz sākumu</a>
+<BaseLayout title="404">
+  <Header
+    name={site.name}
+    role={site.role}
+    activePage="none"
+  />
+
+  <main>
+    <section class="section-hero -no-eyebrow">
+      <h1 class="mb-3">404</h1>
+      <p class="color-fg-muted mb-6">
+        Šī lapa neeksistē vai ir pārvietota.
+      </p>
+      <a href="/">← Atpakaļ uz sākumu</a>
+    </section>
   </main>
+
+  <Footer />
 </BaseLayout>
-
-<style>
-  /* Fill the viewport minus the actual body padding (it grows past the
-     --body-padding token at the breakpoints below) so the group centers. */
-  .not-found {
-    min-height: calc(100svh - 2 * var(--body-padding));
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 8px;
-  }
-
-  @media (min-width: 768px) {
-    .not-found {
-      min-height: calc(100svh - 2 * 60px);
-    }
-  }
-
-  @media (min-width: 1012px) {
-    .not-found {
-      min-height: calc(100svh - 2 * 80px);
-    }
-  }
-
-  .not-found h1 {
-    margin: 0;
-  }
-</style>

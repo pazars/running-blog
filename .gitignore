@@ -2,9 +2,20 @@
 dist/
 # generated types
 .astro/
+# Cloudflare binding types from `wrangler types` (npm run cf-typegen).
+# Regenerate after changing bindings in wrangler.toml; not committed.
+worker-configuration.d.ts
 
 # dependencies
 node_modules/
+
+# Non-npm lockfiles. npm is the canonical package manager (CI runs `npm ci`;
+# package-lock.json is the committed lockfile). Keep other managers' lockfiles
+# out of the repo so they can't drift out of sync with package-lock.json.
+bun.lock
+bun.lockb
+yarn.lock
+pnpm-lock.yaml
 
 # logs
 npm-debug.log*
@@ -21,6 +32,8 @@ pnpm-debug.log*
 # real secrets/tokens live here and must never be committed.
 .dev.vars
 .dev.vars.*
+# ...except the committed template (placeholders only, no real secrets).
+!.dev.vars.example
 
 # Cloudflare local dev state (local D1 SQLite + cache) from `wrangler pages dev`
 .wrangler/

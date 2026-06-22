@@ -1,0 +1,48 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  date: string; // ISO 8601 for <time datetime>, e.g. "2026-05-28"
+  dateLabel: string; // human-readable label, e.g. "2026. gada 28. maijs"
+  summary: string;
+  imageUrl: string;
+  imageAlt?: string;
+  external?: boolean;
+}
+
+const {
+  href,
+  title,
+  date,
+  dateLabel,
+  summary,
+  imageUrl,
+  imageAlt = title,
+  external = false,
+} = Astro.props;
+---
+
+<a
+  href={href}
+  class="content featured-post"
+  target={external ? "_blank" : undefined}
+  rel={external ? "noopener" : undefined}
+>
+  <article class="featured-card card d-flex gap-4">
+    <figure class="image-wrapper rounded">
+      <img
+        src={imageUrl}
+        alt={imageAlt}
+        loading="lazy"
+        class="image bg-subtle"
+        width="1110"
+        height="773"
+      />
+    </figure>
+    <div class="info d-flex flex-column">
+      <time class="date" datetime={date}>{dateLabel}</time>
+      <h3 class="title">{title}</h3>
+      <p class="summary">{summary}</p>
+    </div>
+  </article>
+</a>

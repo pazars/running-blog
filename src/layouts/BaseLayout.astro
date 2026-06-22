@@ -1,8 +1,9 @@
 ---
-import { site } from "../site.config";
+import { site, newsletter } from "../site.config";
 
 interface Props {
-  title: string;
+  /** Tab/OG title. Defaults to the site-wide title; blog posts pass their own. */
+  title?: string;
   description?: string;
   /** Site-relative share image; resolved to an absolute URL below. */
   image?: string;
@@ -11,8 +12,8 @@ interface Props {
 }
 
 const {
-  title,
-  description = "Dāvja Pazara mājaslapa — drīzumā.",
+  title = "Dāvja skriešanas blogs",
+  description = "Dāvja Pazara skriešanas blogs",
   image = "/og-image.jpg",
   type = "website",
 } = Astro.props;
@@ -74,9 +75,10 @@ import "../styles/global.css";
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={ogImage} />
 
-    <!-- Icons & PWA manifest -->
+    <!-- Icons & PWA manifest. The icons are circular crops of the Gravatar
+         profile picture (a favicon can't be CSS-rounded, so it's pre-rendered);
+         regenerate with the recipe in README.md if the photo changes. -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#283cff" />
@@ -86,5 +88,16 @@ import "../styles/global.css";
   </head>
   <body>
     <slot />
+    {
+      newsletter.turnstileSiteKey && (
+        <script
+          is:inline
+          async
+          defer
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        />
+      )
+    }
+    <script is:inline src="/script.js"></script>
   </body>
 </html>

@@ -1,0 +1,122 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import BaseLayout from "./BaseLayout.astro";
+import Header from "../components/Header.astro";
+import NewsletterForm from "../components/NewsletterForm.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../site.config";
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  description?: string;
+  /** Absolute URL of the OG/Twitter share image (a prebuilt JPEG). */
+  image?: string;
+  /** Local hero image, rendered responsively via <Image>. */
+  heroImage?: ImageMetadata;
+  imageAlt?: string;
+  /** Optional photo credit, shown as a caption below the hero image. */
+  imageAttribution?: string;
+  /** Human-readable date label, e.g. "2026. gada 28. maijs". */
+  date?: string;
+  /** ISO date for the <time datetime> attribute, e.g. "2026-05-28". */
+  isoDate?: string;
+  /** Article slug used as the view-counter key (Phase 2 / Cloudflare D1). */
+  viewKey?: string;
+}
+
+const {
+  title,
+  subtitle,
+  description,
+  image,
+  heroImage,
+  imageAlt = title,
+  imageAttribution,
+  date,
+  isoDate,
+  viewKey,
+} = Astro.props;
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  image={image}
+  type="article"
+>
+  <Header
+    name={site.name}
+    role={site.role}
+  />
+
+  <main>
+    <article>
+      <section class="article-hero">
+        {
+          date && (
+            <p class="color-fg-muted text-small mb-0">
+              <time datetime={isoDate ?? date}>{date}</time>
+            </p>
+          )
+        }
+        {/* No visible count — this only pings the view counter so the blog
+            list can sort by popularity. The number is intentionally not shown. */}
+        {viewKey && <span data-js-view-ping data-slug={viewKey} hidden />}
+        <h1 class="mb-3">{title}</h1>
+        {subtitle && <p class="article-subtitle color-fg-muted m-0">{subtitle}</p>}
+      </section>
+
+      {
+        heroImage && (
+          <figure class="article-hero-image work-hero-image rounded">
+            <Image src={heroImage} alt={imageAlt} loading="eager" fetchpriority="high" />
+            {imageAttribution && <figcaption>{imageAttribution}</figcaption>}
+          </figure>
+        )
+      }
+
+      <div class="article-body">
+        <slot />
+      </div>
+    </article>
+
+    <NewsletterForm showBorder={true} />
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<script>
+  // Article view tracking (Cloudflare D1). Increments the per-article counter
+  // once per browser via the /api/views/<slug> function, so the blog list can
+  // sort by popularity. The count is never displayed. Degrades silently when
+  // the API isn't deployed (e.g. local static preview).
+  (function () {
+    const el = document.querySelector<HTMLElement>("[data-js-view-ping]");
+    const slug = el?.dataset.slug;
+    if (!slug) return;
+
+    const key = `viewed:${slug}`;
+    try {
+      if (localStorage.getItem(key)) return; // already counted in this browser
+      // Claim the slot up front so concurrent loads (two tabs, a fast reload)
+      // see it immediately and don't all fire the POST. Rolled back below if
+      // the increment never actually lands.
+      localStorage.setItem(key, "1");
+    } catch {}
+
+    fetch(`/api/views/${encodeURIComponent(slug)}`, { method: "POST" })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      })
+      .catch(() => {
+        // Increment didn't land (API not deployed, transient error) — release
+        // the claim so a later visit can retry.
+        try {
+          localStorage.removeItem(key);
+        } catch {}
+      });
+  })();
+</script>

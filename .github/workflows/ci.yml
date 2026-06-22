@@ -1,0 +1,57 @@
+name: CI
+
+# Build + test gate. Deploys are handled separately by Cloudflare Pages' Git
+# integration (preview on non-main branches, production on main) — this workflow
+# only validates, it does not deploy.
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel superseded runs for the same branch/PR.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # Static build must succeed (also catches Astro / type breakage).
+      - run: npm run build
+
+      # Type-check the Astro app (pages, components, content collections) with
+      # astro check. Self-contained (runs its own `astro sync`, no network);
+      # @astrojs/check + typescript come from `npm ci`. Fails CI only on errors
+      # (warnings/hints don't), so it gates real type breakage without flaking.
+      - run: npm run check:astro
+
+      # Type-check the Pages Functions (their own workerd tsconfig, excluded from the
+      # Astro build). cf-typegen first to generate the gitignored Env/PagesFunction types.
+      - run: npm run cf-typegen
+      - run: npm run check:functions
+
+      # Newsletter double opt-in tests. Token + validation cases always run; the
+      # live Resend cases hit a TEST key and the delivered@resend.dev simulator and
+      # self-skip when these are unset (e.g. PRs from forks don't receive secrets).
+      - run: npm test
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_VERIFY_SECRET: ${{ secrets.RESEND_VERIFY_SECRET }}
+          RESEND_AUDIENCE_VERIFIED_ID: ${{ vars.RESEND_AUDIENCE_VERIFIED_ID }}
+          RESEND_FROM: ${{ vars.RESEND_FROM }}
+          RESEND_CONFIRM_TEMPLATE_ALIAS: ${{ vars.RESEND_CONFIRM_TEMPLATE_ALIAS }}
+          # Optional: set to Turnstile's always-pass dummy secret
+          # (1x0000000000000000000000000000000AA) to exercise the bot check too.
+          # Unset → subscribe skips Turnstile; the dummy-key siteverify tests still run.
+          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}

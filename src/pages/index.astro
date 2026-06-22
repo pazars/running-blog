@@ -1,118 +1,176 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import FeaturedPost from "../components/FeaturedPost.astro";
+import Footer from "../components/Footer.astro";
 import { site } from "../site.config";
+import { getCollection } from "astro:content";
+import { toIsoDate, formatLatvianDate } from "../utils/date";
+import { fetchOgImage } from "../utils/ogImage";
+import { cardThumbnail } from "../utils/postImages";
+
+const pasaulesTureImage = await fetchOgImage(
+  "https://pasaulesture.lv/",
+  "https://pasaulesture.lv/events/egipte-malta/og/og-image-lv.jpg",
+);
+
+// Blog articles, newest first. The featured "Jaunākais raksts" card is derived
+// entirely from the latest published entry's frontmatter — publishing a post
+// (draft: false) updates the home page automatically, no manual wiring.
+const articles = (await getCollection("posts", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+
+// Optimize every post thumbnail once, keyed by entry id (same pattern as
+// blogs/index.astro), then look it up for both the featured and recent slots.
+const thumbnails = new Map(
+  await Promise.all(
+    articles.map(async (a) => [a.id, await cardThumbnail(a.data.thumbnail)] as const),
+  ),
+);
+
+const latest = articles[0];
+const latestPost = latest && {
+  href: `/blogs/${toIsoDate(latest.data.date)}/${latest.data.slug}`,
+  title: latest.data.title,
+  date: toIsoDate(latest.data.date),
+  dateLabel: formatLatvianDate(latest.data.date),
+  summary: latest.data.summary,
+  imageUrl: thumbnails.get(latest.id)!,
+  imageAlt: latest.data.thumbnailAlt ?? latest.data.title,
+};
+
+// "Pēdējie raksti" — the posts after the featured one, also derived from the
+// collection. The section only renders once there are enough posts to fill it
+// (see the guard in the template), so it stays hidden while the blog is small.
+// Minimum posts (beyond the featured one) before the grid looks intentional.
+const RECENT_POSTS_MIN = 2;
+const recentPosts = articles.slice(1).map((a) => ({
+  href: `/blogs/${toIsoDate(a.data.date)}/${a.data.slug}`,
+  title: a.data.title,
+  role: formatLatvianDate(a.data.date),
+  imageUrl: thumbnails.get(a.id)!,
+  imageAlt: a.data.thumbnailAlt ?? a.data.title,
+}));
+
+// `frameBg` is optional per project (a backdrop colour behind logo-style
+// images); declared here so ProjectCard's optional prop type-checks even when
+// no project sets it.
+const sideProjects: {
+  href: string;
+  title: string;
+  role: string;
+  imageUrl: string;
+  frameBg?: string;
+}[] = [
+    {
+    href: "https://pasaulesture.lv/",
+    title: "Pasaules Tūre",
+    role: "Riteņbraukšanas pasākumi Latvijā (ar našķiem)",
+    imageUrl: pasaulesTureImage,
+  },
+  {
+    href: "https://noskrien-ziemu.pages.dev/",
+    title: "noskrien-ziemu.pages.dev",
+    role: "Dalībnieku rezultātu salīdzināšana",
+    imageUrl: "https://noskrien-ziemu.pages.dev/og-image.png",
+  },
+];
 ---
 
-<BaseLayout title="Dāvis Pazars — drīzumā">
-  <main class="coming-soon">
-    <!-- Kalnu grēda — krāsas no dizaina tokeniem,
-         tāpēc grafika pielāgojas arī tumšajam režīmam. -->
-    <svg
-      class="graphic color-fg-muted"
-      width="280"
-      height="120"
-      viewBox="0 0 280 120"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M8 104 H272"
-        stroke="var(--color-line-default)"
-        stroke-width="1.5"
-        stroke-linecap="round"
+<BaseLayout>
+  <Header
+    name={site.name}
+    role={site.role}
+    activePage="home"
+  />
+
+  <main>
+    <!-- Currently working on -->
+    <section class="section-hero">
+      <SectionHeader
+        id="currently-working-on"
+        title="Šobrīd gatavojos"
+        showDot={true}
+        class="pt-3"
       />
-      <path
-        d="M8 104 L64 44 L96 78 L140 24 L196 88 L232 56 L272 104"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
+      
+      <h2 class="h1 mb-1">
+        <a href="https://oisanstrailtour.fr/en/home/" target="_blank" rel="noopener" class="d-inline-flex flex-items-center gap-2">
+          Oisans Trail Tour
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
+        </a>
+      </h2>
+    </section>
 
-    <h1>Drīzumā</h1>
+    <!-- Introduction -->
+    <section id="intro">
+      <p>
+        Šī mājaslapa ir mans mēģinājums radīt vietu brīvi pieejamai un skrējējiem noderīgai informācijai,
+        kas nav aprakta reklāmās vai paslēpta zem reģistrācijām un maksas abonementiem. Varu arī apsolīt,
+        ka ikvienu rakstu būšu rakstījis un pārbaudījis es pats nevis kāds mākslīgā intelekta rīks.
+      </p>
+    </section>
 
-    <p class="color-fg-muted">Pa to laiku mani vari atrast šeit:</p>
+    <!-- Latest article -->
+    {
+      latestPost && (
+        <section>
+          <SectionHeader id="latest-post" title="Jaunākais raksts" />
+          <FeaturedPost
+            href={latestPost.href}
+            title={latestPost.title}
+            date={latestPost.date}
+            dateLabel={latestPost.dateLabel}
+            summary={latestPost.summary}
+            imageUrl={latestPost.imageUrl}
+            imageAlt={latestPost.imageAlt}
+          />
+        </section>
+      )
+    }
 
-    <nav class="socials d-flex flex-items-center gap-5" aria-label="Sociālie tīkli">
-      {
-        site.socials.map((social) => (
-          <a
-            href={social.href}
-            target="_blank"
-            rel="noopener"
-            class="d-flex flex-items-center gap-1"
-          >
-            {social.label}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="trailingIcon"
-            >
-              <path d="M7 7h10v10" />
-              <path d="M7 17 17 7" />
-            </svg>
-          </a>
-        ))
-      }
-    </nav>
+    <!-- Recent posts -->
+    {
+      recentPosts.length >= RECENT_POSTS_MIN && (
+        <section>
+          <SectionHeader id="recent-posts" title="Pēdējie raksti" />
+          <div class="content-grid -equal mb-3">
+            {recentPosts.map((post) => (
+              <ProjectCard
+                href={post.href}
+                title={post.title}
+                role={post.role}
+                imageUrl={post.imageUrl}
+                imageAlt={post.imageAlt}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Side projects -->
+    <section>
+      <SectionHeader id="side-projects" title="Citi projekti" />
+      <div class="content-grid -equal">
+        {
+          sideProjects.map((project) => (
+            <ProjectCard
+              href={project.href}
+              title={project.title}
+              role={project.role}
+              imageUrl={project.imageUrl}
+              external={true}
+              frameBg={project.frameBg}
+            />
+          ))
+        }
+      </div>
+    </section>
   </main>
+
+  <Footer />
 </BaseLayout>
-
-<style>
-  /* Fill the viewport minus the actual body padding (it grows past the
-     --body-padding token at the breakpoints below) so the group centers. */
-  .coming-soon {
-    min-height: calc(100svh - 2 * var(--body-padding));
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 8px;
-  }
-
-  @media (min-width: 768px) {
-    .coming-soon {
-      min-height: calc(100svh - 2 * 60px);
-    }
-  }
-
-  @media (min-width: 1012px) {
-    .coming-soon {
-      min-height: calc(100svh - 2 * 80px);
-    }
-  }
-
-  .graphic {
-    max-width: 100%;
-    height: auto;
-    margin-bottom: 16px;
-  }
-
-  .coming-soon h1 {
-    margin: 0;
-  }
-
-  .socials {
-    margin-top: 8px;
-  }
-
-  .socials a {
-    color: var(--color-fg-muted);
-    text-decoration: none;
-  }
-
-  .socials a:hover {
-    color: var(--color-fg-default);
-    text-decoration: underline;
-    text-decoration-color: var(--color-line-emphasis);
-  }
-</style>
