@@ -29,6 +29,36 @@ magick /tmp/circle.png -resize 180x180 -background white -flatten public/apple-t
 magick /tmp/circle.png -define icon:auto-resize=16,32,48,64 public/favicon.ico
 ```
 
+## Writing posts
+
+Posts are Markdown in `src/content/posts/`. The filename is irrelevant — the URL
+`/blogs/<date>/<slug>` is built from frontmatter `date` + `slug`. Set `draft: true`
+to keep one out of the build.
+
+**Thumbnail** is a *local* image, optimized at build time and reused everywhere:
+
+```yaml
+thumbnail: "../../assets/my-photo.jpg"   # relative to the post file → src/assets/
+thumbnailAlt: "Short description"
+```
+
+From that one file Astro emits a responsive WebP hero, WebP listing-card images,
+and a dedicated **1200×630 JPEG** Open Graph share image at an absolute URL (the
+format/size link previews want). Put source images in `src/assets/` — never
+`public/`, which is served unoptimized.
+
+**Body Markdown** supports the usual GFM, plus:
+
+- **Tables** and **blockquotes** (`>`) — standard Markdown, styled automatically.
+- **Photo credit** — a standalone image with a *title* becomes a `<figure>` with a
+  `<figcaption>`, while staying optimized (no raw HTML needed):
+
+  ```markdown
+  ![Alt text](../../assets/photo.jpg "Foto: Photographer Name")
+  ```
+
+  The title text becomes the visible caption. (Plumbing: `src/plugins/rehype-figcaption.mjs`.)
+
 ## Environments
 
 Three tiers — local for **dev**, Cloudflare Pages **preview** for test, Pages

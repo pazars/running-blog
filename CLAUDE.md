@@ -12,6 +12,23 @@ D1 backend for article view counts. UI copy and routes are in **Latvian**
 > MCP**, which is well-maintained with a high trust score — prefer it over web
 > search or recall.
 
+## Content policy (no AI-written prose)
+
+This blog has a **strict no-AI content policy** — it's an editorial promise to
+readers (the home-page intro states every article is written and checked by
+Dāvis, not an AI tool). Respect it:
+
+- **Code is fine to build/generate; reader-facing *prose* is not.** Never write
+  or invent article bodies, summaries, subtitles, captions, or any human-facing
+  copy. That's Dāvis's to write.
+- **Placeholder text uses the `lorem-ipsum` package — never AI-authored filler.**
+  When a component, post, or layout needs stand-in copy, generate it with
+  `lorem-ipsum` (already a devDependency). Do not hand-write plausible-sounding
+  sentences (in any language) as a substitute.
+- **Every piece of placeholder text gets a `TODO` comment** flagging that real
+  copy is still needed (e.g. `<!-- TODO: replace placeholder copy -->` or a
+  `{/* TODO: ... */}` in `.astro`), so nothing ships as if it were final.
+
 ## Commands
 
 ```bash
@@ -133,6 +150,26 @@ typed bindings). Not worth it for one view counter.
   runs token/validation cases offline and live Resend cases against a **test** key +
   the `delivered@resend.dev` simulator (self-skips without creds).
   `.github/workflows/ci.yml` runs build + test on PRs to `main`.
+
+## Testing policy (read before editing any test)
+
+**Never touch tests mid-feature, ever — and never unprompted.** During feature
+work, tests are a fixed yardstick: do **not** create, edit, delete, skip, or
+relax a test to make a change "pass". Changing the test to fit the code (rather
+than fixing the code) games the signal and hides real regressions. This holds
+even when a test looks wrong or in the way.
+
+- While building a feature, leave the existing suite exactly as-is. If a test
+  fails, fix the **code** — or surface the failure to the user; don't adjust the
+  test.
+- Tests are reviewed and new ones added **only after the feature is complete**,
+  as a **separate, explicit step the user asks for**. No test changes ride along
+  in feature commits.
+- You **may remind** the user that tests are due once the feature is done — but
+  do not write or modify them until they ask.
+
+The one exception is when the user's current request *is* the testing task
+(e.g. "add tests for X", "update the tests"). Then, and only then, author tests.
 
 ## Conventions
 
