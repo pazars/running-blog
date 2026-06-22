@@ -8,7 +8,10 @@ import { glob } from "astro/loaders";
 // date baked into filenames. (English code id `posts`; the public route stays
 // `/blogs`.)
 const posts = defineCollection({
-  loader: glob({ base: "./src/content/posts", pattern: "**/*.md" }),
+  // `[^_]*` skips `_`-prefixed files (e.g. `_example.md`): unlike `src/pages`,
+  // the glob loader does NOT treat the underscore prefix as "private", so it
+  // must be excluded here or the example post would be built as a real route.
+  loader: glob({ base: "./src/content/posts", pattern: "**/[^_]*.md" }),
   // Function-form schema so the `image()` helper is available: it resolves a
   // frontmatter path (relative to the post file, e.g. ../../assets/foo.jpg) to
   // an ImageMetadata object and pulls the file into Astro's image pipeline. The
@@ -48,7 +51,8 @@ const posts = defineCollection({
 // filters them client-side by `tags`. (English code id `recommendations`; the
 // public route stays `/iesaku`.)
 const recommendations = defineCollection({
-  loader: glob({ base: "./src/content/recommendations", pattern: "**/*.md" }),
+  // Skip `_`-prefixed files here too (see the note on the posts loader).
+  loader: glob({ base: "./src/content/recommendations", pattern: "**/[^_]*.md" }),
   schema: z.object({
     title: z.string(),
     // Shown as the card summary.
