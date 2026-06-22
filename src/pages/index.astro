@@ -46,7 +46,16 @@ const recentPosts = articles.slice(1).map((a) => ({
   imageAlt: a.data.thumbnailAlt ?? a.data.title,
 }));
 
-const sideProjects = [
+// `frameBg` is optional per project (a backdrop colour behind logo-style
+// images); declared here so ProjectCard's optional prop type-checks even when
+// no project sets it.
+const sideProjects: {
+  href: string;
+  title: string;
+  role: string;
+  imageUrl: string;
+  frameBg?: string;
+}[] = [
     {
     href: "https://pasaulesture.lv/",
     title: "pasaulesture.lv",

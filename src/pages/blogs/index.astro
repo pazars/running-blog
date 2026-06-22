@@ -146,7 +146,9 @@ const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase("lv") + s.slice(
         const db = b.dataset.date || "";
         return mode === "date-asc" ? da.localeCompare(db) : db.localeCompare(da);
       });
-      sorted.forEach((el) => list.appendChild(el));
+      // `list` is non-null here (guarded above); the narrowing just doesn't
+      // reach into this nested closure.
+      sorted.forEach((el) => list!.appendChild(el));
     }
 
     // Reflect the active set onto the chips. The "Visas tēmas" chip (empty
