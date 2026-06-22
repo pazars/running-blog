@@ -5,11 +5,12 @@
 title: "Culpa labore sunt deserunt"
 subtitle: "Est et dolore duis sunt id culpa Lorem aliquip et consequat nisi."
 summary: "Culpa dolor sint reprehenderit ullamco non."
-slug: "sacensibu-nedelas-planosana"
+slug: "example-blog-post"
 date: 2026-06-15
 tags: ["treniņi", "sacensības"]
-thumbnail: "../../assets/thumb-sacensibu-nedela.jpg"
+thumbnail: "../../assets/thumb-example.jpg"
 thumbnailAlt: "Eu anim dolor consectetur" # TODO: real alt text
+thumbnailAttribution: "Foto: Eu irure" # TODO: real photo credit (omit if none)
 ---
 
 <!-- TODO: all body copy below is lorem-ipsum placeholder — replace with the real article. -->
@@ -22,7 +23,7 @@ Nostrud do deserunt ipsum ad nisi deserunt culpa consectetur. Dolor velit aliqua
 
 Ex laborum duis laboris aliqua sunt ea.
 
-![Minim cillum fugiat laboris](../../assets/taka-rudeni.jpg "Foto: Eu irure")
+![Minim cillum fugiat laboris](../../assets/thumb-example.jpg "Foto: Eu irure")
 
 Eiusmod nisi anim ex reprehenderit culpa enim dolor. Veniam veniam officia in officia est nostrud enim. Sit enim commodo esse proident. Ullamco labore quis culpa culpa non enim minim laboris. Non Lorem deserunt aliquip sint. Consequat minim qui aliqua commodo nostrud sint consequat aliquip ex sint laborum.
 
