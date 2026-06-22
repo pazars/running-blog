@@ -1,5 +1,5 @@
 ---
-import { site, navLinks, newsletter } from "../site.config";
+import { navLinks, newsletter } from "../site.config";
 import { gravatarUrl } from "../utils/avatar";
 
 // Site-wide profile image from the Gravatar account (see src/utils/avatar.ts).
@@ -10,8 +10,6 @@ const gravatarAvatarLarge = gravatarUrl(480);
 interface Props {
   name: string;
   role: string;
-  company: string;
-  email: string;
   avatarUrl?: string;
   activePage?: string;
 }
@@ -19,8 +17,6 @@ interface Props {
 const {
   name,
   role,
-  company,
-  email,
   avatarUrl = gravatarAvatar,
   activePage = "blog",
 } = Astro.props;

@@ -36,8 +36,6 @@ const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase("lv") + s.slice(
   <Header
     name={site.name}
     role={site.role}
-    company={site.company}
-    email={site.email}
     activePage="blog"
   />
 
@@ -109,7 +107,7 @@ const capitalize = (s: string) => s.charAt(0).toLocaleUpperCase("lv") + s.slice(
     </section>
   </main>
 
-  <Footer email={site.email} />
+  <Footer />
 </BaseLayout>
 
 <script>

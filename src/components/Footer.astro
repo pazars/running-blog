@@ -2,11 +2,10 @@
 import { navLinks, site } from "../site.config";
 
 interface Props {
-  email: string;
   socials?: { label: string; href: string }[];
 }
 
-const { email, socials = site.socials } = Astro.props;
+const { socials = site.socials } = Astro.props;
 ---
 
 <footer>

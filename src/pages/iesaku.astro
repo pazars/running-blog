@@ -54,8 +54,6 @@ const thumbnails = await Promise.all(
   <Header
     name={site.name}
     role={site.role}
-    company={site.company}
-    email={site.email}
     activePage="iesaku"
   />
 
@@ -141,7 +139,7 @@ const thumbnails = await Promise.all(
     </section>
   </main>
 
-  <Footer email={site.email} />
+  <Footer />
 </BaseLayout>
 
 <style>
