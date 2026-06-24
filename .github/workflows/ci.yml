@@ -51,7 +51,3 @@ jobs:
           RESEND_AUDIENCE_VERIFIED_ID: ${{ vars.RESEND_AUDIENCE_VERIFIED_ID }}
           RESEND_FROM: ${{ vars.RESEND_FROM }}
           RESEND_CONFIRM_TEMPLATE_ALIAS: ${{ vars.RESEND_CONFIRM_TEMPLATE_ALIAS }}
-          # Optional: set to Turnstile's always-pass dummy secret
-          # (1x0000000000000000000000000000000AA) to exercise the bot check too.
-          # Unset → subscribe skips Turnstile; the dummy-key siteverify tests still run.
-          TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}

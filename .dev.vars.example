@@ -9,7 +9,3 @@ RESEND_API_KEY="re_..."
 
 # Long random string that signs/verifies the double opt-in confirm token.
 RESEND_VERIFY_SECRET="any-long-random-string"
-
-# Optional: Cloudflare Turnstile secret to exercise the bot check locally. Leave it
-# unset to skip the check. Cloudflare's always-pass dummy secret is shown.
-# TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"

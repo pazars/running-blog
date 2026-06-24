@@ -11,13 +11,12 @@
 // The handlers only read { request, env } from the Pages context, so we hand-build
 // a minimal context. Run under Node via `vitest run` (see package.json).
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { onRequestPost } from "./subscribe";
 import { onRequestGet } from "./confirm";
 import { Resend } from "resend";
 import { signToken, verifyToken } from "./_token";
 import { addContact, deleteContact, getContact } from "./_resend";
-import { verifyTurnstile } from "./_turnstile";
 
 const env = {
   RESEND_API_KEY: process.env.RESEND_API_KEY ?? "",
@@ -27,14 +26,7 @@ const env = {
   // Confirm-email Resend template alias. The live "sends the confirm mail" case needs a
   // real published template in the test account; without it the block self-skips.
   RESEND_CONFIRM_TEMPLATE_ALIAS: process.env.RESEND_CONFIRM_TEMPLATE_ALIAS ?? "",
-  // Optional: when set (CI), subscribe enforces Turnstile. The always-pass dummy
-  // secret (1x000…AA) lets any non-empty token through.
-  TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY ?? "",
 };
-
-// Cloudflare's documented Turnstile test secrets (no real widget needed).
-const TURNSTILE_ALWAYS_PASS = "1x0000000000000000000000000000000AA";
-const TURNSTILE_ALWAYS_FAIL = "2x0000000000000000000000000000000AA";
 
 const hasCreds = Boolean(
   env.RESEND_API_KEY &&
@@ -109,88 +101,6 @@ describe("subscribe input validation (no network)", () => {
   });
 });
 
-// Turnstile — these run on every `npm test`: no creds, no real network (fetch is
-// mocked). They cover the verify helper's branches and prove subscribe.ts actually
-// enforces the check when the secret is configured. The live siteverify cases (real
-// Cloudflare endpoint + dummy secrets) are in the creds-gated block below.
-const SITEVERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-const siteverifyResponse = (success: boolean) =>
-  new Response(JSON.stringify({ success }), { status: 200 });
-
-describe("verifyTurnstile (mocked siteverify)", () => {
-  afterEach(() => vi.restoreAllMocks());
-
-  it("rejects an empty token without calling siteverify", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
-    expect(await verifyTurnstile(TURNSTILE_ALWAYS_PASS, "")).toBe(false);
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
-
-  it("returns true when siteverify reports success", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(siteverifyResponse(true));
-    expect(await verifyTurnstile("secret", "token")).toBe(true);
-  });
-
-  it("returns false when siteverify reports failure", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(siteverifyResponse(false));
-    expect(await verifyTurnstile("secret", "bad-token")).toBe(false);
-  });
-
-  it("fails closed (false) when the siteverify request throws", async () => {
-    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network down"));
-    expect(await verifyTurnstile("secret", "token")).toBe(false);
-  });
-
-  it("POSTs the secret, token and remote IP to the siteverify endpoint", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(siteverifyResponse(true));
-
-    await verifyTurnstile("the-secret", "the-token", "203.0.113.7");
-
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    const [url, init] = fetchSpy.mock.calls[0];
-    expect(url).toBe(SITEVERIFY);
-    expect(init?.method).toBe("POST");
-    expect(JSON.parse(String(init?.body))).toEqual({
-      secret: "the-secret",
-      response: "the-token",
-      remoteip: "203.0.113.7",
-    });
-  });
-});
-
-describe("subscribe enforces Turnstile when the secret is set (no Resend network)", () => {
-  afterEach(() => vi.restoreAllMocks());
-
-  it("returns 403 captcha_failed when no token is supplied", async () => {
-    // The empty token short-circuits inside verifyTurnstile, so this reaches neither
-    // the network nor Resend — it just proves the gate runs before any send.
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
-    const res = await onRequestPost(
-      ctx(subscribeReq(JSON.stringify({ email: "real@example.com" })), {
-        TURNSTILE_SECRET_KEY: TURNSTILE_ALWAYS_PASS,
-      }),
-    );
-    expect(res.status).toBe(403);
-    expect((await res.json()).error).toBe("captcha_failed");
-    expect(fetchSpy).not.toHaveBeenCalled();
-  });
-
-  it("returns 403 (and never reaches Resend) when siteverify rejects the token", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(siteverifyResponse(false));
-    const res = await onRequestPost(
-      ctx(
-        subscribeReq(JSON.stringify({ email: "real@example.com", turnstileToken: "bad-token" })),
-        { TURNSTILE_SECRET_KEY: "secret" },
-      ),
-    );
-    expect(res.status).toBe(403);
-    expect((await res.json()).error).toBe("captcha_failed");
-    // siteverify was the only outbound call; the 403 returns before Resend is built.
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
-    expect(fetchSpy.mock.calls[0][0]).toBe(SITEVERIFY);
-  });
-});
-
 describe.skipIf(!hasCreds)("live Resend flow (simulator address + test audiences)", () => {
   const resend = new Resend(env.RESEND_API_KEY || "re_placeholder");
 
@@ -200,7 +110,7 @@ describe.skipIf(!hasCreds)("live Resend flow (simulator address + test audiences
 
   it("sends the confirm mail without adding a contact yet", async () => {
     const res = await onRequestPost(
-      ctx(subscribeReq(JSON.stringify({ email: TEST_EMAIL, turnstileToken: "dummy" })), env),
+      ctx(subscribeReq(JSON.stringify({ email: TEST_EMAIL })), env),
     );
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe("pending");
@@ -213,18 +123,10 @@ describe.skipIf(!hasCreds)("live Resend flow (simulator address + test audiences
   it("no-ops (no send) when already verified", async () => {
     await addContact(resend, env.RESEND_AUDIENCE_VERIFIED_ID, TEST_EMAIL);
     const res = await onRequestPost(
-      ctx(subscribeReq(JSON.stringify({ email: TEST_EMAIL, turnstileToken: "dummy" })), env),
+      ctx(subscribeReq(JSON.stringify({ email: TEST_EMAIL })), env),
     );
     expect(res.status).toBe(200);
     expect((await res.json()).status).toBe("already");
-  });
-
-  it("siteverify accepts a token with the always-pass test secret", async () => {
-    expect(await verifyTurnstile(TURNSTILE_ALWAYS_PASS, "dummy")).toBe(true);
-  });
-
-  it("siteverify rejects a token with the always-fail test secret", async () => {
-    expect(await verifyTurnstile(TURNSTILE_ALWAYS_FAIL, "dummy")).toBe(false);
   });
 
   it("confirm with a valid token adds the contact to the list", async () => {

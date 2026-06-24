@@ -175,17 +175,6 @@
       const panel = section.closest("[data-js-dropdown-panel]");
       const originalBtnText = btn.textContent;
 
-      // Cloudflare Turnstile widget for THIS form, if rendered. Reset issues a fresh,
-      // single-use token for the next submit.
-      const turnstileWidget = form.querySelector(".cf-turnstile");
-      const resetTurnstile = () => {
-        if (window.turnstile && turnstileWidget) {
-          try {
-            window.turnstile.reset(turnstileWidget);
-          } catch {}
-        }
-      };
-
       // Cancel any running timer and hide the toast. Idempotent.
       const clearToast = () => {
         if (section._nlTimer) {
@@ -211,7 +200,6 @@
         btn.textContent = originalBtnText;
         status.textContent = "";
         status.classList.remove("is-error");
-        resetTurnstile();
         // Reveal the form area again: drop the toasting state (which hid everything
         // but the toast) and clear any fallback d-none left on the form.
         section.classList.remove("is-toasting");
@@ -285,9 +273,6 @@
         const msgError = section.dataset.msgError || "";
         const msgRateLimit = section.dataset.msgRatelimit || msgError;
 
-        const tokenInput = form.querySelector('[name="cf-turnstile-response"]');
-        const turnstileToken = tokenInput ? tokenInput.value : "";
-
         // Submitting state: lock the button width so it can't jump, keep a real label
         // (not a bare "..."), and mark it busy for assistive tech.
         const submittingLabel = btn.dataset.labelSubmitting || originalBtnText;
@@ -300,8 +285,8 @@
         status.classList.remove("is-error");
 
         // Re-enable the form and show an inline error (the form stays put so the user
-        // can act/retry); reset Turnstile so a fresh token is issued. Errors never use
-        // the auto-dismissing toast — only the two success outcomes do.
+        // can act/retry). Errors never use the auto-dismissing toast — only the two
+        // success outcomes do.
         const fail = (message) => {
           btn.disabled = false;
           btn.removeAttribute("aria-busy");
@@ -310,7 +295,6 @@
           emailInput.disabled = false;
           status.textContent = message;
           status.classList.add("is-error");
-          resetTurnstile();
         };
 
         // Double opt-in: this only stages the address + sends a confirm email.
@@ -319,7 +303,7 @@
           const res = await fetch("/api/newsletter/subscribe", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email, turnstileToken }),
+            body: JSON.stringify({ email }),
           });
           const data = await res.json().catch(() => ({}));
 

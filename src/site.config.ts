@@ -46,13 +46,6 @@ export const newsletter = {
   // Shown on HTTP 429 (rate limit) — distinct from the generic error so the user
   // knows to simply wait rather than that something is broken.
   rateLimitMessage: "Serverim klājas grūti. Lūdzu, pamēģini vēlreiz nedaudz vēlāk.",
-  // Cloudflare Turnstile public site key (bot protection on the form). A configured
-  // key makes the widget render; leave it empty to disable — the form then submits
-  // without a token and the backend skips the check (so local dev works). The widget
-  // must allow davispazars.lv, the *.pages.dev preview hosts, and localhost. The
-  // matching SECRET is a Pages secret (TURNSTILE_SECRET_KEY), never committed; without
-  // it the backend skips verification even when the widget renders.
-  turnstileSiteKey: "0x4AAAAAADkV-2QK6RDaJjpK",
 };
 
 // Copy for the standalone landing pages the double opt-in confirm flow redirects
