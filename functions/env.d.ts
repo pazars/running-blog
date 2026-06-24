@@ -22,12 +22,6 @@ interface NewsletterEnv {
    *  Fed into the SDK's `template.id`, which accepts a UUID or the alias. */
   RESEND_CONFIRM_TEMPLATE_ALIAS: string;
   /**
-   * Cloudflare Turnstile secret key. SECRET. Optional: when unset, subscribe.ts
-   * skips the bot check (so local dev / pre-setup still works). The matching site
-   * key is public and lives in src/site.config.ts (`newsletter.turnstileSiteKey`).
-   */
-  TURNSTILE_SECRET_KEY?: string;
-  /**
    * Cloudflare Rate Limiting binding (wrangler.toml [[ratelimits]]). Optional: when
    * absent, subscribe.ts skips the per-IP check. Typed structurally so it doesn't
    * depend on cf-typegen having generated the `RateLimit` type.

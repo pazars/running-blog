@@ -14,7 +14,6 @@
 import { Resend } from "resend";
 import { getContact, sendTemplate } from "./_resend";
 import { signToken } from "./_token";
-import { verifyTurnstile } from "./_turnstile";
 
 // Variable the Resend confirm-email template expects (referenced as {{{confirm_url}}}
 // in the dashboard). The template owns the subject + body/markup; we only fill this.
@@ -48,22 +47,13 @@ export const onRequestPost: PagesFunction<Env & NewsletterEnv> = async ({ reques
   }
 
   let email = "";
-  let turnstileToken = "";
   try {
-    const body = (await request.json()) as { email?: unknown; turnstileToken?: unknown };
+    const body = (await request.json()) as { email?: unknown };
     email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    turnstileToken = typeof body.turnstileToken === "string" ? body.turnstileToken : "";
   } catch {
     return json({ error: "bad_request" }, 400);
   }
   if (!isEmail(email)) return json({ error: "invalid_email" }, 400);
-
-  // Bot check (skipped when Turnstile isn't configured, so local/dev still works).
-  if (env.TURNSTILE_SECRET_KEY) {
-    const ip = request.headers.get("CF-Connecting-IP") ?? undefined;
-    const human = await verifyTurnstile(env.TURNSTILE_SECRET_KEY, turnstileToken, ip);
-    if (!human) return json({ error: "captcha_failed" }, 403);
-  }
 
   const resend = new Resend(env.RESEND_API_KEY);
 

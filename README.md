@@ -133,8 +133,7 @@ and http.request.method eq "POST"`, e.g. 10 requests / 1 min per IP → *Block*.
 
 ## Secrets / vars
 
-The view counter needs none. The **newsletter** (see below) needs five Resend keys,
-plus an optional Turnstile secret:
+The view counter needs none. The **newsletter** (see below) needs five Resend keys:
 
 | Name | Kind | Where it's set |
 |------|------|----------------|
@@ -143,14 +142,11 @@ plus an optional Turnstile secret:
 | `RESEND_FROM` | var | `wrangler.toml` `[vars]` / `[env.preview.vars]` · GitHub Actions **variable** |
 | `RESEND_AUDIENCE_VERIFIED_ID` | var | same — id of the *verified* mailing list |
 | `RESEND_CONFIRM_TEMPLATE_ALIAS` | var | same — alias of the Resend template for the confirm email |
-| `TURNSTILE_SECRET_KEY` | secret | optional bot check; same places as the Resend secrets. Unset → skipped |
 
 The audience/template **ids** are account-scoped identifiers, not credentials — they
 grant nothing without the API key (which an attacker who had it could use to list the
 audiences anyway), so committing them as `[vars]` adds no real exposure and avoids the
-operational cost of provisioning them out-of-band in every environment. The Turnstile
-**site** key is public and lives in `src/site.config.ts`
-(`newsletter.turnstileSiteKey`), not here.
+operational cost of provisioning them out-of-band in every environment.
 
 Secrets **never** go in `wrangler.toml`. Local secrets live in `.dev.vars`
 (gitignored); remote ones in `npx wrangler pages secret put <NAME>` or the dashboard.
@@ -206,25 +202,16 @@ One-time Resend setup:
    `RESEND_CONFIRM_TEMPLATE_ALIAS`, all pointing at the **test** key + test
    audience/template, for the CI job below.
 
-### Bot protection (Cloudflare Turnstile)
+### Bot protection
 
-The form is optionally guarded by [Turnstile](https://developers.cloudflare.com/turnstile/).
-A site key is **currently configured** (`src/site.config.ts` → `newsletter.turnstileSiteKey`),
-so the widget renders; clear that key to disable it. The backend skips the check whenever
-`TURNSTILE_SECRET_KEY` is unset, so local dev still works even with the widget shown. To
-(re)configure:
-
-1. Create a Turnstile widget in the Cloudflare dashboard; allow the hostnames
-   `davispazars.lv`, your `*.pages.dev` preview host, and `localhost`.
-2. Put the **site key** in `src/site.config.ts` → `newsletter.turnstileSiteKey`
-   (public, committed). The widget then renders in every newsletter form and
-   `BaseLayout` loads `api.js`.
-3. Set the **secret key** as `TURNSTILE_SECRET_KEY` (Pages secret per env, `.dev.vars`
-   locally). `functions/api/newsletter/subscribe.ts` then verifies every sign-up via
-   siteverify and returns `403` on failure.
-
-For tests/CI use Cloudflare's dummy keys — site `1x00000000000000000000AA` (always
-passes) and secret `1x0000000000000000000000000000000AA` (always passes).
+There is **no CAPTCHA / Turnstile** on the form, by design. Subscribe is
+non-destructive — it only emails a signed double opt-in link and stores nothing
+until the confirm click — so the abuse surface is small. The guardrails are the
+**double opt-in** itself (the confirm click is proof of a real, reachable human),
+the per-IP **rate limit** below, and a **WAF rate-limiting rule** at the edge. A
+bot check was dropped because it added friction and could silently lock out
+legitimate users whose browser (e.g. Safari with iCloud Private Relay) blocked
+the challenge.
 
 ### Rate limiting
 

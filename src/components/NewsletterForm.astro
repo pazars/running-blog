@@ -44,16 +44,6 @@ const {
     >
       {newsletter.subscribeButton}
     </button>
-    {
-      newsletter.turnstileSiteKey && (
-        <div
-          class="cf-turnstile"
-          data-sitekey={newsletter.turnstileSiteKey}
-          data-theme="auto"
-          data-appearance="interaction-only"
-        />
-      )
-    }
   </form>
   <p class="newsletter-note">
     {showUnsubscribeInfo ? newsletter.unsubscribeInfo : newsletter.unsubscribeNote}
