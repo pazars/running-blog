@@ -141,11 +141,6 @@ const lv = {
   "newsletter.invalid.linkText": "Pierakstīties vēlreiz",
   "newsletter.invalid.metaDescription":
     "Šī apstiprināšanas saite ir nederīga vai novecojusi.",
-  "newsletter.unsubscribed.title": "Esi atrakstījies",
-  "newsletter.unsubscribed.body":
-    "Tava e-pasta adrese ir izņemta no vēstkopas adresātu saraksta. Turpmāk vairs nesaņemsi e-pastus.",
-  "newsletter.unsubscribed.linkText": "Atpakaļ uz blogu",
-  "newsletter.unsubscribed.metaDescription": "Turpmāk vairs nesaņemsi e-pastus.",
 
   // ---- 404 --------------------------------------------------------------
   "notFound.body": "Šī lapa neeksistē vai ir pārvietota.",
@@ -268,11 +263,6 @@ const en = {
   "newsletter.invalid.linkText": "Sign up again",
   "newsletter.invalid.metaDescription":
     "This confirmation link is invalid or expired.",
-  "newsletter.unsubscribed.title": "You've unsubscribed",
-  "newsletter.unsubscribed.body":
-    "Your email address has been removed from the newsletter mailing list. You won't receive any more emails.",
-  "newsletter.unsubscribed.linkText": "Back to the blog",
-  "newsletter.unsubscribed.metaDescription": "You won't receive any more emails.",
 
   "notFound.body": "This page doesn't exist or has been moved.",
   "notFound.backHome": "← Back home",

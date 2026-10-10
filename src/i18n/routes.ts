@@ -22,7 +22,7 @@ export type RouteId = keyof typeof ROUTE_SEGMENTS;
  * segment is the same in both locales (it never appears in prose), but it is
  * listed here so `functions/api/newsletter/_paths.ts` has one place to mirror.
  */
-export const NEWSLETTER_SUBPAGES = ["confirmed", "invalid", "unsubscribe"] as const;
+export const NEWSLETTER_SUBPAGES = ["confirmed", "invalid"] as const;
 export type NewsletterSubpage = (typeof NEWSLETTER_SUBPAGES)[number];
 
 /**
