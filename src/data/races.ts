@@ -21,6 +21,14 @@ export interface RaceResult {
 
 export const trailRunning: RaceResult[] = [
   {
+    title: {
+      lv: "Siguldas kalnu maratons 🏆",
+      en: "Sigulda Mountain Marathon 🏆",
+    },
+    description: "67km · 2328m · 06:34:58",
+    trailing: "2026",
+  },
+  {
     title: { lv: "Vilkaču maratons 🏆", en: "Werewolf Marathon 🏆" },
     description: "42km · 2200m · 04:19:22",
     trailing: "2026",
