@@ -65,6 +65,7 @@ const lv = {
   "blog.sortOldest": "Vecākie",
   "blog.sortPopular": "Populārākie",
   "blog.empty": "Nav atrasts neviens raksts ar šo filtru.",
+  "blog.none": "Vēl nav neviena raksta.",
 
   // ---- Recommendations (/iesaku) ----------------------------------------
   // NOTE: `recs.itemLanguage.*` is the language of the RECOMMENDED ITEM, not the
@@ -195,6 +196,7 @@ const en = {
   "blog.sortOldest": "Oldest",
   "blog.sortPopular": "Most popular",
   "blog.empty": "No articles match this filter.",
+  "blog.none": "No articles yet.",
 
   "recs.title": "Picks",
   "recs.description": "People and content that inspire me.",
