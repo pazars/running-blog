@@ -89,10 +89,14 @@ const recentPosts = articles.slice(1).map((a) => ({
       />
 
       <h2 class="h1 mb-1">
-        <a href={currentPreparation.href[lang]} target="_blank" rel="noopener" class="d-inline-flex flex-items-center gap-2">
-          {currentPreparation.title[lang]}
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
-        </a>
+        {currentPreparation.href ? (
+          <a href={currentPreparation.href[lang]} target="_blank" rel="noopener" class="d-inline-flex flex-items-center gap-2">
+            {currentPreparation.title[lang]}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
+          </a>
+        ) : (
+          currentPreparation.title[lang]
+        )}
       </h2>
     </section>
 

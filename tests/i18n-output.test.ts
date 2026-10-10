@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { currentPreparation } from "../src/data/current-preparation";
 
 const DIST = join(process.cwd(), "dist");
 const englishHome = join(DIST, "en", "index.html");
@@ -59,10 +60,16 @@ describe("English build output", () => {
     const english = readFileSync(join(DIST, "en", "index.html"), "utf8");
     const latvian = readFileSync(join(DIST, "index.html"), "utf8");
 
-    expect(english).toContain("SKM (Latvian Trail Running Championship)");
-    expect(english).toContain('href="https://www.raid.lv/en/"');
-    expect(latvian).toContain("SKM (LČ taku skriešanā)");
-    expect(latvian).toContain('href="https://www.raid.lv/lv/"');
+    const { title, href } = currentPreparation;
+
+    // Each locale gets its own title, and its own link when there is one.
+    expect(english).toContain(title.en);
+    expect(latvian).toContain(title.lv);
+    if (title.en !== title.lv) expect(english).not.toContain(title.lv);
+    if (href) {
+      expect(english).toContain(`href="${href.en}"`);
+      expect(latvian).toContain(`href="${href.lv}"`);
+    }
   });
 
   it("renders only the localized Pasaules Tūre project card", () => {
