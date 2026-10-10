@@ -5,9 +5,13 @@ import BaseLayout from "./BaseLayout.astro";
 import Header from "../components/Header.astro";
 import NewsletterForm from "../components/NewsletterForm.astro";
 import Footer from "../components/Footer.astro";
-import { site } from "../site.config";
+import type { Locale } from "../i18n";
 
 interface Props {
+  /** The article's language - forwarded to BaseLayout, Header and Footer. */
+  lang: Locale;
+  /** Translations of this article, or omitted when it has no counterpart. */
+  alternates?: Partial<Record<Locale, string>>;
   title: string;
   subtitle?: string;
   description?: string;
@@ -27,6 +31,8 @@ interface Props {
 }
 
 const {
+  lang,
+  alternates,
   title,
   subtitle,
   description,
@@ -41,15 +47,16 @@ const {
 ---
 
 <BaseLayout
+  lang={lang}
+  alternates={alternates}
   title={title}
   description={description}
   image={image}
+  imageAlt={imageAlt}
   type="article"
+  publishedTime={isoDate}
 >
-  <Header
-    name={site.name}
-    role={site.role}
-  />
+  <Header lang={lang} activePage="blog" langHrefs={alternates} />
 
   <main>
     <article>
@@ -61,7 +68,7 @@ const {
             </p>
           )
         }
-        {/* No visible count — this only pings the view counter so the blog
+        {/* No visible count - this only pings the view counter so the blog
             list can sort by popularity. The number is intentionally not shown. */}
         {viewKey && <span data-js-view-ping data-slug={viewKey} hidden />}
         <h1 class="mb-3">{title}</h1>
@@ -82,10 +89,10 @@ const {
       </div>
     </article>
 
-    <NewsletterForm showBorder={true} />
+    <NewsletterForm lang={lang} showBorder={true} />
   </main>
 
-  <Footer />
+  <Footer lang={lang} />
 </BaseLayout>
 
 <script>
@@ -112,7 +119,7 @@ const {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
       })
       .catch(() => {
-        // Increment didn't land (API not deployed, transient error) — release
+        // Increment didn't land (API not deployed, transient error) - release
         // the claim so a later visit can retry.
         try {
           localStorage.removeItem(key);

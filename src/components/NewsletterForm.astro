@@ -1,57 +1,36 @@
 ---
-import { newsletter } from "../site.config";
+import { DEFAULT_LOCALE, type Locale } from "../i18n";
+import { useTranslations } from "../i18n/ui";
+import NewsletterLanguageNotice from "./NewsletterLanguageNotice.astro";
+import NewsletterSignup from "./NewsletterSignup.astro";
 
 interface Props {
+  lang: Locale;
   description?: string;
   showBorder?: boolean;
-  // When true, render the fuller unsubscribe explanation (`newsletter.unsubscribeInfo`)
-  // under the short note. Used only on the /vestkopa page, not the header pop-up.
+  // When true, render the fuller unsubscribe explanation
+  // (`newsletter.unsubscribeInfo`). Used only on the newsletter page, not the
+  // header pop-up, which stays compact with just `unsubscribeNote`.
   showUnsubscribeInfo?: boolean;
 }
 
-const {
-  description = "Vēlies saņemt paziņojumus par jaunākajiem bloga rakstiem? Piesakies vēstkopai!",
-  showBorder = false,
-  showUnsubscribeInfo = false,
-} = Astro.props;
+const { lang, showBorder = false, showUnsubscribeInfo = false } = Astro.props;
+
+const t = useTranslations(lang);
+const description = Astro.props.description ?? t("newsletter.formDescription");
 ---
 
-<section
-  class={`newsletter-form-section ${showBorder ? "border-top" : ""}`}
-  data-js-newsletter-form
-  data-msg-pending={newsletter.pendingMessage}
-  data-msg-hint={newsletter.pendingHint}
-  data-msg-already={newsletter.alreadyMessage}
-  data-msg-error={newsletter.errorMessage}
-  data-msg-ratelimit={newsletter.rateLimitMessage}
->
-  <p>{description}</p>
-  <form class="newsletter-form d-flex gap-2" data-js-newsletter-submit>
-    <input
-      type="email"
-      name="email"
-      placeholder="tavs@epasts.lv"
-      required
-      autocomplete="email"
-      class="newsletter-input flex-1"
-      data-js-newsletter-email
+{
+  lang !== DEFAULT_LOCALE ? (
+    <section class={`newsletter-form-section ${showBorder ? "border-top" : ""}`}>
+      <NewsletterLanguageNotice lang={lang} />
+    </section>
+  ) : (
+    <NewsletterSignup
+      lang={lang}
+      description={description}
+      showBorder={showBorder}
+      showUnsubscribeInfo={showUnsubscribeInfo}
     />
-    <button
-      type="submit"
-      class="newsletter-btn btn-secondary"
-      data-js-newsletter-btn
-      data-label-submitting={newsletter.submittingLabel}
-    >
-      {newsletter.subscribeButton}
-    </button>
-  </form>
-  <p class="newsletter-note">
-    {showUnsubscribeInfo ? newsletter.unsubscribeInfo : newsletter.unsubscribeNote}
-  </p>
-  <div class="newsletter-status" data-js-newsletter-status aria-live="polite"></div>
-  <div class="newsletter-toast" data-js-newsletter-toast hidden tabindex="-1">
-    <p class="newsletter-toast-text" data-js-toast-text aria-live="polite"></p>
-    <p class="newsletter-note" data-js-toast-hint></p>
-    <span class="newsletter-toast-bar" data-js-toast-bar aria-hidden="true"></span>
-  </div>
-</section>
+  )
+}

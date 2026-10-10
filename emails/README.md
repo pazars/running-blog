@@ -1,101 +1,118 @@
 # Email templates
 
-Source of truth for the transactional emails sent via Resend. These files are the
-version-controlled markup; the **`template:sync` script pushes them to Resend via the
-API**, so the repo is authoritative and changes are reviewable in git.
+The email HTML lives here and is pushed to Resend by scripts, so git stays the
+source of truth. Templates use tables, inline styles and hex colors (mail clients
+ignore CSS variables). The palette follows `STYLE_GUIDE.md`. Resend wraps the
+HTML in its own document, so the dark-mode `<style>` is in the body.
 
-## `newsletter-confirm.html`
+## Confirm email
 
-The double opt-in confirmation email (`functions/api/newsletter/subscribe.ts` sends
-it). Email-safe HTML: table layout, inline styles, hex colors only (no CSS custom
-properties — mail clients don't support them). Palette mirrors `STYLE_GUIDE.md`.
+`newsletter-confirm.html` (Latvian) and `newsletter-confirm-en.html` (English) are
+the double opt-in emails sent by `functions/api/newsletter/subscribe.ts`. The
+function fills `{{{confirm_url}}}` (triple braces, so the URL is not escaped).
+There is no unsubscribe link because the address isn't on the list yet.
 
-### Wiring it into Resend — use the API, not the visual editor
-
-**Do not paste this into the dashboard template editor.** That editor is a visual/block
-editor: it re-parses pasted HTML into its own blocks and re-wraps it in its own
-container (own width/background/alignment), so a hand-coded layout won't center or keep
-its wrapper. Push the raw HTML through the API instead — a send with `template.id`
-renders the stored HTML verbatim.
+Push the HTML with the script, not the dashboard editor. The editor rebuilds pasted
+HTML into its own blocks and breaks the layout.
 
 ```bash
-npm run template:sync   # preview alias only
+npm run template:sync                                        # Latvian
+CONFIRM_SUBJECT_EN="..." npm run template:sync -- --lang=en  # English
 ```
 
-`scripts/sync-confirm-template.mjs` upserts + publishes the **preview** template, sets
-the **subject** (`CONFIRM_SUBJECT`, default "Apstiprini pierakstīšanos vēstkopai"), and
-declares the `confirm_url` variable with its fallback. `RESEND_FROM` +
-`RESEND_CONFIRM_TEMPLATE_ALIAS` come straight from **`wrangler.toml`**
-`[env.preview.vars]` (one source of truth); the secret `RESEND_API_KEY` is read from
-the environment or `.dev.vars`. Re-run after any edit to the HTML or subject.
+`scripts/sync-confirm-template.mjs` creates or updates and publishes the preview
+template, sets the subject (`CONFIRM_SUBJECT`, default "Apstiprini pierakstīšanos
+vēstkopai") and gives `confirm_url` the site origin as a fallback. The English run
+fails without `CONFIRM_SUBJECT_EN`; the English HTML still has placeholder copy.
+`RESEND_FROM` and the template alias come from `wrangler.toml` `[env.preview.vars]`,
+and `RESEND_API_KEY` from the environment or `.dev.vars`.
 
-> If the alias currently points at a template you already built in the **visual
-> editor**, delete that one in the dashboard first, then run the script — a leftover
-> visual design can otherwise win over the HTML on send.
+If the alias points at a template made in the visual editor, delete that template
+first. Otherwise the old design can win over the HTML on send.
 
-The `confirm_url` variable is referenced with **triple braces** (`{{{confirm_url}}}`)
-so the URL is inserted unescaped; `subscribe.ts` fills it at send time. There is **no
-unsubscribe link** in this email — the address isn't on the list until the confirm
-click. (The unsubscribe page/endpoint at `/vestkopa/unsubscribe` exists for the actual
-newsletter broadcasts.)
+### Release to production
 
-### Release flow (preview → prod)
+The script only writes the preview template.
 
-The script syncs **preview only** — there is no `--prod`. Promote to production by
-**duplicating in the Resend UI**, because the one thing that can't be scripted (preview
-text) is set by hand:
+1. Run `npm run template:sync`.
+2. In the Resend dashboard, set the template's preview text by hand. The Templates
+   API has no field for it.
+3. Review the result, then duplicate the template onto the production alias
+   (`[vars]` in `wrangler.toml`). The copy keeps the preview text.
 
-1. `npm run template:sync` — pushes the HTML to the preview template.
-2. In the Resend dashboard, **set the preview text** (inbox snippet) on that template
-   by hand — see below — and review the rendered result.
-3. **Duplicate** the reviewed template in the Resend UI onto the production alias
-   (`RESEND_CONFIRM_TEMPLATE_ALIAS` in `wrangler.toml` `[vars]`). The duplicate carries
-   the preview text with it.
+### Sender avatar
 
-### Preview text (inbox snippet) — set it MANUALLY
+Mail clients choose the avatar next to the sender name from the sending address
+(`vestkopa@davispazars.lv`), not from the HTML. Preview and production share that
+address, so it is set up once.
 
-The templates API has **no preview-text field** (only `name`, `subject`, `html`,
-`text`, `from`, `alias`, `variables`), and `emails.send` has no `previewText` either —
-that option only exists for Broadcasts. So the sync script **cannot** set it: after
-syncing, open the template in the Resend dashboard and type the preview text into its
-preview-text box by hand (e.g. "Apstiprini savu e-pasta adresi, lai pabeigtu
-pierakstīšanos vēstkopai."). The template also has **no `<head>`**: Resend wraps the
-stored HTML in its own document shell, so the dark-mode `<style>` lives in the body.
+- **Gmail:** create a Google account for `vestkopa@davispazars.lv` and use the
+  Gravatar photo as its profile picture. This needs Cloudflare Email Routing so
+  the address can receive the verification email. It can take a few days to appear.
+- **Apple Mail and BIMI:** need an SVG logo plus a paid VMC certificate. A photo
+  doesn't qualify.
 
-### URL fallbacks
+## Newsletter issues
 
-Resend fills variables at send time; if one is ever missing **and has no fallback**,
-the send is rejected with a validation error. The sync script gives `confirm_url` a
-fallback of the site origin `https://davispazars.lv` — a missing var then degrades to a
-harmless link to the homepage instead of an empty `href` or a blocked email. (Our code
-always supplies it, so the fallback is just a safety net.)
+An issue is an ES module in `newsletters/`. Copy `newsletters/_example.mjs`:
 
-### Profile image in the inbox
+```js
+export default {
+  subject: "...",
+  preheader: "...",          // optional inbox snippet
+  blocks: [
+    { heading: "..." },
+    { text: "Paragraph with a [link](https://...), **bold**, *italic*.\n\nNext paragraph." },
+    { post: "skm-2026" },    // slug of a published Latvian post
+  ],
+};
+```
 
-The little avatar shown **next to the sender name** is **not** set in this HTML — it's
-controlled by the receiving mail client, keyed on the **sending address**
-(`vestkopa@davispazars.lv`). Both Pages environments send from that same address (see
-`RESEND_FROM` in `wrangler.toml` `[vars]` **and** `[env.preview.vars]`), so this is
-configured **once** and covers preview + prod — there's nothing per-environment and
-`*.pages.dev` never sends mail.
+The HTML comes from `newsletter/layout.html` plus one partial per block type
+(`heading.html`, `paragraph.html`, `post.html`). Issues are Latvian only.
 
-Important: **the Gravatar JPEG can't be a BIMI logo.** BIMI marks must be **SVG Tiny
-PS** (a vector logo, no raster), and Gmail only renders them with a **paid VMC/CMC
-certificate** — overkill for a personal blog, and a photo wouldn't qualify anyway. To
-actually use the Gravatar *photo* as the avatar, set it on the sending account instead:
+```bash
+npm run build                                                # writes dist/newsletter-cards.json
+npm run newsletter:build -- newsletters/<issue>.mjs          # -> newsletters/out/<issue>.html
+npm run newsletter:send -- newsletters/<issue>.mjs           # checks only, sends nothing
+npm run newsletter:send -- newsletters/<issue>.mjs --send    # test send to the preview audience
+```
 
-- **Gmail (free, uses the photo):** give `vestkopa@davispazars.lv` a **Google
-  account** and upload the Gravatar image as its profile picture (Google Account →
-  Personal info → photo). Gmail then shows it next to the sender in the app, push
-  notifications, and opened messages. Creating the account needs to receive a
-  verification email at that address — route `vestkopa@` to a readable inbox via
-  **Cloudflare Email Routing** first (it's send-only through Resend today). Propagation
-  to Gmail can take a few days.
-- **Apple Mail:** shows an avatar only from the recipient's Contacts, or via **Apple
-  Branded Mail** / **BIMI + VMC** — no free photo path.
-- **In the email body (works everywhere, no setup):** the Gravatar can always be shown
-  as a normal `<img>` inside the message — `https://www.gravatar.com/avatar/HASH?s=160`
-  where `HASH` is the SHA-256 of the lowercased `gravatarEmail` (same hash the site
-  uses, see `src/utils/avatar.ts`). This is independent of the inbox avatar above. The
-  identity block was removed from this template, so it's not currently shown; re-add it
-  if you want the face in the body too.
+Put options after `--`. npm swallows flags written before it, and the scripts
+stop when that happens.
+
+### Article cards
+
+`src/pages/newsletter-cards.json.ts` emits each post's title, summary, URL and a
+760x399 JPEG (quality 50, mozjpeg, usually 15-50 KB). Rebuild after editing a post.
+
+The images are Astro build assets, so they only load once that build is live on
+production. Preview deployments are behind Cloudflare Access, which mail clients
+can't get through. `--asset-origin=https://...` loads images from another public
+host; links still point at production.
+
+Changing the JPEG settings in `astro.config.mjs` requires clearing
+`node_modules/.astro/assets`, because Astro's image cache ignores them.
+
+### Sending
+
+`newsletter:send` only targets the audience in `[env.preview.vars]`. It has no
+production option. Every run:
+
+1. renders the issue,
+2. fetches each image and link (images must return an `image/*` content type),
+3. prints the size and the preview audience's recipients.
+
+With `--send` it then asks you to type `send`, creates a draft broadcast, confirms
+Resend recorded the preview audience, and sends. `preheader` becomes the preview text.
+
+Resend fills the footer's `{{{RESEND_UNSUBSCRIBE_URL}}}` per recipient and adds the
+`List-Unsubscribe` header. Unsubscribing applies to the contact, not the audience,
+so use a dedicated test address in the preview audience: clicking unsubscribe in a
+test also removes that address from the real list.
+
+### Validation
+
+The build fails on an unknown slug or option, a missing `subject`, a block with
+zero or several keys, an unfilled `%%slot%%`, and ambiguous emphasis such as `***`.
+Asterisks only emphasize when they touch text, so `5 * 3` stays literal.

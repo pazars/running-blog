@@ -1,0 +1,39 @@
+---
+// Shared body of the 404 page. Cloudflare Pages walks UP the directory tree for
+// the nearest 404.html, so dist/en/404.html serves /en/anything-missing and
+// dist/404.html stays the Latvian fallback - each locale gets a real 404 in its
+// own language.
+//
+// No `alternates`: a not-found page has no counterpart worth advertising. No
+// `noindex` either - the response is already HTTP 404, which is a stronger
+// signal than the meta tag, and this keeps the Latvian output unchanged. It is
+// excluded from the sitemap by the filter in astro.config.mjs.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../Header.astro";
+import Footer from "../Footer.astro";
+import { homePath, type Locale } from "../../i18n";
+import { useTranslations } from "../../i18n/ui";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<BaseLayout lang={lang} title="404">
+  <Header lang={lang} activePage="none" />
+
+  <main>
+    <section class="section-hero -no-eyebrow">
+      <h1 class="mb-3">404</h1>
+      <p class="color-fg-muted mb-6">
+        {t("notFound.body")}
+      </p>
+      <a href={homePath(lang)}>{t("notFound.backHome")}</a>
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>

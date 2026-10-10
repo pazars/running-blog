@@ -1,0 +1,50 @@
+---
+// Shared body of an article page (/blogs/<date>/<slug>, /en/blog/<date>/<slug>).
+//
+// `getStaticPaths` cannot live here - Astro only calls it on a page file - so
+// each locale's route file owns its own (three lines, filtered by postsFor) and
+// hands the entry to this component.
+import { render } from "astro:content";
+import BlogPost from "../../layouts/BlogPost.astro";
+import { formatPostDate, toIsoDate } from "../../utils/date";
+import { ogShareImage } from "../../utils/postImages";
+import type { Locale } from "../../i18n";
+import { postAlternates, type Post } from "../../i18n/posts";
+
+interface Props {
+  lang: Locale;
+  post: Post;
+}
+
+const { lang, post } = Astro.props;
+const { Content } = await render(post);
+const { title, subtitle, summary, thumbnail, thumbnailAlt, thumbnailAttribution, date } =
+  post.data;
+
+// The local thumbnail feeds both surfaces: a dedicated absolute-URL JPEG for
+// the OG/Twitter share image, and the ImageMetadata itself for the responsive
+// hero (BlogPost renders it via <Image>).
+const ogImage = await ogShareImage(thumbnail, Astro.site);
+
+// Only the locales this article actually exists in - an untranslated post gets a
+// lone self-reference, so no hreflang is emitted and the switcher falls back to
+// the other locale's home page rather than a 404.
+const alternates = await postAlternates(post);
+---
+
+<BlogPost
+  lang={lang}
+  alternates={alternates}
+  title={title}
+  subtitle={subtitle}
+  description={summary}
+  image={ogImage}
+  heroImage={thumbnail}
+  imageAlt={thumbnailAlt}
+  imageAttribution={thumbnailAttribution}
+  date={formatPostDate(date, lang)}
+  isoDate={toIsoDate(date)}
+  viewKey={post.data.slug}
+>
+  <Content />
+</BlogPost>

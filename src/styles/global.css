@@ -118,6 +118,12 @@
 body {
   font-family: var(--system-ui);
   margin: auto;
+  /* Smallest supported viewport: the 360px CSS-width class (Galaxy S/A
+     series, small Pixels) is today's de-facto phone minimum; the 320px class
+     (original iPhone SE era) is legacy and gets a horizontal scroll instead
+     of a squeezed layout. The open mobile menu is sized to hold both
+     locales' nav labels on one row down to exactly this width. */
+  min-width: 360px;
   padding: var(--body-padding);
   text-align: left;
   background-color: var(--color-bg-default);
@@ -218,6 +224,20 @@ section.section-hero {
    reach the same header-to-heading distance. */
 section.section-hero.-no-eyebrow {
   padding-top: 40px;
+}
+
+/* The homepage is a single flowing overview, so its content blocks should sit
+   closer together than standalone page sections. Keep the first hero untouched
+   so the header-to-preparation spacing remains the established 56px rhythm. */
+main.home-page > section:not(:first-child) {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* The global footer gap suits long listing and article pages but feels detached
+   after the homepage project card. Preserve the footer's bottom breathing room. */
+main.home-page + footer {
+  margin-top: 48px;
 }
 
 /* ===== Utility Classes ===== */
@@ -387,18 +407,35 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* Breathing room between the brand and the links row once the two meet
+     (544-660px); harmless below 544px, where the links row is an absolute
+     overlay (closed) or the brand is hidden (open menu, which also resets
+     the gap to 0). */
+  column-gap: 16px;
 }
 header > .brand:hover {
   text-decoration: none;
 }
+/* min-width: 0 down the whole chain lets the name/role column shrink below
+   its content size when the links row (in normal flow from 544px up) needs
+   the room - flex items otherwise refuse to shrink past their text, and the
+   name would push the nav off the edge instead of truncating. */
+header > .brand {
+  min-width: 0;
+}
 header > .brand > .wrapper {
   position: relative;
+  min-width: 0;
 }
 header > .brand > .wrapper > .image-container {
   position: relative;
   height: 40px;
   width: 40px;
   max-width: 40px;
+  /* The avatar never gives up width when the header runs tight - the
+     min-width: 0 chain makes the TEXT column the shrinkable part, and
+     without this the circle deflates first. */
+  flex-shrink: 0;
   overflow: hidden;
   /* Circular profile picture (matches the favicon). */
   border-radius: 50%;
@@ -411,6 +448,16 @@ header > .brand > .wrapper > .image-container > .image {
 header > .brand > .wrapper > .info {
   position: relative;
   text-decoration: none;
+  min-width: 0;
+}
+/* Both lines ellipsize rather than clip or wrap when the header runs out of
+   room (the 544-660px band, where the full desktop links row meets the
+   name): "Dāvis Paz…" beats a bare cut or a two-line brand. */
+header > .brand > .wrapper > .info > .title,
+header > .brand > .wrapper > .info > .desc {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 header > .brand > .wrapper > .info > .title {
   font-size: var(--text-body-size-medium);
@@ -459,14 +506,15 @@ header > .brand > .wrapper:active > .image-container {
     gap: 0;
   }
 
+  /* The whole brand hides while the menu is open, at every mobile width: the
+     avatar has no job during navigation, and its ~52px is what lets the three
+     pills, the language control and the close button share ONE row down to
+     the 360px floor. Uniform hiding also means the open menu is the same
+     layout on every phone, not avatar-ful on some and avatar-less on others.
+     Branding returns the moment the menu closes. !important is required to
+     out-gun the d-flex utility on the element. */
   header:has(.input:checked) > .brand {
-    flex: 0 0 auto;
-    max-width: none;
-    z-index: 201;
-  }
-
-  header:has(.input:checked) > .brand > .wrapper > .info {
-    display: none;
+    display: none !important;
   }
 
   header:has(.input:checked) > .links {
@@ -504,7 +552,13 @@ header > .links:has(> .toggle-nav > .input:checked) {
   width: 100%;
 }
 @media (min-width: 544px) {
+  /* From 544px up the links row joins normal flow. As an absolute overlay it
+     simply painted OVER the brand in the 544-660px band (name and role
+     clipped mid-letter under the nav); in flow, flexbox negotiates: the
+     links keep their size (flex-shrink: 0) and the brand ellipsizes. */
   header > .links {
+    position: static;
+    flex-shrink: 0;
     width: auto;
     flex-direction: row;
   }
@@ -528,13 +582,25 @@ nav > .link {
   border-radius: var(--border-radius-lg);
   font-weight: var(--font-weight-medium);
   text-decoration: none;
+  /* A label must never break into two lines inside its pill; if space runs
+     out, the narrow-screen padding step below is the give, not the text. */
+  white-space: nowrap;
 }
 /* Optically center the label: the font's ascent outweighs its descender
    reserve, so a symmetric box lifts the text a hair toward the top. Split the
-   8px vertical padding 9/7 to nudge it back down ~1px (total height unchanged). */
+   8px vertical padding 9/7 to nudge it back down ~1px (total height unchanged).
+   Horizontal padding is defined here rather than with a px-* utility in the
+   markup, so the narrow-screen step below can override it. */
 nav > .link > .item {
-  padding-top: 9px;
-  padding-bottom: 7px;
+  padding: 9px 12px 7px;
+}
+/* Inside the open mobile menu the pills run tighter (12px -> 8px sides): the
+   three labels, the language control and the close button must share ~312px
+   at the 360px floor. If labels ever outgrow this, shorten the labels (see
+   the note in src/i18n/ui.ts), don't let anything wrap. */
+.toggle-nav > .input:checked ~ .menu > nav > .link > .item {
+  padding-left: 8px;
+  padding-right: 8px;
 }
 nav > .link.active {
   background-color: var(--color-bg-default);
@@ -550,6 +616,57 @@ nav > .link.active {
   nav > .link:hover {
     background-color: var(--color-bg-subtle);
   }
+}
+
+/* ===== Language Switcher ===== */
+/* A miniature segmented control: a quiet track holding two equal cells, the
+   active one raised on a bg-default "thumb" - the same treatment the active
+   nav pill gets inside the open mobile menu, one size down. The size step is
+   deliberate: this is a control (current state + affordance), not a
+   destination, and shrinking it is what keeps LV|EN from reading as two more
+   nav links. State is carried by text color (muted → default) plus the thumb;
+   hover only darkens the label so nothing competes with the thumb. */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--border-radius-lg);
+}
+.lang-switch > .cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Equal cells, so the control's width never shifts when the active side
+     changes between pages. */
+  min-width: 32px;
+  /* Same optical trick as the nav pills: uneven vertical padding nudges the
+     cap-height-only label back to true center. */
+  padding: 6px 8px 5px;
+  font-size: var(--text-body-size-extra-small);
+  font-weight: var(--font-weight-medium);
+  /* Two-letter codes are set a touch open so they read as labels, not words. */
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--color-fg-muted);
+  border-radius: var(--border-radius-lg);
+  text-decoration: none;
+}
+.lang-switch > .cell:hover {
+  color: var(--color-fg-default);
+}
+.lang-switch > .cell.active {
+  color: var(--color-fg-default);
+  background-color: var(--color-bg-default);
+  /* Ring instead of a border so the active cell keeps the same box size as
+     the inactive one - no 1px wobble when the active side changes. The ring
+     is what articulates the thumb in dark mode, where bg-default sits darker
+     than the track and the drop shadow disappears. */
+  box-shadow:
+    0 0 0 1px var(--color-border-subtle),
+    var(--tw-shadow);
 }
 
 /* ===== Toggle Nav (Mobile) ===== */
@@ -591,6 +708,14 @@ nav > .link.active {
 .toggle-nav > .input:checked ~ .menu {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  /* One row, always: pills, then a 12px breath, then the language control.
+     The row is budgeted to never wrap down to the 360px floor (hidden brand
+     + tightened pill padding + the single-cell switcher under 400px below);
+     flex-wrap stays only as a failsafe so oversized future content degrades
+     to a visible second line instead of clipping off-screen. */
+  flex-wrap: wrap;
+  gap: 12px;
   width: 100%;
 }
 .toggle-nav > .input:checked ~ .menu > nav > .link {
@@ -608,9 +733,59 @@ nav > .link.active {
 .toggle-nav > .input:checked ~ .menu > nav > .link:nth-child(1) {
   animation-delay: 0.05s;
 }
+/* The switcher is the cascade's last beat: the nav links sweep right-to-left
+   (0.02–0.05s above), then the second line settles. */
+.toggle-nav > .input:checked ~ .menu > .lang-switch {
+  animation: 0.3s stack-to-left var(--snappy-animation);
+  animation-fill-mode: forwards;
+  animation-delay: 0.06s;
+  transform: translate(12px);
+  opacity: 0;
+  /* Inside the open card the track's outline would double the card's own
+     enclosure, so the border yields to a soft well: one step darker than the
+     card (bg-emphasis over bg-subtle) keeps LV|EN reading as a single control,
+     distinct from the route pills, without drawing a second box. On the white
+     page background (desktop row) the bordered track above still applies. */
+  border-color: transparent;
+  background-color: var(--color-bg-emphasis);
+}
+/* Under 400px even the tightened pills leave no room for a two-cell segment
+   (pills + close button take ~259px of the ~312px available at 360). The
+   control collapses to its actionable half: one quiet pill naming the OTHER
+   language, i.e. the destination of the tap. The current-language display
+   returns at wider sizes, and the group keeps its aria-label either way. */
+@media (max-width: 399px) {
+  .toggle-nav > .input:checked ~ .menu > .lang-switch {
+    padding: 0;
+    background-color: transparent;
+  }
+  .toggle-nav > .input:checked ~ .menu > .lang-switch > .cell.active {
+    display: none;
+  }
+  .toggle-nav > .input:checked ~ .menu > .lang-switch > .cell {
+    background-color: var(--color-bg-emphasis);
+    padding: 7px 10px 6px;
+  }
+}
+/* The cascade parks items at opacity 0 and animates them in, so killing the
+   animation alone would leave the menu invisible - the base state must be
+   reset alongside it. */
+@media (prefers-reduced-motion: reduce) {
+  .toggle-nav > .input ~ .menu,
+  .toggle-nav > .input:checked ~ .menu > nav > .link,
+  .toggle-nav > .input:checked ~ .menu > .lang-switch {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
 @media (min-width: 544px) {
+  /* One row, never two: nav pills and the language switcher share a single
+     flex line, which is what keeps the switcher from wrapping under the nav. */
   .toggle-nav > .input ~ .menu {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     margin: 0;
     background-color: var(--color-bg-default);
     width: auto;
@@ -913,8 +1088,9 @@ nav > .link.active {
     min-height: 0;
   }
 }
-/* Stacked (mobile): the thumbnail needs its own height. */
-.featured-card > .image-wrapper > .image {
+/* The latest article and full-width project rows share the same image crop. */
+.featured-card > .image-wrapper > .image,
+.content-grid.-single-column .image-wrapper > .image {
   object-fit: cover;
   height: 240px;
 }
@@ -1027,6 +1203,15 @@ nav > .link.active {
       "content3 content4"
       "content5 content6";
   }
+}
+
+/* Full-width cards, with every additional item starting a new row. */
+.content-grid.-single-column {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: none;
+}
+.content-grid.-single-column > .content {
+  grid-area: auto;
 }
 
 /* ===== Trailing Icon (external link arrow) ===== */
@@ -1331,7 +1516,7 @@ footer a:hover {
   transform: scale(0.98);
 }
 /* Unlike a blog summary (a teaser linking to the full article), a recommendation
-   description IS the whole content — there's no detail page — so show it in full
+   description IS the whole content - there's no detail page - so show it in full
    instead of clamping to 4 lines. The card grows to fit. */
 .featured-card.rec-card > .info > .summary {
   display: block;
@@ -1359,7 +1544,7 @@ footer a:hover {
   display: flex;
   gap: 6px;
 }
-/* No transform on hover — a scale here makes the icon edge chase the cursor and
+/* No transform on hover - a scale here makes the icon edge chase the cursor and
    jitter; the background tint is enough feedback. */
 .rec-card-platform {
   display: inline-flex;
@@ -1389,7 +1574,7 @@ footer a:hover {
   margin-top: 8px;
 }
 /* Blog post hero. The default section:first-child rule gives 80px top/bottom
-   padding — too much here. Match the site's header->content rhythm (header mb
+   padding - too much here. Match the site's header->content rhythm (header mb
    16 + 40 = 56px, like .section-hero.-no-eyebrow) and mirror that 56px below
    the subtitle, so the hero text sits symmetrically between header and image.
    Selector is `section.article-hero` to outrank section:first-child by equal

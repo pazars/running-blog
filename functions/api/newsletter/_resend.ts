@@ -40,21 +40,6 @@ export async function addContact(
   if (error) throw new Error(`Resend contacts.create: ${error.message ?? error.name}`);
 }
 
-// Flag a contact as unsubscribed (suppress, don't delete) so Resend honors the
-// opt-out and the address can't be silently re-added later. A not-found contact is
-// treated as success: someone can click "unsubscribe" in the confirm email before
-// ever confirming, so there may be no contact to update — that's a no-op, not an error.
-export async function setUnsubscribed(
-  resend: Resend,
-  audienceId: string,
-  email: string,
-): Promise<void> {
-  const { error } = await resend.contacts.update({ audienceId, email, unsubscribed: true });
-  if (error && !isNotFound(error)) {
-    throw new Error(`Resend contacts.update: ${error.message ?? error.name}`);
-  }
-}
-
 // Remove a contact from an audience. An already-gone contact is treated as success.
 export async function deleteContact(
   resend: Resend,

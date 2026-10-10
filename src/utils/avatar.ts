@@ -1,10 +1,10 @@
 import crypto from "node:crypto";
 import { site } from "../site.config";
 
-// SHA-256 of the trimmed, lowercased Gravatar email — the key Gravatar uses to
+// SHA-256 of the trimmed, lowercased Gravatar email - the key Gravatar uses to
 // address an account's avatar. Build-time only (node:crypto). Backs the live
 // header avatar (CSS-rounded). The circular favicon/PWA icons in public/ are
-// pre-rendered crops of the same photo — see README.md to regenerate them.
+// pre-rendered crops of the same photo - see README.md to regenerate them.
 const hash = crypto
   .createHash("sha256")
   .update(site.gravatarEmail.trim().toLowerCase())

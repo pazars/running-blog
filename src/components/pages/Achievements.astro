@@ -1,0 +1,121 @@
+---
+// Shared body of the achievements page (/sasniegumi, /en/achievements).
+//
+// Both locales render the same race array (src/data/races.ts): measurements
+// are locale-invariant, and an event title resolves through localize() so an
+// entry may carry a per-locale name. Headings and intro prose come from the
+// dictionary.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../Header.astro";
+import SectionHeader from "../SectionHeader.astro";
+import ListItem from "../ListItem.astro";
+import Footer from "../Footer.astro";
+import { site } from "../../site.config";
+import { trailRunning, roadRunning, cycling } from "../../data/races";
+import type { Locale } from "../../i18n";
+import { localize } from "../../i18n/localized";
+import { sectionAlternates } from "../../i18n/routes";
+import { useTranslations } from "../../i18n/ui";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const alternates = sectionAlternates("results");
+
+// Profile links for the "broader results" line in the intro. ITRA already lives
+// in site.socials (and shows in the footer); the athletics.lv profile is
+// config-only and intentionally absent from the footer.
+const itraHref = site.socials.find((s) => s.label === "ITRA")?.href;
+const athleticsHref = site.athleticsProfile;
+
+const disciplines = [
+  { key: "trailRunning", items: trailRunning },
+  { key: "roadRunning", items: roadRunning },
+  { key: "cycling", items: cycling },
+] as const;
+---
+
+<BaseLayout
+  lang={lang}
+  alternates={alternates}
+  title={t("results.title")}
+  description={t("results.description")}
+>
+  <Header lang={lang} activePage="results" langHrefs={alternates} />
+
+  <main>
+    <!-- Intro -->
+    <section class="section-hero -no-eyebrow">
+      <p>
+        {t("results.intro")}
+      </p>
+      <p>
+        {t("results.intro2")}
+        {/* One sentence wrapping two external links, so it can't be a single
+            dictionary string - it is assembled from three fragments. A locale
+            needing a different link ORDER should get its own fragment component
+            rather than reusing these. */}
+        {t("results.profilesNote.before")}<span class="external-link"><a href={itraHref} target="_blank" rel="noopener">ITRA</a><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon" aria-hidden="true"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>{t("results.profilesNote.between")}<span class="external-link"><a href={athleticsHref} target="_blank" rel="noopener">athletics.lv</a><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon" aria-hidden="true"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg></span>{t("results.profilesNote.after")}
+      </p>
+    </section>
+
+    {
+      disciplines.map((discipline) => (
+        <section class="race-section">
+          <SectionHeader
+            id={t(`results.anchor.${discipline.key}`)}
+            title={t(`results.${discipline.key}`)}
+          />
+          <div class="list-container">
+            {discipline.items.map((item) => (
+              <ListItem
+                title={localize(lang, item.title)}
+                description={item.description}
+                trailing={item.trailing}
+              />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>
+
+<style>
+  /* Tighten the gap between the discipline sections: 28px top/bottom instead of
+     the default section 40px, so consecutive sections sit 56px apart (not 80). */
+  .race-section {
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  /* Let the last section sit flush so only the footer's own 120px margin spaces
+     it from the content - matching the blog listing, whose section-hero has no
+     bottom padding. */
+  main > section:last-child {
+    padding-bottom: 0;
+  }
+
+  /* The hero's first paragraph carries the default 16px top margin, which would
+     push it lower than the blog's (margin-less) filter row sits. Drop it so the
+     header-to-content distance matches the blog listing exactly. */
+  section.section-hero > p:first-child {
+    margin-top: 0;
+  }
+
+  /* Inline external-link arrow, mirroring the footer's trailingIcon. Wrapped so
+     the link text and arrow stay on one line, and the arrow nudged to sit
+     centered against the text. */
+  .external-link {
+    white-space: nowrap;
+  }
+  .external-link .trailingIcon {
+    margin-left: 3px;
+    vertical-align: -0.125em;
+  }
+</style>

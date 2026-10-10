@@ -1,8 +1,8 @@
 // Tests for the newsletter double opt-in functions.
 //
 // Two layers:
-//   1. Token + input validation — pure, no network, always run.
-//   2. Live Resend flow — hits the real API with a TEST key, sends only to the
+//   1. Token + input validation - pure, no network, always run.
+//   2. Live Resend flow - hits the real API with a TEST key, sends only to the
 //      Resend simulator address (delivered@resend.dev) so nothing reaches a real
 //      inbox, and writes to DEDICATED TEST AUDIENCES. Skipped automatically when the
 //      RESEND_* env vars aren't set (e.g. local runs without .dev.vars, fork PRs).
@@ -36,7 +36,7 @@ const hasCreds = Boolean(
     env.RESEND_CONFIRM_TEMPLATE_ALIAS,
 );
 
-// Resend's delivery simulator — accepted by /emails but never actually delivered.
+// Resend's delivery simulator - accepted by /emails but never actually delivered.
 const TEST_EMAIL = "delivered@resend.dev";
 
 // Minimal Pages context (handlers only use request + env).

@@ -19,7 +19,7 @@ const root = (...children: unknown[]) => ({ type: "root", children });
 
 // The default export is a unified plugin: calling it returns the transformer,
 // which mutates the tree in place. `tree` is loosely typed (the .mjs plugin
-// ships no types) — fine for a test that builds and inspects bare hast nodes.
+// ships no types) - fine for a test that builds and inspects bare hast nodes.
 const transform = (tree: any) => {
   rehypeFigcaption()(tree);
   return tree;
@@ -51,7 +51,7 @@ describe("rehypeFigcaption", () => {
   });
 
   it("does not convert an image that shares its paragraph with text", () => {
-    // An inline image mid-sentence must stay inline — only standalone images
+    // An inline image mid-sentence must stay inline - only standalone images
     // become figures.
     const tree = transform(root(p(text("skat. "), img({ src: "/_astro/x.webp", title: "x" }))));
     expect(tree.children[0].tagName).toBe("p");

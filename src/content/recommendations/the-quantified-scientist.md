@@ -1,6 +1,8 @@
 ---
 title: "The Quantified Scientist"
-description: "Bioloģijas zinātnieks, kas skrupulozi testē fitnesa ierīču precizitāti. Liels fokuss ir tieši uz pulsa un miega metriku analīzi. Rezultāti tiek salīdzināti ne tikai starp ierīcēm, bet arī mērinstrumentiem, kas tiek izmantoti zinātniskajos pētījumos. Ja tev patīk tehnoloģijas un grafiki, tad tev varētu arī patikt šie videoklipi."
+description:
+  lv: "Bioloģijas zinātnieks, kas skrupulozi testē fitnesa ierīču precizitāti. Liels fokuss ir tieši uz pulsa un miega metriku analīzi. Rezultāti tiek salīdzināti ne tikai starp ierīcēm, bet arī mērinstrumentiem, kas tiek izmantoti zinātniskajos pētījumos. Ja tev patīk tehnoloģijas un grafiki, tad tev varētu arī patikt šie videoklipi."
+  en: "A biologist who puts fitness trackers through meticulous accuracy tests, focusing especially on heart rate and sleep. He checks how the devices compare with one another and with research-grade equipment. If you like technology and charts, these videos will probably be right up your street."
 tags: ["youtube"]
 language: "en"
 # Pinned for deterministic builds (the channel's current avatar). Remove to

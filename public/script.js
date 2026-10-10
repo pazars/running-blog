@@ -152,7 +152,7 @@
   // state. After a submit the form swaps for a short, auto-dismissing toast ("go
   // confirm via email") with a draining timer bar, then reverts to the input. This
   // avoids the cross-device dead end of a persisted "pending" flag (you might confirm
-  // on a different device) and never leaves the form fixated — reopening always offers
+  // on a different device) and never leaves the form fixated - reopening always offers
   // the input. Abuse is bounded server-side (per-IP rate limit + the idempotent
   // "already on the list" check, which sends no second email).
   const TOAST_MS = 6000; // how long the success message stays before reverting
@@ -216,7 +216,7 @@
       // duration via --toast-ms so the two can't drift.
       const showToast = (text, hint) => {
         if (!toast) {
-          // No toast element (shouldn't happen) — degrade to an inline message.
+          // No toast element (shouldn't happen) - degrade to an inline message.
           form.classList.add("d-none");
           status.textContent = hint ? text + " " + hint : text;
           return;
@@ -225,7 +225,7 @@
         toastText.textContent = text;
         toastHint.textContent = hint || ""; // empty for "already"; :empty hides it
         // Hide everything in the form area but the toast (form, description, note,
-        // status) so the notification stands alone — see the .is-toasting CSS rule.
+        // status) so the notification stands alone - see the .is-toasting CSS rule.
         section.classList.add("is-toasting");
         toast.hidden = false;
         toast.style.setProperty("--toast-ms", TOAST_MS + "ms");
@@ -240,7 +240,7 @@
 
       // For the pop-up, mirror the dropdown's own close triggers (outside-click and
       // capture-phase Escape) so dismissing it mid-toast cancels the timer and resets
-      // state — no orphaned timer, and the next open shows a clean input.
+      // state - no orphaned timer, and the next open shows a clean input.
       if (panel) {
         window.addEventListener(
           "keydown",
@@ -285,7 +285,7 @@
         status.classList.remove("is-error");
 
         // Re-enable the form and show an inline error (the form stays put so the user
-        // can act/retry). Errors never use the auto-dismissing toast — only the two
+        // can act/retry). Errors never use the auto-dismissing toast - only the two
         // success outcomes do.
         const fail = (message) => {
           btn.disabled = false;
@@ -300,10 +300,16 @@
         // Double opt-in: this only stages the address + sends a confirm email.
         // The mailing list isn't joined until the user clicks that link.
         try {
+          // `lang` decides which Resend template the confirm email uses and
+          // which landing page the confirm click lands on - the server signs it
+          // into the token, since a click from a mail client carries no cookie
+          // and no referer. Read from the form's data-lang (data-driven DOM),
+          // falling back to <html lang>.
+          const lang = section.dataset.lang || document.documentElement.lang || "lv";
           const res = await fetch("/api/newsletter/subscribe", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email, lang }),
           });
           const data = await res.json().catch(() => ({}));
 
@@ -314,7 +320,7 @@
           }
 
           // Success: show the auto-dismissing toast in place. "already" means they were
-          // already on the list (no email sent) — so no spam-folder hint is shown.
+          // already on the list (no email sent) - so no spam-folder hint is shown.
           if (data.status === "already") {
             showToast(msgAlready, "");
           } else {
@@ -360,5 +366,30 @@
       el.addEventListener("focus", showTooltip);
       el.addEventListener("blur", hideTooltip);
     });
+  });
+})();
+
+// ===== Language Preference =====
+// Persist an EXPLICIT language choice so the "/" negotiator
+// (functions/index.ts) honours it on later visits instead of re-guessing from
+// Accept-Language. Written ONLY when a human clicks the switcher: landing on a
+// shared /en/ link is not a stated preference, and flipping the cookie there
+// would silently change where "/" sends a Latvian reader afterwards.
+//
+// Set synchronously on click, before the navigation. No preventDefault, so the
+// anchor still works with JS disabled - you just don't get the memory.
+(function () {
+  document.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!target || !target.closest) return;
+    const link = target.closest("[data-js-lang-pick]");
+    const lang = link && link.dataset.jsLangPick;
+    if (!lang) return;
+    // localhost is plain http, so only add Secure where it applies.
+    const secure = location.protocol === "https:" ? "; secure" : "";
+    try {
+      document.cookie =
+        "lang=" + lang + "; path=/; max-age=31536000; samesite=lax" + secure;
+    } catch {}
   });
 })();

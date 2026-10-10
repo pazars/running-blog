@@ -1,6 +1,6 @@
 /**
  * rehype plugin: promote a lone Markdown image that carries a *title* into a
- * semantic <figure> + <figcaption>. Authoring stays pure Markdown —
+ * semantic <figure> + <figcaption>. Authoring stays pure Markdown -
  *
  *   ![Taka rudens miglā](../../assets/taka-rudeni.jpg "Foto: Jānis Bērziņš")
  *

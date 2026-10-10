@@ -1,28 +1,100 @@
 ---
 import { site } from "../site.config";
+import {
+  LOCALE_TAG,
+  LOCALES,
+  OG_LOCALE,
+  DEFAULT_LOCALE,
+  otherLocales,
+  type Locale,
+} from "../i18n";
+import { feedPath, manifestPath } from "../i18n/routes";
+import { useTranslations } from "../i18n/ui";
 
 interface Props {
-  /** Tab/OG title. Defaults to the site-wide title; blog posts pass their own. */
+  /**
+   * The page's language. REQUIRED on purpose: making it explicit means
+   * TypeScript refuses to compile a page that hasn't declared what language it
+   * renders in, which is a stronger guarantee than deriving it from the URL
+   * (a page file copy-pasted into the wrong directory would derive the wrong
+   * answer silently).
+   */
+  lang: Locale;
+  /**
+   * Absolute-path URLs of this page in each locale, INCLUDING its own - Google
+   * requires hreflang sets to be self-referential and reciprocal.
+   *
+   * Omit it entirely when the page has no counterpart (untranslated article) or
+   * shouldn't advertise one (the noindex newsletter landings). No hreflang is
+   * then emitted, which is the truthful signal - better than pointing crawlers
+   * at a URL that 404s.
+   */
+  alternates?: Partial<Record<Locale, string>>;
+  /**
+   * Page-specific title, rendered as "<title> - <site.name>". When omitted
+   * (the home page), the site-wide "<site.name> - <site.tagline>" is used.
+   * Every page should pass one - duplicate <title>s hurt search ranking.
+   */
   title?: string;
   description?: string;
   /** Site-relative share image; resolved to an absolute URL below. */
   image?: string;
-  /** og:type — pages (e.g. blog posts) can pass "article". */
+  /** Alt text for the share image (og:image:alt / twitter:image:alt). */
+  imageAlt?: string;
+  /** og:type - pages (e.g. blog posts) can pass "article". */
   type?: string;
+  /**
+   * ISO publish date (e.g. "2026-06-22") for pages with type="article"; feeds
+   * the article:published_time OG tag and the BlogPosting JSON-LD, which is
+   * what gets a post treated as a dated article in search results.
+   */
+  publishedTime?: string;
+  /**
+   * Keep the page out of search results (utility pages like the newsletter
+   * confirm landings). Pair with the sitemap exclusion in
+   * astro.config.mjs - noindex'ing a page that the sitemap still advertises
+   * sends crawlers contradictory signals.
+   */
+  noindex?: boolean;
 }
 
 const {
-  title = "Taku skriešanas blogs",
-  description = "Par aktualitātēm, savu pieredzi un mācībām, kas var noderēt ikvienam.",
+  lang,
+  alternates,
+  title,
   image = "/og-image.jpg",
+  imageAlt,
   type = "website",
+  publishedTime,
+  noindex = false,
 } = Astro.props;
+
+const t = useTranslations(lang);
+const description = Astro.props.description ?? t("meta.defaultDescription");
+
+// Branded, unique-per-page <title> (shared with og:/twitter:title below).
+const fullTitle = title ? `${title} - ${site.name}` : `${site.name} - ${t("site.tagline")}`;
+
+// hreflang is only meaningful as a SET: a lone self-reference tells crawlers
+// nothing, so an untranslated article emits none at all rather than a broken
+// pair. Google also requires the set to be reciprocal and self-referential,
+// which is why callers pass their own locale too.
+const localised = alternates ? LOCALES.filter((code) => alternates[code]) : [];
+const hreflangs =
+  localised.length > 1
+    ? localised.map((code) => ({ code, href: new URL(alternates![code]!, Astro.site) }))
+    : [];
+// x-default marks the entry point for readers whose language we don't serve.
+// Latvian is the site's primary language, so it takes that role.
+const xDefault = hreflangs.length > 0 ? alternates?.[DEFAULT_LOCALE] : undefined;
 
 // Absolute URLs for canonical + social metadata (Astro.site comes from astro.config).
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
 
-// Site-wide structured data: who the author is and what the site is.
+// Site-wide structured data: who the author is and what the site is. Articles
+// additionally get a BlogPosting node (headline stays the bare page title -
+// no "- <site.name>" suffix, which is branding, not the headline).
 const jsonLd = {
   "@context": "https://schema.org",
   "@graph": [
@@ -30,15 +102,29 @@ const jsonLd = {
       "@type": "Person",
       name: site.name,
       url: site.url,
-      jobTitle: site.role,
+      jobTitle: t("site.role"),
       sameAs: site.socials.map((s) => s.href),
     },
     {
       "@type": "WebSite",
       name: site.name,
       url: site.url,
-      inLanguage: "lv",
+      inLanguage: LOCALE_TAG[lang],
     },
+    ...(type === "article"
+      ? [
+          {
+            "@type": "BlogPosting",
+            headline: title,
+            description,
+            image: ogImage.toString(),
+            ...(publishedTime && { datePublished: publishedTime }),
+            author: { "@type": "Person", name: site.name, url: site.url },
+            inLanguage: LOCALE_TAG[lang],
+            mainEntityOfPage: canonical.toString(),
+          },
+        ]
+      : []),
   ],
 };
 
@@ -46,41 +132,89 @@ import "../styles/global.css";
 ---
 
 <!doctype html>
-<html lang="lv">
+<html lang={LOCALE_TAG[lang]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
 
     <!-- Canonical -->
+    {/* Each locale is self-canonical: translations are ALTERNATES, never
+        canonicalised onto one another. */}
     <link rel="canonical" href={canonical} />
 
+    {/* Translations of this exact page. Emitted only when a real counterpart
+        exists (see the `alternates` prop) - driven by a translationKey lookup
+        rather than @astrojs/sitemap's mechanical path substitution, which would
+        advertise URLs that 404 for posts published in one language only. */}
+    {hreflangs.map((alt) => (
+      <link rel="alternate" hreflang={LOCALE_TAG[alt.code]} href={alt.href} />
+    ))}
+    {xDefault && (
+      <link rel="alternate" hreflang="x-default" href={new URL(xDefault, Astro.site)} />
+    )}
+
+    <!-- RSS autodiscovery (feed generated by src/pages/rss.xml.ts) -->
+    {/* One feed per locale: /rss.xml (lv) and /en/rss.xml. The Latvian URL is
+        deliberately unchanged - people have subscribed to it. */}
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${site.name} - ${t("site.tagline")}`}
+      href={new URL(feedPath(lang), Astro.site)}
+    />
+
     <!-- Primary meta tags -->
-    <title>{title}</title>
-    <meta name="title" content={title} />
+    <title>{fullTitle}</title>
+    <meta name="title" content={fullTitle} />
+    {noindex && <meta name="robots" content="noindex" />}
     <meta name="description" content={description} />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content={type} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
+    {/* Every share image is 1200x630: the default public/og-image.jpg is authored
+        at that size and ogShareImage() (src/utils/postImages.ts) crops to it.
+        Declaring the dimensions lets scrapers render the card on first share,
+        before they have fetched the image. */}
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    {imageAlt && <meta property="og:image:alt" content={imageAlt} />}
     <meta property="og:site_name" content={site.name} />
-    <meta property="og:locale" content="lv_LV" />
+    {/* Open Graph is the one place that wants a region-qualified locale. */}
+    <meta property="og:locale" content={OG_LOCALE[lang]} />
+    {hreflangs.length > 0 &&
+      otherLocales(lang)
+        .filter((code) => alternates![code])
+        .map((code) => (
+          <meta property="og:locale:alternate" content={OG_LOCALE[code]} />
+        ))}
+    {type === "article" && publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )}
+    {type === "article" && <meta property="article:author" content={site.name} />}
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={canonical} />
-    <meta property="twitter:title" content={title} />
-    <meta property="twitter:description" content={description} />
-    <meta property="twitter:image" content={ogImage} />
+    <!-- Twitter. X's parser documents the name= attribute; property= is kept as
+         a duplicate because some scrapers only read the OG-style attribute. -->
+    <meta property="twitter:card" content="summary_large_image" name="twitter:card" />
+    <meta property="twitter:url" content={canonical} name="twitter:url" />
+    <meta property="twitter:title" content={fullTitle} name="twitter:title" />
+    <meta property="twitter:description" content={description} name="twitter:description" />
+    <meta property="twitter:image" content={ogImage} name="twitter:image" />
+    {imageAlt && (
+      <meta property="twitter:image:alt" content={imageAlt} name="twitter:image:alt" />
+    )}
 
     <!-- Icons & PWA manifest. The icons are circular crops of the Gravatar
          profile picture (a favicon can't be CSS-rounded, so it's pre-rendered);
          regenerate with the recipe in README.md if the photo changes. -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    {/* A manifest declares ONE lang and one start_url, so each locale needs its
+        own - public/site.webmanifest (lv) and public/en/site.webmanifest. */}
+    <link rel="manifest" href={manifestPath(lang)} />
     <meta name="theme-color" content="#283cff" />
 
     <!-- Structured data -->

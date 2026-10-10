@@ -1,18 +1,25 @@
 ---
-import { navLinks, site } from "../site.config";
+import { site } from "../site.config";
+import type { Locale } from "../i18n";
+import { navLinks, path } from "../i18n/routes";
+import { useTranslations } from "../i18n/ui";
 
 interface Props {
+  lang: Locale;
   socials?: { label: string; href: string }[];
 }
 
-const { socials = site.socials } = Astro.props;
+const { lang, socials = site.socials } = Astro.props;
+
+const t = useTranslations(lang);
+const nav = navLinks(lang);
 ---
 
 <footer>
   <div class="line border-top"></div>
   <div class="container color-fg-muted text-small pt-7">
     <div class="flex-1 d-flex flex-items-start">
-      <span>Uzdrīksties sev noticēt</span>
+      <span>{t("footer.motto")}</span>
     </div>
     <div class="d-flex flex-column gap-1 mr-2 mr-md-6">
       {
@@ -42,10 +49,10 @@ const { socials = site.socials } = Astro.props;
     </div>
     <div class="d-flex flex-column gap-1 mr-2 mr-md-6">
       {
-        navLinks.map((link) => (
+        nav.map((link) => (
           <div class="item d-flex flex-items-center gap-1">
             <a href={link.href}>
-              {link.text}
+              {t(`nav.${link.id}`)}
             </a>
           </div>
         ))
@@ -53,7 +60,7 @@ const { socials = site.socials } = Astro.props;
     </div>
     <div class="mr-2 mr-md-6">
       <div class="d-flex flex-items-center gap-1">
-        <a href="/vestkopa">Vēstkopa</a>
+        <a href={path("newsletter", lang)}>{t("nav.newsletter")}</a>
       </div>
     </div>
   </div>

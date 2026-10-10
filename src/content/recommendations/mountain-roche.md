@@ -1,6 +1,8 @@
 ---
 title: "David & Megan Roche"
-description: "David & Megan Roche veido ne tikai izcilu podkāstu, bet arī labākās taku skriešanas sacensību dokumentālās filmas. Nu jau ir pieejamas vairākas un katra ir filmu vakara vērta. Neregulāri tiek publicēti arī īsāki klipi par kādu skriešanas tematu, kas visticamāk jau ir apspriesta podkāstā, bet piešķir tai vizuālo komponenti un ieskatu viņu ikdienā."
+description:
+  lv: "David & Megan Roche veido ne tikai izcilu podkāstu, bet arī labākās taku skriešanas sacensību dokumentālās filmas. Nu jau ir pieejamas vairākas un katra ir filmu vakara vērta. Neregulāri tiek publicēti arī īsāki klipi par kādu skriešanas tematu, kas visticamāk jau ir apspriesta podkāstā, bet piešķir tai vizuālo komponenti un ieskatu viņu ikdienā."
+  en: "Alongside their excellent podcast, David & Megan Roche make some of the best documentaries about trail races. There are several to choose from now, and each one is worth making a movie night of. They occasionally share shorter videos too, revisiting topics from the podcast with footage that adds context and offers a glimpse into their daily lives."
 tags: ["youtube"]
 language: "en"
 # Pinned for deterministic builds (the channel's current avatar). Remove to

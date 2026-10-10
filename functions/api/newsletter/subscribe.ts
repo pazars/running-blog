@@ -1,11 +1,11 @@
-// Cloudflare Pages Function — newsletter sign-up (double opt-in, step 1).
+// Cloudflare Pages Function - newsletter sign-up (double opt-in, step 1).
 //   POST /api/newsletter/subscribe  { email }  ->  { status: "pending" | "already" }
 //
 // Validates the email, makes sure they aren't already on the list, and emails a
-// signed confirm link. Nothing is stored at this step — the unverified address lives
+// signed confirm link. Nothing is stored at this step - the unverified address lives
 // only in the signed token until the confirm click (see confirm.ts) adds it to the
 // audience. The only server state is Resend's single audience; the pending step is
-// stateless — no D1.
+// stateless - no D1.
 //
 // Env (RESEND_*) comes from wrangler.toml [vars] (audience id, template, from) plus
 // secrets in .dev.vars / `wrangler pages secret put` (API key, verify secret). Run
@@ -13,14 +13,29 @@
 
 import { Resend } from "resend";
 import { getContact, sendTemplate } from "./_resend";
+import { DEFAULT_LOCALE, isLocale, type Lang } from "./_paths";
 import { signToken } from "./_token";
+
+/**
+ * Confirm-email template per language. The Latvian one keeps the original var
+ * name so nothing already set in production has to be re-set; English adds a
+ * second. Typed as a total map over Lang, so adding a locale won't compile until
+ * its template var exists. Falls back rather than failing a send.
+ */
+function confirmTemplate(env: NewsletterEnv, lang: Lang): string {
+  const byLang: Record<Lang, string | undefined> = {
+    lv: env.RESEND_CONFIRM_TEMPLATE_ALIAS,
+    en: env.RESEND_CONFIRM_TEMPLATE_ALIAS_EN,
+  };
+  return byLang[lang] ?? env.RESEND_CONFIRM_TEMPLATE_ALIAS;
+}
 
 // Variable the Resend confirm-email template expects (referenced as {{{confirm_url}}}
 // in the dashboard). The template owns the subject + body/markup; we only fill this.
 // Declare it in the template's Inspector with a fallback value (e.g.
 // https://davispazars.lv) so a missing var degrades to a safe link instead of an empty
 // href or a blocked send. Source markup lives in emails/newsletter-confirm.html. No
-// unsubscribe link here — the address isn't on the list until the confirm click.
+// unsubscribe link here - the address isn't on the list until the confirm click.
 const CONFIRM_URL_VAR = "confirm_url";
 
 const json = (data: unknown, status = 200) =>
@@ -33,11 +48,11 @@ const json = (data: unknown, status = 200) =>
 // pattern forbids whitespace/newlines, so header-injection payloads are rejected; the
 // value only ever flows into JSON bodies and encodeURIComponent'd URL paths anyway
 // (no SQL/HTML/SMTP-header surface). The *real* proof the address exists and is owned
-// is the double opt-in confirm click — this just rejects obvious junk before Resend.
+// is the double opt-in confirm click - this just rejects obvious junk before Resend.
 const isEmail = (s: string) => s.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 
 export const onRequestPost: PagesFunction<Env & NewsletterEnv> = async ({ request, env }) => {
-  // Per-IP rate limit (optional binding — skipped if not bound, e.g. local dev or if
+  // Per-IP rate limit (optional binding - skipped if not bound, e.g. local dev or if
   // the Pages project doesn't have it). The limit is per Cloudflare location, so it's
   // a coarse abuse guard, not a precise global cap; a WAF rule is the edge backstop.
   if (env.SUBSCRIBE_RATE_LIMITER) {
@@ -47,9 +62,15 @@ export const onRequestPost: PagesFunction<Env & NewsletterEnv> = async ({ reques
   }
 
   let email = "";
+  // Language the visitor signed up in, sent by public/script.js from the form's
+  // data-lang. Validated against the allow-list and never trusted further: it
+  // picks a template alias and gets signed into the token, so an unknown value
+  // must degrade to the default rather than flow through.
+  let lang: Lang = DEFAULT_LOCALE;
   try {
-    const body = (await request.json()) as { email?: unknown };
+    const body = (await request.json()) as { email?: unknown; lang?: unknown };
     email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (typeof body.lang === "string" && isLocale(body.lang)) lang = body.lang;
   } catch {
     return json({ error: "bad_request" }, 400);
   }
@@ -65,7 +86,10 @@ export const onRequestPost: PagesFunction<Env & NewsletterEnv> = async ({ reques
     // Don't store anything yet: the unverified address rides in the signed token and
     // is added to the audience only when confirm.ts runs. A repeat sign-up while
     // pending just re-sends the confirm email.
-    const token = await signToken(email, env.RESEND_VERIFY_SECRET);
+    // The locale is signed into the token so confirm.ts can land the reader on a
+    // page in the same language as this email - a mail-client click carries no
+    // cookie and no referer.
+    const token = await signToken(email, env.RESEND_VERIFY_SECRET, lang);
     const confirmUrl = `${new URL(request.url).origin}/api/newsletter/confirm?token=${encodeURIComponent(token)}`;
 
     // The confirm email is a Resend template (subject + markup managed there); we
@@ -73,11 +97,11 @@ export const onRequestPost: PagesFunction<Env & NewsletterEnv> = async ({ reques
     await sendTemplate(resend, {
       from: env.RESEND_FROM,
       to: email,
-      templateAlias: env.RESEND_CONFIRM_TEMPLATE_ALIAS,
+      templateAlias: confirmTemplate(env, lang),
       variables: { [CONFIRM_URL_VAR]: confirmUrl },
     });
   } catch {
-    // Resend unavailable / misconfigured — let the form surface a retry.
+    // Resend unavailable / misconfigured - let the form surface a retry.
     return json({ error: "send_failed" }, 502);
   }
 

@@ -1,0 +1,75 @@
+---
+import type { Locale } from "../i18n";
+import { useTranslations } from "../i18n/ui";
+
+interface Props {
+  lang: Locale;
+  variant?: "section" | "popup";
+  description: string;
+  showBorder?: boolean;
+  showUnsubscribeInfo?: boolean;
+}
+
+const {
+  lang,
+  variant = "section",
+  description,
+  showBorder = false,
+  showUnsubscribeInfo = false,
+} = Astro.props;
+const t = useTranslations(lang);
+const Root = variant === "popup" ? "div" : "section";
+const rootClass =
+  variant === "popup"
+    ? "subscribe-popup"
+    : `newsletter-form-section ${showBorder ? "border-top" : ""}`;
+const formClass =
+  variant === "popup"
+    ? "subscribe-popup-form d-flex gap-2"
+    : "newsletter-form d-flex gap-2";
+---
+
+<Root
+  class={rootClass}
+  data-js-newsletter-form
+  data-lang={lang}
+  data-msg-pending={t("newsletter.pendingMessage")}
+  data-msg-hint={t("newsletter.pendingHint")}
+  data-msg-already={t("newsletter.alreadyMessage")}
+  data-msg-error={t("newsletter.errorMessage")}
+  data-msg-ratelimit={t("newsletter.rateLimitMessage")}
+>
+  <p class={variant === "popup" ? "subscribe-popup-desc" : undefined}>
+    {description}
+  </p>
+  <form class={formClass} data-js-newsletter-submit>
+    <input
+      type="email"
+      name="email"
+      placeholder={t("newsletter.emailPlaceholder")}
+      required
+      autocomplete="email"
+      class="newsletter-input flex-1"
+      data-js-newsletter-email
+    />
+    <button
+      type="submit"
+      class="newsletter-btn btn-secondary"
+      data-js-newsletter-btn
+      data-label-submitting={t("newsletter.submittingLabel")}
+    >
+      {t("newsletter.subscribeButton")}
+    </button>
+  </form>
+  <p class="newsletter-note">
+    {showUnsubscribeInfo
+      ? t("newsletter.unsubscribeInfo")
+      : t("newsletter.unsubscribeNote")}
+  </p>
+  <div class="newsletter-status" data-js-newsletter-status aria-live="polite"></div>
+  <div class="newsletter-toast" data-js-newsletter-toast hidden tabindex="-1">
+    <p class="newsletter-toast-text" data-js-toast-text aria-live="polite"></p>
+    <p class="newsletter-note" data-js-toast-hint></p>
+    <span class="newsletter-toast-bar" data-js-toast-bar aria-hidden="true"></span>
+  </div>
+</Root>

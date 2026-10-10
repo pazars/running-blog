@@ -7,13 +7,15 @@ subtitle: "Est et dolore duis sunt id culpa Lorem aliquip et consequat nisi."
 summary: "Culpa dolor sint reprehenderit ullamco non."
 slug: "example-blog-post"
 date: 2026-06-15
+# Canonical tag slugs, shared verbatim by any translation of this post. A new
+# tag also gets its per-language display names in src/i18n/tags.ts.
 tags: ["treniņi", "sacensības"]
 thumbnail: "../../assets/thumb-example.jpg"
 thumbnailAlt: "Eu anim dolor consectetur" # TODO: real alt text
 thumbnailAttribution: "Foto: Eu irure" # TODO: real photo credit (omit if none)
 ---
 
-<!-- TODO: all body copy below is lorem-ipsum placeholder — replace with the real article. -->
+<!-- TODO: all body copy below is lorem-ipsum placeholder - replace with the real article. -->
 
 Nostrud do deserunt ipsum ad nisi deserunt culpa consectetur. Dolor velit aliqua eiusmod laborum quis ut minim. Ad dolore quis voluptate ex anim culpa excepteur ut. Ut commodo mollit id duis. Eiusmod laborum consectetur nisi ea nostrud non ex aliquip eiusmod reprehenderit.
 

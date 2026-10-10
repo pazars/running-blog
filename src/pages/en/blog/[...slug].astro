@@ -1,0 +1,20 @@
+---
+// One page per published English article at /en/blog/<YYYY-MM-DD>/<uri-title>.
+// Same shape as the Latvian route: the date and slug come from frontmatter, so
+// the filename is irrelevant.
+import BlogPostPage from "../../../components/pages/BlogPostPage.astro";
+import { postsFor } from "../../../i18n/posts";
+import { toIsoDate } from "../../../utils/date";
+
+export async function getStaticPaths() {
+  const posts = await postsFor("en");
+  return posts.map((post) => ({
+    params: { slug: `${toIsoDate(post.data.date)}/${post.data.slug}` },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+---
+
+<BlogPostPage lang="en" post={post} />

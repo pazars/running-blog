@@ -1,6 +1,8 @@
 ---
 title: "Some Work, All Play"
-description: "David & Megan Roche podkāsts, kas ir piepildīts ne tikai ar sarunām par aktuālākajiem taku skriešanas zinātnes pētījumiem un jaunumiem, bet arī latvietim nepieredzētu enerģiju un mīlestību. Nedaudz garāks un tehniskāks, bet tajā pašā laikā jautrs un sirsnīgs saturs."
+description:
+  lv: "David & Megan Roche podkāsts, kas ir piepildīts ne tikai ar sarunām par aktuālākajiem taku skriešanas zinātnes pētījumiem un jaunumiem, bet arī latvietim nepieredzētu enerģiju un mīlestību. Nedaudz garāks un tehniskāks, bet tajā pašā laikā jautrs un sirsnīgs saturs."
+  en: "On this podcast, David & Megan Roche mix the latest trail running research and news with a level of energy and affection that can feel almost alien to a Latvian. The episodes run a little long and get technical, but they stay funny and warm throughout."
 tags: ["podkāsti"]
 language: "en"
 # Pinned for deterministic builds (the show's current Spotify cover art).

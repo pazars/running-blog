@@ -1,0 +1,169 @@
+---
+// Shared body of the home page (/, /en/).
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../Header.astro";
+import SectionHeader from "../SectionHeader.astro";
+import ProjectCard from "../ProjectCard.astro";
+import FeaturedPost from "../FeaturedPost.astro";
+import Footer from "../Footer.astro";
+import { toIsoDate, formatPostDate } from "../../utils/date";
+import { fetchOgImage } from "../../utils/ogImage";
+import { cardThumbnail } from "../../utils/postImages";
+import { sideProjects } from "../../data/side-projects";
+import { currentPreparation } from "../../data/current-preparation";
+import type { Locale } from "../../i18n";
+import { homeAlternates, postPath } from "../../i18n/routes";
+import { useTranslations } from "../../i18n/ui";
+import { postsFor } from "../../i18n/posts";
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const alternates = homeAlternates();
+
+// Resolve each side project's card image: an explicit URL wins, otherwise scrape
+// the project's own og:image at build time.
+const projects = await Promise.all(
+  sideProjects.map(async (project) => ({
+    ...project,
+    href: project.href[lang],
+    resolvedImage:
+      project.imageUrl
+        ? project.imageUrl[lang]
+        : await fetchOgImage(project.ogSource[lang], project.ogFallback[lang]),
+  })),
+);
+
+// Blog articles, newest first. The featured "latest article" card is derived
+// entirely from the latest published entry's frontmatter - publishing a post
+// (draft: false) updates the home page automatically, no manual wiring.
+const articles = await postsFor(lang);
+
+// Optimize every post thumbnail once, keyed by entry id (same pattern as
+// blogs/index.astro), then look it up for both the featured and recent slots.
+const thumbnails = new Map(
+  await Promise.all(
+    articles.map(async (a) => [a.id, await cardThumbnail(a.data.thumbnail)] as const),
+  ),
+);
+
+const latest = articles[0];
+const latestPost = latest && {
+  href: postPath(lang, toIsoDate(latest.data.date), latest.data.slug),
+  title: latest.data.title,
+  date: toIsoDate(latest.data.date),
+  dateLabel: formatPostDate(latest.data.date, lang),
+  summary: latest.data.summary,
+  imageUrl: thumbnails.get(latest.id)!,
+  imageAlt: latest.data.thumbnailAlt ?? latest.data.title,
+};
+
+// Recent posts - the ones after the featured article, also derived from the
+// collection. The section only renders once there are enough posts to fill it
+// (see the guard in the template), so it stays hidden while the blog is small.
+// Minimum posts (beyond the featured one) before the grid looks intentional.
+const RECENT_POSTS_MIN = 2;
+const recentPosts = articles.slice(1).map((a) => ({
+  href: postPath(lang, toIsoDate(a.data.date), a.data.slug),
+  title: a.data.title,
+  role: formatPostDate(a.data.date, lang),
+  imageUrl: thumbnails.get(a.id)!,
+  imageAlt: a.data.thumbnailAlt ?? a.data.title,
+}));
+---
+
+<BaseLayout lang={lang} alternates={alternates}>
+  <Header lang={lang} activePage="home" langHrefs={alternates} />
+
+  <main class="home-page">
+    <!-- Currently working on -->
+    <section class="section-hero">
+      <SectionHeader
+        id="currently-working-on"
+        title={t("home.currentlyPreparing")}
+        showDot={true}
+        class="pt-3"
+      />
+
+      <h2 class="h1 mb-1">
+        {currentPreparation.href ? (
+          <a href={currentPreparation.href[lang]} target="_blank" rel="noopener" class="d-inline-flex flex-items-center gap-2">
+            {currentPreparation.title[lang]}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="trailingIcon"><path d="M7 7h10v10"></path><path d="M7 17 17 7"></path></svg>
+          </a>
+        ) : (
+          currentPreparation.title[lang]
+        )}
+      </h2>
+    </section>
+
+    <!-- Introduction -->
+    <section id="intro">
+      <p>
+        {t("home.intro")}
+      </p>
+    </section>
+
+    <!-- Latest article -->
+    {
+      latestPost && (
+        <section>
+          <SectionHeader id="latest-post" title={t("home.latestPost")} />
+          <FeaturedPost
+            href={latestPost.href}
+            title={latestPost.title}
+            date={latestPost.date}
+            dateLabel={latestPost.dateLabel}
+            summary={latestPost.summary}
+            imageUrl={latestPost.imageUrl}
+            imageAlt={latestPost.imageAlt}
+          />
+        </section>
+      )
+    }
+
+    <!-- Recent posts -->
+    {
+      recentPosts.length >= RECENT_POSTS_MIN && (
+        <section>
+          <SectionHeader id="recent-posts" title={t("home.recentPosts")} />
+          <div class="content-grid -equal mb-3">
+            {recentPosts.map((post) => (
+              <ProjectCard
+                href={post.href}
+                title={post.title}
+                role={post.role}
+                imageUrl={post.imageUrl}
+                imageAlt={post.imageAlt}
+              />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Side projects -->
+    <section>
+      <SectionHeader id="side-projects" title={t("home.sideProjects")} />
+      <div class="content-grid -equal -single-column">
+        {
+          projects.map((project) => (
+            <ProjectCard
+              href={project.href}
+              title={project.title}
+              role={t(project.roleKey)}
+              imageUrl={project.resolvedImage}
+              external={true}
+              frameBg={project.frameBg}
+            />
+          ))
+        }
+      </div>
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>

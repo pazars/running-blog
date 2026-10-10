@@ -1,6 +1,12 @@
 ---
-import { navLinks, newsletter } from "../site.config";
+import { site } from "../site.config";
 import { gravatarUrl } from "../utils/avatar";
+import { DEFAULT_LOCALE, homePath, type Locale } from "../i18n";
+import { navLinks, type ActivePage } from "../i18n/routes";
+import { useTranslations } from "../i18n/ui";
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import NewsletterLanguageNotice from "./NewsletterLanguageNotice.astro";
+import NewsletterSignup from "./NewsletterSignup.astro";
 
 // Site-wide profile image from the Gravatar account (see src/utils/avatar.ts).
 const gravatarAvatar = gravatarUrl(160);
@@ -8,18 +14,29 @@ const gravatarAvatar = gravatarUrl(160);
 const gravatarAvatarLarge = gravatarUrl(480);
 
 interface Props {
-  name: string;
-  role: string;
+  lang: Locale;
   avatarUrl?: string;
-  activePage?: string;
+  activePage?: ActivePage;
+  /**
+   * Where the LV/EN pill should point for this page. Falls back to each locale's
+   * home page, so an untranslated article never links to a 404.
+   */
+  langHrefs?: Partial<Record<Locale, string>>;
 }
 
 const {
-  name,
-  role,
+  lang,
   avatarUrl = gravatarAvatar,
   activePage = "blog",
+  langHrefs,
 } = Astro.props;
+
+const t = useTranslations(lang);
+// `name` and `role` used to be props repeated at all ten call sites; they are
+// derived here now - the name is locale-invariant, the role is a dictionary key.
+const name = site.name;
+const role = t("site.role");
+const nav = navLinks(lang);
 ---
 
 <header class="mb-4">
@@ -28,25 +45,27 @@ const {
       <button
         type="button"
         class="image-container mr-3"
-        aria-label="Palielināt profila attēlu"
+        aria-label={t("header.avatarZoomLabel")}
         data-js-avatar-trigger
       >
         <img
           src={avatarUrl}
-          alt="Profila foto"
+          alt={t("header.avatarAlt")}
           class="image"
           width="80"
           height="80"
         />
       </button>
-      <a href="/" class="info">
+      {/* Must stay locale-scoped: a bare "/" would re-enter language
+          negotiation and could bounce the reader into the other language. */}
+      <a href={homePath(lang)} class="info">
         <div class="title">{name}</div>
         <div class="desc color-fg-muted">{role}</div>
       </a>
       <div class="avatar-zoom-preview" data-js-avatar-preview>
         <img
           src={gravatarAvatarLarge}
-          alt="Profila attēls, palielināts"
+          alt={t("header.avatarLargeAlt")}
           class="avatar-zoom-img"
           width="240"
           height="240"
@@ -61,7 +80,7 @@ const {
     >
       <input type="checkbox" class="input d-none" data-js-nav-input />
       <button
-        aria-label="Atvērt izvēlni"
+        aria-label={t("header.openMenu")}
         class="navButton flex-0 btn-icon btn-invisible"
         data-js-nav-button
       >
@@ -102,16 +121,28 @@ const {
       <div class="menu">
         <nav class="d-flex flex-items-center gap-1">
           {
-            navLinks.map((link) => (
+            nav.map((link) => (
               <a
                 href={link.href}
                 class={`link ${activePage === link.id ? "active" : ""}`}
               >
-                <div class="item px-3">{link.text}</div>
+                {/* Template-literal key: adding an id to NAV_IDS won't compile
+                    until `nav.<id>` exists in BOTH dictionaries. */}
+                {/* Horizontal padding lives in the `nav > .link > .item` CSS
+                    (not a px-* utility) so the narrow-screen query in
+                    global.css can tighten it - utilities are !important. */}
+                <div class="item">{t(`nav.${link.id}`)}</div>
               </a>
             ))
           }
         </nav>
+        {/* Sibling of <nav>, NOT a fourth nav child: the mobile open animation
+            in global.css staggers `nav > .link:nth-child(1..3)` by hand, so a
+            fourth child would fall outside the stagger (the switcher has its
+            own cascade rule instead). Inside the open mobile menu it shares
+            the single row; under 400px it collapses to just the
+            other-language cell (see global.css) so the row never wraps. */}
+        <LanguageSwitcher lang={lang} hrefs={langHrefs} />
       </div>
     </label>
     <div class="line" data-js-line>
@@ -142,50 +173,24 @@ const {
               class="tooltip"
               data-position="bottom"
               data-visible="false"
-              data-js-tooltip-text>Vēstkopa</span
+              data-js-tooltip-text>{t("header.newsletterTooltip")}</span
             >
           </div>
         </div>
         <div class="panel subscribe-panel" data-js-dropdown-panel>
-          <div
-            class="subscribe-popup"
-            data-js-newsletter-form
-            data-msg-pending={newsletter.pendingMessage}
-            data-msg-hint={newsletter.pendingHint}
-            data-msg-already={newsletter.alreadyMessage}
-            data-msg-error={newsletter.errorMessage}
-            data-msg-ratelimit={newsletter.rateLimitMessage}
-          >
-            <p class="subscribe-popup-desc">
-              Kopsavilkumi par jaunākajiem rakstiem
-            </p>
-            <form class="subscribe-popup-form d-flex gap-2" data-js-newsletter-submit>
-              <input
-                type="email"
-                name="email"
-                placeholder="tavs@epasts.lv"
-                required
-                autocomplete="email"
-                class="newsletter-input flex-1"
-                data-js-newsletter-email
+          {
+            lang !== DEFAULT_LOCALE ? (
+              <div class="subscribe-popup">
+                <NewsletterLanguageNotice lang={lang} />
+              </div>
+            ) : (
+              <NewsletterSignup
+                lang={lang}
+                variant="popup"
+                description={t("header.newsletterBlurb")}
               />
-              <button
-                type="submit"
-                class="newsletter-btn btn-secondary"
-                data-js-newsletter-btn
-                data-label-submitting={newsletter.submittingLabel}
-              >
-                {newsletter.subscribeButton}
-              </button>
-            </form>
-            <p class="newsletter-note">{newsletter.unsubscribeNote}</p>
-            <div class="newsletter-status" data-js-newsletter-status aria-live="polite"></div>
-            <div class="newsletter-toast" data-js-newsletter-toast hidden tabindex="-1">
-              <p class="newsletter-toast-text" data-js-toast-text aria-live="polite"></p>
-              <p class="newsletter-note" data-js-toast-hint></p>
-              <span class="newsletter-toast-bar" data-js-toast-bar aria-hidden="true"></span>
-            </div>
-          </div>
+            )
+          }
         </div>
       </div>
     </div>

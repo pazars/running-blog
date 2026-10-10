@@ -1,9 +1,9 @@
-// Cloudflare Pages Function — bulk view counts for the listing page.
+// Cloudflare Pages Function - bulk view counts for the listing page.
 //   GET /api/views  ->  { "<slug>": <views>, ... }
 //
 // The listing page fetches this once to enable the "Populārākie" sort. Uses the
 // generated `Env` (typed `DB: D1Database`) and `PagesFunction` from
-// worker-configuration.d.ts — see functions/api/views/[slug].ts.
+// worker-configuration.d.ts - see functions/api/views/[slug].ts.
 
 export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
   const { results } = await env.DB.prepare(

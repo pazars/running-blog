@@ -1,9 +1,9 @@
-// Cloudflare Pages Function — read & increment a single article's view count.
+// Cloudflare Pages Function - read & increment a single article's view count.
 //   GET  /api/views/<slug>  -> { slug, views }   (read only)
 //   POST /api/views/<slug>  -> { slug, views }   (increment, returns new total)
 //
 // `Env` (with the typed `DB: D1Database` binding) and `PagesFunction` come from
-// the generated worker-configuration.d.ts — run `npm run cf-typegen` after
+// the generated worker-configuration.d.ts - run `npm run cf-typegen` after
 // changing bindings in wrangler.toml. Requires the `page_views` table (see
 // schema.sql). The slug is the article's frontmatter `slug`.
 

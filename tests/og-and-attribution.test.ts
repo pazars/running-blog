@@ -1,12 +1,12 @@
 // End-to-end checks against the real static build (dist/). Two guarantees:
 //
-//   1. OG share images — MISSION-CRITICAL. Every blog post must expose an
+//   1. OG share images - MISSION-CRITICAL. Every blog post must expose an
 //      *absolute* og:image / twitter:image URL pointing at a real 1200x630 JPEG
 //      in the build. A relative URL or a missing/wrong-sized file silently
 //      breaks every social/link-preview unfurl, so this is asserted broadly
 //      (all posts), not just the demo one.
 //
-//   2. Markdown attribution — a standalone image with a title renders as a
+//   2. Markdown attribution - a standalone image with a title renders as a
 //      <figure>/<figcaption> wrapping an OPTIMIZED (/_astro/...) image, with the
 //      title lifted out of the <img>. This is the real-Markdown counterpart to
 //      the unit tests in src/plugins/rehype-figcaption.test.ts.
@@ -56,7 +56,7 @@ describe("OG share images (build output)", () => {
       const twitter = meta(html, "twitter:image");
 
       expect(og, `og:image missing in ${file}`).toBeTruthy();
-      // new URL() with no base THROWS on a relative URL — this is the core
+      // new URL() with no base THROWS on a relative URL - this is the core
       // absolute-URL guarantee for crawlers.
       expect(new URL(og!).origin, `og:image not same-origin in ${file}`).toBe(ORIGIN);
       expect(twitter, `twitter:image should mirror og:image in ${file}`).toBe(og);

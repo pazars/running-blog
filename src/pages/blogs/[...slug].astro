@@ -1,14 +1,14 @@
 ---
-import { getCollection, render } from "astro:content";
-import BlogPost from "../../layouts/BlogPost.astro";
-import { toIsoDate, formatLatvianDate } from "../../utils/date";
-import { ogShareImage } from "../../utils/postImages";
+// One page per published Latvian article at /blogs/<YYYY-MM-DD>/<uri-title>.
+// A catch-all param holds both segments; the date comes from frontmatter and the
+// slug is the url-title, so the route is rebuilt from the entry's data - the
+// filename is irrelevant. English articles live at /en/blog/... (same shape).
+import BlogPostPage from "../../components/pages/BlogPostPage.astro";
+import { postsFor } from "../../i18n/posts";
+import { toIsoDate } from "../../utils/date";
 
-// One page per (non-draft) article at /blogs/<YYYY-MM-DD>/<uri-title>. A
-// catch-all param holds both segments; the date comes from frontmatter and the
-// slug is the url-title, so the route is rebuilt from the entry's data.
 export async function getStaticPaths() {
-  const posts = await getCollection("posts", ({ data }) => !data.draft);
+  const posts = await postsFor("lv");
   return posts.map((post) => ({
     params: { slug: `${toIsoDate(post.data.date)}/${post.data.slug}` },
     props: { post },
@@ -16,27 +16,6 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
-const { title, subtitle, summary, thumbnail, thumbnailAlt, thumbnailAttribution, date } =
-  post.data;
-
-// The local thumbnail feeds both surfaces: a dedicated absolute-URL JPEG for
-// the OG/Twitter share image, and the ImageMetadata itself for the responsive
-// hero (BlogPost renders it via <Image>).
-const ogImage = await ogShareImage(thumbnail, Astro.site);
 ---
 
-<BlogPost
-  title={title}
-  subtitle={subtitle}
-  description={summary}
-  image={ogImage}
-  heroImage={thumbnail}
-  imageAlt={thumbnailAlt}
-  imageAttribution={thumbnailAttribution}
-  date={formatLatvianDate(date)}
-  isoDate={toIsoDate(date)}
-  viewKey={post.data.slug}
->
-  <Content />
-</BlogPost>
+<BlogPostPage lang="lv" post={post} />

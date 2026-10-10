@@ -1,0 +1,10 @@
+---
+// Latvian newsletter sign-up. Body shared with /en/newsletter.
+//
+// Deliberately `vestkopa/index.astro` rather than a `vestkopa.astro` leaf beside
+// the `vestkopa/` directory: both emitted the same URL, but the two coexisting
+// was one rename away from a silent overwrite.
+import NewsletterPage from "../../components/pages/NewsletterPage.astro";
+---
+
+<NewsletterPage lang="lv" />

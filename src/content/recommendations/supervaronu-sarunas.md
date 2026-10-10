@@ -1,6 +1,8 @@
 ---
 title: "Supervaroņu sarunas"
-description: "Pašmāju taku skrējēju Andra Ronimoisa un Anetes Švilpes sarunas par treniņiem, aktuālāko taku skriešanas pasaulē gan ārzemēs, gan Latvijā un atbildes uz klausītāju jautājumeim. Ar laiku radīsies sajūta, ka ir iegūti divi jauni draugi, lai gan dzīvē varbūt ne reizi nav satikti. Visas epizodes ir aptuveni stundu garas, tāpēc tās ideāli saderēs ar vieglajiem treniņiem. Jaunas epizodes tiek publicētas katru piektdienu."
+description:
+  lv: "Pašmāju taku skrējēju Andra Ronimoisa un Anetes Švilpes sarunas par treniņiem, aktuālāko taku skriešanas pasaulē gan ārzemēs, gan Latvijā un atbildes uz klausītāju jautājumeim. Ar laiku radīsies sajūta, ka ir iegūti divi jauni draugi, lai gan dzīvē varbūt ne reizi nav satikti. Visas epizodes ir aptuveni stundu garas, tāpēc tās ideāli saderēs ar vieglajiem treniņiem. Jaunas epizodes tiek publicētas katru piektdienu."
+  en: "Latvian trail runners Andris Ronimoiss and Anete Švilpe chat about training, what is happening in trail running both at home and abroad, and questions from listeners. Before long, they start to feel like two new friends, even if you have never met either of them. Episodes are about an hour long, making them perfect company for an easy run. A new one comes out every Friday."
 tags: ["podkāsti", "youtube"]
 language: "lv"
 # Pinned for deterministic builds (the show's current Spotify cover art).

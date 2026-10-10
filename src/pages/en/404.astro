@@ -1,0 +1,8 @@
+---
+// English 404 -> dist/en/404.html. Cloudflare Pages looks for the closest
+// 404.html walking UP the directory tree, so this serves /en/anything-missing
+// while dist/404.html stays the Latvian fallback.
+import NotFound from "../../components/pages/NotFound.astro";
+---
+
+<NotFound lang="en" />

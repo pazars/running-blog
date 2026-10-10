@@ -1,0 +1,47 @@
+---
+// Segmented LV | EN control. Two plain anchors, so it works with JS disabled and is
+// crawlable - the language choice is real navigation, not a widget.
+//
+// With exactly two languages a segmented control shows the current state AND the
+// affordance at the same time, which a dropdown can't. A third language should
+// switch this to the icon-button + dropdown pattern already used by the header's
+// envelope, not grow a third cell.
+//
+// Rendered as a miniature track-and-thumb segment (`.lang-switch` in
+// src/styles/global.css), deliberately one size below the nav pills: it is a
+// control, not a destination, and the size step is what keeps LV|EN from
+// reading as two more nav links.
+import { homePath, LOCALES, LOCALE_NAME, LOCALE_TAG, type Locale } from "../i18n";
+import { useTranslations } from "../i18n/ui";
+
+interface Props {
+  lang: Locale;
+  /**
+   * Where each locale should go. Falls back to that locale's home page, which is
+   * what makes an untranslated article safe: the reader lands somewhere real
+   * instead of a 404.
+   */
+  hrefs?: Partial<Record<Locale, string>>;
+}
+
+const { lang, hrefs } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<div class="lang-switch" role="group" aria-label={t("lang.switchLabel")}>
+  {
+    LOCALES.map((code) => (
+      <a
+        href={hrefs?.[code] ?? homePath(code)}
+        class={`cell ${code === lang ? "active" : ""}`}
+        hreflang={LOCALE_TAG[code]}
+        lang={LOCALE_TAG[code]}
+        aria-current={code === lang ? "true" : undefined}
+        title={LOCALE_NAME[code]}
+        data-js-lang-pick={code}
+      >
+        {code.toUpperCase()}
+      </a>
+    ))
+  }
+</div>

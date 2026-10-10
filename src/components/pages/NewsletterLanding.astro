@@ -1,0 +1,50 @@
+---
+// Shared body of the two double opt-in landing pages (confirmed / invalid),
+// reached only by clicking a link in an email.
+//
+// Both are `noindex`, so they pass NO `alternates` - advertising hreflang
+// for a page you've told crawlers to ignore sends contradictory signals. They
+// are also dropped from the sitemap (see the filter in astro.config.mjs).
+//
+// `linkTo` is a RouteId rather than a literal href: the old hardcoded "/blogs"
+// would have dropped a confirmed English subscriber onto a Latvian page.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../Header.astro";
+import Footer from "../Footer.astro";
+import type { Locale } from "../../i18n";
+import { path, type RouteId } from "../../i18n/routes";
+import { useTranslations } from "../../i18n/ui";
+
+type Kind = "confirmed" | "invalid";
+
+interface Props {
+  lang: Locale;
+  kind: Kind;
+  /** Where the single call-to-action link goes, resolved per locale. */
+  linkTo: RouteId;
+}
+
+const { lang, kind, linkTo } = Astro.props;
+const t = useTranslations(lang);
+
+// Template-literal keys: a new `kind` won't compile until all four of its
+// dictionary entries exist in BOTH languages.
+const title = t(`newsletter.${kind}.title`);
+const body = t(`newsletter.${kind}.body`);
+const linkText = t(`newsletter.${kind}.linkText`);
+const description = t(`newsletter.${kind}.metaDescription`);
+---
+
+<BaseLayout lang={lang} title={title} description={description} noindex>
+  <Header lang={lang} activePage="none" />
+
+  <main>
+    <section class="section-hero -no-eyebrow">
+      <h1>{title}</h1>
+      <p>{body}</p>
+      <p><a href={path(linkTo, lang)}>{linkText}</a></p>
+    </section>
+  </main>
+
+  <Footer lang={lang} />
+</BaseLayout>

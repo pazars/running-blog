@@ -1,7 +1,7 @@
 name: CI
 
 # Build + test gate. Deploys are handled separately by Cloudflare Pages' Git
-# integration (preview on non-main branches, production on main) — this workflow
+# integration (preview on non-main branches, production on main) - this workflow
 # only validates, it does not deploy.
 on:
   pull_request:

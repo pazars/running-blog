@@ -3,7 +3,7 @@
 // `PagesFunction<Env & NewsletterEnv>`, so:
 //   * the code type-checks even before `npm run cf-typegen` adds the [vars], and
 //   * it never clashes with cf-typegen's output (intersection of compatible types,
-//     not a declaration merge — so string & "literal" is fine).
+//     not a declaration merge - so string & "literal" is fine).
 //
 // VALUES at runtime: the *_ID / _FROM vars come from wrangler.toml [vars]; the two
 // SECRETS come from .dev.vars locally and `wrangler pages secret put` remotely.
@@ -19,8 +19,15 @@ interface NewsletterEnv {
   RESEND_FROM: string;
   /** Alias of the published Resend template for the double opt-in confirm email
    *  (owns subject + markup; the {{confirm_url}} variable is filled at send time).
-   *  Fed into the SDK's `template.id`, which accepts a UUID or the alias. */
+   *  Fed into the SDK's `template.id`, which accepts a UUID or the alias.
+   *  This is the LATVIAN (default-locale) template - the name is deliberately
+   *  unsuffixed so nothing already configured in production has to change. */
   RESEND_CONFIRM_TEMPLATE_ALIAS: string;
+  /** Same, for the English confirm email. Selected by the `lang` the sign-up form
+   *  posts (see subscribe.ts -> confirmTemplate). Must be set in BOTH
+   *  wrangler.toml [vars] and [env.preview.vars] - preview inherits nothing, and
+   *  a missing preview value is a preview-only failure CI does not catch. */
+  RESEND_CONFIRM_TEMPLATE_ALIAS_EN: string;
   /**
    * Cloudflare Rate Limiting binding (wrangler.toml [[ratelimits]]). Optional: when
    * absent, subscribe.ts skips the per-IP check. Typed structurally so it doesn't
