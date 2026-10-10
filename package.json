@@ -13,6 +13,7 @@
     "check:functions": "tsc -p functions/tsconfig.json",
     "template:sync": "node scripts/sync-confirm-template.mjs",
     "newsletter:build": "node scripts/build-newsletter.mjs",
+    "newsletter:send": "node scripts/send-newsletter.mjs",
     "test": "vitest run"
   },
   "dependencies": {
