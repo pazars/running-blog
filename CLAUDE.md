@@ -316,6 +316,16 @@ typed bindings). Not worth it for one view counter.
   tripped; it's guarded (`if (env.SUBSCRIBE_RATE_LIMITER)`) so it no-ops where the
   binding is absent. Counts are per Cloudflare location, so a WAF rate-limiting rule
   is the edge-level backstop (see README).
+- **Newsletter issues** are built locally, not by a Function: an issue module in
+  `newsletters/` (blocks: heading / text / post slug) is rendered by
+  `scripts/lib/newsletter.mjs` with the templates in `emails/newsletter/`.
+  `npm run newsletter:build` writes HTML to `newsletters/out/` (gitignored);
+  `npm run newsletter:send` sends a Resend Broadcast. Card data + small email
+  JPEGs come from `dist/newsletter-cards.json` (`src/pages/newsletter-cards.json.ts`),
+  so `npm run build` first. **`newsletter:send` is preview-audience only and a dry
+  run unless `--send` is passed, on purpose: never add a production path to it
+  without Dāvis explicitly asking.**
+  The footer's `{{{RESEND_UNSUBSCRIBE_URL}}}` is Resend's. See `emails/README.md`.
 - **Tests + CI**: `functions/api/newsletter/newsletter.test.ts` (vitest, `npm test`)
   runs token/validation cases offline and live Resend cases against a **test** key +
   the `delivered@resend.dev` simulator (self-skips without creds).

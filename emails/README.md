@@ -99,3 +99,61 @@ actually use the Gravatar *photo* as the avatar, set it on the sending account i
   uses, see `src/utils/avatar.ts`). This is independent of the inbox avatar above. The
   identity block was removed from this template, so it's not currently shown; re-add it
   if you want the face in the body too.
+
+## Newsletter issues (`newsletter/`)
+
+Each issue is built from the shell `newsletter/layout.html` and one partial per block
+type (`heading.html`, `paragraph.html`, `post.html`). It uses the same palette and
+dark-mode remap as the confirm email, with a 560px card so article images have room.
+Latvian only.
+
+An issue is a small ES module in `newsletters/` (copy `newsletters/_example.mjs`):
+a `subject`, an optional `preheader`, and `blocks` in any order: `{ heading }`,
+`{ text }` (paragraphs split on blank lines; `[link](https://...)`, `**bold**`,
+`*italic*`), and `{ post: "<slug>" }` for an article card.
+
+```bash
+npm run build                                          # emits dist/newsletter-cards.json
+npm run newsletter:build -- newsletters/<issue>.mjs    # -> newsletters/out/<issue>.html
+xdg-open newsletters/out/<issue>.html                  # flip the OS theme for dark mode
+
+npm run newsletter:send -- newsletters/<issue>.mjs          # every check, sends NOTHING
+npm run newsletter:send -- newsletters/<issue>.mjs --send   # test send, PREVIEW audience
+```
+
+Options go **after the `--`**: npm swallows flags written before it, and both
+scripts refuse to run when they see that happened.
+
+- **Card data and images** come from `dist/newsletter-cards.json`, emitted by
+  `src/pages/newsletter-cards.json.ts` from the post frontmatter. Each card image is
+  a 760x399 JPEG at quality 50 with mozjpeg (`emailCardImage()` in
+  `src/utils/postImages.ts`; mozjpeg is set for all JPEGs in `astro.config.mjs`),
+  typically 15-50 KB. They are Astro build assets, so their URLs only resolve
+  once the build that made them is deployed to production.
+- **Unsubscribe**: the footer links to `{{{RESEND_UNSUBSCRIBE_URL}}}`, which Resend
+  fills per recipient on a **Broadcast** (and adds the `List-Unsubscribe` header).
+  In a local preview the link is the literal placeholder.
+- **Sending is test-only for now, and a dry run by default.** `newsletter:send`
+  targets only the audience in `wrangler.toml` `[env.preview.vars]`; it has no flag
+  or env override for production. Both audience ids must be UUIDs and differ. Every
+  run renders the issue, checks that every image (200 + an image content-type) and
+  link (200) works, and prints the weight and the preview audience's recipients.
+  Only with `--send` does it then ask you to type `send`, create a draft, re-read
+  the draft's audience from Resend, and send. Preview text is sent from
+  `preheader` (the Broadcasts API has the field the Templates API lacks).
+- **Use a dedicated test address in the preview audience.** Resend's unsubscribe
+  is per contact, not per audience, so clicking the (live) unsubscribe link in a
+  test also unsubscribes that address from the real list.
+- **Images must be on a public host before a send.** Card images are build assets,
+  so a new post's image exists only once that post is deployed to production.
+  Pages previews are behind Cloudflare Access, which a mail client can't pass (the
+  URL check rejects the login page). `--asset-origin=https://...` swaps the image
+  host for another public one; with `newsletter:build` it also works against a
+  preview in a browser that has an Access session. Links always point at production.
+- **Changing the JPEG encoder settings** in `astro.config.mjs` needs
+  `node_modules/.astro/assets` cleared: Astro's image cache ignores them.
+- Template comments are stripped from the output. Unknown slugs or options, a
+  missing `subject`, a block with zero or several keys, unfilled `%%slots%%` and
+  broken URLs fail instead of shipping. Inline markup: links are parsed first
+  (balanced parentheses allowed in URLs), and `*` only emphasizes when it hugs
+  text, so `5 * 3` stays literal.
