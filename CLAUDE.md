@@ -146,9 +146,10 @@ disables `_redirects` / `_headers` site-wide.
   `SUBSCRIBE_RATE_LIMITER` binding (5/60s per IP, per location) and a WAF rule.
 - Issues are built locally from `newsletters/*.mjs` by `scripts/lib/newsletter.mjs`
   and `emails/newsletter/`. Card data comes from `dist/newsletter-cards.json`, so
-  build first. **`newsletter:send` only targets the preview audience and is a dry
-  run without `--send`. Never add a production path unless Dāvis explicitly asks.**
-  See `emails/README.md`.
+  build first. **`newsletter:send` is a dry run without `--send`. It targets the
+  preview audience unless given `--production`, which requires a sent test of the
+  same content hash and refuses a second production send. Never run a production
+  send or weaken those guards unless Dāvis explicitly asks.** See `emails/README.md`.
 - Tests: `functions/api/newsletter/newsletter.test.ts`. Live cases use a Resend
   test key and `delivered@resend.dev` and skip without credentials.
 
