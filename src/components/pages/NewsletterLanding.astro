@@ -1,8 +1,8 @@
 ---
-// Shared body of the three double opt-in landing pages (confirmed / invalid /
-// unsubscribe), reached only by clicking a link in an email.
+// Shared body of the two double opt-in landing pages (confirmed / invalid),
+// reached only by clicking a link in an email.
 //
-// All three are `noindex`, so they pass NO `alternates` - advertising hreflang
+// Both are `noindex`, so they pass NO `alternates` - advertising hreflang
 // for a page you've told crawlers to ignore sends contradictory signals. They
 // are also dropped from the sitemap (see the filter in astro.config.mjs).
 //
@@ -15,7 +15,7 @@ import type { Locale } from "../../i18n";
 import { path, type RouteId } from "../../i18n/routes";
 import { useTranslations } from "../../i18n/ui";
 
-type Kind = "confirmed" | "invalid" | "unsubscribed";
+type Kind = "confirmed" | "invalid";
 
 interface Props {
   lang: Locale;

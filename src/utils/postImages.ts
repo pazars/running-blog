@@ -40,3 +40,29 @@ export async function ogShareImage(
   });
   return new URL(img.src, site).toString();
 }
+
+/**
+ * Newsletter card image: the share image's crop, re-encoded small for email.
+ * 760px wide is ~1.5x the 492px card slot in emails/newsletter/post.html: still
+ * crisp on high-DPI screens at roughly half the bytes of a full 2x. JPEG because
+ * WebP/AVIF don't render in every mail client; mozjpeg is enabled for all JPEGs
+ * in astro.config.mjs. Weight matters more here than on the site (every
+ * subscriber downloads every image on open), hence the low quality. Absolute URL:
+ * emails can't resolve paths.
+ */
+export async function emailCardImage(
+  src: ImageMetadata,
+  site: URL | undefined,
+): Promise<string> {
+  const img = await getImage({
+    src,
+    width: 760,
+    height: 399, // 1200x630 aspect, same crop as the share image
+    fit: "cover",
+    position: "center",
+    format: "jpeg",
+    quality: 50,
+    layout: "none",
+  });
+  return new URL(img.src, site).toString();
+}

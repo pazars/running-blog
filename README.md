@@ -1,20 +1,173 @@
 # davispazars.lv
 
-Astro static site + Cloudflare Pages Functions (D1-backed view counts) for
-[davispazars.lv](https://davispazars.lv).
+Personal blog and portfolio. Static Astro site on Cloudflare Pages, with a few
+Pages Functions for view counts (D1) and the newsletter (Resend).
 
-Requires **Node 22.12+** (`.nvmrc`). Run `npm install` to set up. To get types
-for the Pages Functions (the `env.DB` binding etc.), run `npm run cf-typegen` -
-it generates a gitignored `worker-configuration.d.ts` from `wrangler.toml`.
-Re-run it whenever you change a binding.
+Requires Node 22.12+ (`.nvmrc`).
+
+```bash
+npm install
+npm run dev                                    # UI only; view counts and forms no-op
+npm run build && npx wrangler pages dev dist   # site + Functions + local D1
+npm test                                       # vitest
+npm run check:astro && npm run check:functions
+```
+
+Run `npm run cf-typegen` after changing bindings in `wrangler.toml`. It generates
+the gitignored `worker-configuration.d.ts` that types `env`.
+
+## Layout
+
+| Path | Contents |
+|------|----------|
+| `src/content/posts/` | Posts (Latvian), `en/` for English |
+| `src/i18n/` | Locales, routes, UI strings, post helpers |
+| `src/site.config.ts` | Name, origin, socials |
+| `src/data/` | Page data (race results, projects) |
+| `functions/` | Pages Functions: `/` language negotiation, `api/views`, `api/newsletter` |
+| `emails/` | Email templates, see `emails/README.md` |
+| `newsletters/` | Newsletter issues |
+| `scripts/` | Resend template sync, newsletter build and send |
+
+`CLAUDE.md` has the detailed conventions. `STYLE_GUIDE.md` describes the visual design.
+
+## Languages
+
+Latvian is the default and keeps its URLs (`/blogs`, `/iesaku`, `/sasniegumi`,
+`/vestkopa`). English lives under `/en/` with translated slugs (`/en/blog`,
+`/en/recommendations`, ...).
+
+- UI strings are in `src/i18n/ui.ts`. A key missing in either language fails the build.
+- URL paths are in `src/i18n/routes.ts`. Don't hard-code them.
+- `/` redirects to `/en/` for browsers that prefer English, unless the `lang`
+  cookie (set by the LV | EN switch) says otherwise. Other URLs are never redirected.
+
+Unwritten English copy is marked `TODO(en):`:
+
+```bash
+grep -rn 'TODO(en)' src/ emails/ public/
+```
+
+## Writing posts
+
+Add a Markdown file to `src/content/posts/` (Latvian) or `src/content/posts/en/`
+(English). The URL comes from frontmatter `date` and `slug`, not the filename.
+`draft: true` keeps a post out of the build.
+
+- `slug` must be unique across both languages; it is also the view-counter key.
+- A translation sets `translationKey` to the original post's slug. See
+  `src/content/posts/en/_example.md`.
+- `thumbnail` points at an image in `src/assets/` (not `public/`). Astro generates
+  the WebP hero, listing images, the 1200x630 Open Graph JPEG and the newsletter card from it.
+
+```yaml
+thumbnail: "../../assets/my-photo.jpg"
+thumbnailAlt: "Short description"
+```
+
+An image with a title becomes a `<figure>` with a caption:
+
+```markdown
+![Alt text](../../assets/photo.jpg "Foto: Photographer Name")
+```
+
+## Environments
+
+| Env | Runs on | Deployed by | D1 database |
+|-----|---------|-------------|-------------|
+| dev | your machine | - | local SQLite |
+| preview | Pages preview | push to any non-`main` branch | `personal-blog-views-preview` |
+| production | Pages production | push to `main` | `personal-blog-views` |
+
+Every environment uses the `DB` binding; `wrangler.toml` points it at a different
+database per environment. The preview block (`[env.preview]`) inherits nothing from
+the top level, so add new vars to both. Preview deployments are behind Cloudflare Access.
+
+Manual deploy:
+
+```bash
+npx wrangler pages deploy dist --branch <branch>   # preview
+npx wrangler pages deploy dist --branch main       # production
+```
+
+### D1 setup
+
+```bash
+npx wrangler d1 create personal-blog-views
+npx wrangler d1 create personal-blog-views-preview
+# put both ids in wrangler.toml, then:
+npx wrangler d1 execute personal-blog-views --remote --file=./schema.sql
+npx wrangler d1 execute personal-blog-views-preview --remote --file=./schema.sql
+npx wrangler d1 execute personal-blog-views --local --file=./schema.sql
+```
+
+## View counts
+
+`functions/api/views/[slug].ts` reads (`GET`) and increments (`POST`) one post's
+count; `functions/api/views/index.ts` returns all counts. The `POST` is
+unauthenticated because every anonymous reader sends it. `localStorage` stops a
+reader's browser from counting the same post twice, but anyone can still inflate a
+count with `curl`. A WAF rate-limiting rule
+(`starts_with(http.request.uri.path, "/api/views/") and http.request.method eq "POST"`,
+around 10/min per IP) keeps the numbers roughly honest.
+
+## Newsletter
+
+Sign-up is double opt-in through Resend:
+
+1. `functions/api/newsletter/subscribe.ts` emails a confirm link from a Resend
+   template, one per language. The address and language travel inside a signed
+   JWT; nothing is stored yet.
+2. `confirm.ts` verifies the token, adds the contact to the verified audience and
+   redirects to `/vestkopa/confirmed` or `/en/newsletter/confirmed`.
+
+There is no CAPTCHA. Since subscribing only sends an email, the confirm click,
+a per-IP rate limit (`SUBSCRIBE_RATE_LIMITER`, 5/60s per Cloudflare location)
+and a WAF rule on `/api/newsletter/subscribe` cover abuse.
+
+Issues are sent as Resend Broadcasts. Templates, issue building and sending are
+described in `emails/README.md`.
+
+### Config
+
+| Name | Kind | Set in |
+|------|------|--------|
+| `RESEND_API_KEY` | secret | `.dev.vars`, Pages secrets, GitHub secret (test key) |
+| `RESEND_VERIFY_SECRET` | secret | same; any long random string |
+| `RESEND_FROM` | var | `wrangler.toml` `[vars]` and `[env.preview.vars]`, GitHub variable |
+| `RESEND_AUDIENCE_VERIFIED_ID` | var | same |
+| `RESEND_CONFIRM_TEMPLATE_ALIAS` | var | same (Latvian template) |
+| `RESEND_CONFIRM_TEMPLATE_ALIAS_EN` | var | same (English template) |
+
+Audience ids and template aliases do nothing without the API key, so they are
+committed. For local dev, copy `.dev.vars.example` to `.dev.vars` and fill in the
+two secrets.
+
+### Resend setup
+
+1. Verify the `davispazars.lv` sending domain (SPF, DKIM, DMARC).
+2. Create a verified audience for production and a separate one for preview, and
+   put their ids in `wrangler.toml`.
+3. Push the confirm templates with `npm run template:sync`, then copy them to
+   production in the Resend UI (see `emails/README.md`).
+4. Create API keys for production, preview and CI (test).
+5. Set `RESEND_API_KEY` and `RESEND_VERIFY_SECRET` for both Pages environments.
+6. Add the same secrets plus the vars as GitHub Actions secrets and variables,
+   pointing at the test key, audience and template.
+
+Enable `nodejs_compat` for both Pages environments; the Resend SDK needs it.
+
+## CI
+
+`.github/workflows/ci.yml` runs `npm ci`, `npm run build` and `npm test` on PRs
+to `main` and pushes to `main`. Live newsletter tests use the Resend test key and
+the `delivered@resend.dev` simulator, and skip themselves without credentials
+(for example, on forked PRs). Cloudflare's Git integration handles deploys.
 
 ## Icons
 
-The favicon and PWA icons in `public/` are **circular crops of the Gravatar
-profile picture** (the same photo as the header avatar - a favicon can't be
-CSS-rounded, so it's pre-rendered). Regenerate them with ImageMagick if the
-Gravatar photo changes (`HASH` is the SHA-256 of the lowercased
-`gravatarEmail` in `src/site.config.ts`):
+The favicon and PWA icons are circular crops of the Gravatar photo. Regenerate
+them with ImageMagick when the photo changes:
 
 ```bash
 HASH=$(printf '%s' davis.pazars@gmail.com | sha256sum | cut -d' ' -f1)
@@ -28,264 +181,3 @@ cp /tmp/circle.png public/icon-512.png
 magick /tmp/circle.png -resize 180x180 -background white -flatten public/apple-touch-icon.png
 magick /tmp/circle.png -define icon:auto-resize=16,32,48,64 public/favicon.ico
 ```
-
-## Languages
-
-The site is bilingual. **Latvian keeps every URL it always had** (`/blogs`,
-`/iesaku`, `/sasniegumi`, `/vestkopa`, `/rss.xml`); **English lives under `/en/`**
-with translated slugs (`/en/blog`, `/en/recommendations`, `/en/achievements`,
-`/en/newsletter`, `/en/rss.xml`).
-
-- **UI strings** live in `src/i18n/ui.ts`, keyed once and required in both
-  languages - a missing English string is a **build error**, not a silently
-  Latvian page. Values still marked `TODO(en):` are awaiting real copy:
-
-  ```bash
-  grep -rn 'TODO(en)' src/ emails/ public/    # what's left to write
-  ```
-
-- **URL paths** live in `src/i18n/routes.ts`. Never hand-write a section path.
-- A visitor landing on `/` is sent to `/en/` when their browser asks for English
-  and they have no saved preference (`functions/index.ts`). Clicking the header's
-  **LV | EN** switch stores that choice in a `lang` cookie, which then wins over
-  the browser. Deep links are never redirected.
-
-`astro dev` runs no Pages Functions, so `/` will not negotiate there - use
-`npm run build && npx wrangler pages dev dist` to exercise it.
-
-## Writing posts
-
-Posts are Markdown in `src/content/posts/` for **Latvian** and
-`src/content/posts/en/` for **English** - the directory is what determines the
-language, so there is no frontmatter field to forget. The filename is irrelevant:
-the URL (`/blogs/<date>/<slug>` or `/en/blog/<date>/<slug>`) is built from
-frontmatter `date` + `slug`. Set `draft: true` to keep one out of the build.
-
-`slug` must be **unique across both languages** - it is the view-counter key, and
-the build fails on a collision. A translation therefore gets its own English slug,
-plus `translationKey` pointing at the original post's slug so the language switch
-can deep-link between them. `src/content/posts/en/_example.md` is a working
-template. A post with no counterpart is fine: the switch falls back to the other
-language's home page and no `hreflang` is emitted.
-
-**Thumbnail** is a *local* image, optimized at build time and reused everywhere:
-
-```yaml
-thumbnail: "../../assets/my-photo.jpg"   # relative to the post file → src/assets/
-thumbnailAlt: "Short description"
-```
-
-From that one file Astro emits a responsive WebP hero, WebP listing-card images,
-and a dedicated **1200×630 JPEG** Open Graph share image at an absolute URL (the
-format/size link previews want). Put source images in `src/assets/` - never
-`public/`, which is served unoptimized.
-
-**Body Markdown** supports the usual GFM, plus:
-
-- **Tables** and **blockquotes** (`>`) - standard Markdown, styled automatically.
-- **Photo credit** - a standalone image with a *title* becomes a `<figure>` with a
-  `<figcaption>`, while staying optimized (no raw HTML needed):
-
-  ```markdown
-  ![Alt text](../../assets/photo.jpg "Foto: Photographer Name")
-  ```
-
-  The title text becomes the visible caption. (Plumbing: `src/plugins/rehype-figcaption.mjs`.)
-
-## Environments
-
-Three tiers - local for **dev**, Cloudflare Pages **preview** for test, Pages
-**production** for prod. Each remote tier has its own D1 database (wired in
-`wrangler.toml`); local dev uses a local SQLite copy.
-
-| Env      | Runs on      | Trigger                      | D1 database                    |
-|----------|--------------|------------------------------|--------------------------------|
-| **dev**  | your machine | -                            | local SQLite (auto-created)    |
-| **test** | Pages preview| push any non-`main` branch   | `personal-blog-views-preview`  |
-| **prod** | Pages prod   | push to `main`               | `personal-blog-views`          |
-
-The functions read D1 through a single binding, `env.DB`. The **binding name**
-(`DB`) is the handle your code uses at runtime; the **database name**
-(`personal-blog-views`) is what the `wrangler d1` commands below target - they
-are different things. The binding is the same in every environment; only the
-database it points at changes (top-level block = prod/local, `[env.preview]` =
-preview). If the project later needs several *different* databases at once, this
-will need refactoring to distinct named bindings.
-
-## Dev (local)
-
-```bash
-npm run dev                                     # UI only (HMR); view counts no-op
-npm run build && npx wrangler pages dev dist    # full: Functions + local D1
-```
-
-Seed the local DB once (auto-created on first use):
-
-```bash
-npx wrangler d1 execute personal-blog-views --local --file=./schema.sql
-```
-
-## Test (preview) & Prod (production)
-
-With Git integration, push a non-`main` branch → preview deploy; merge to `main`
-→ production. To deploy manually:
-
-```bash
-npx wrangler pages deploy dist --branch <branch>   # preview
-npx wrangler pages deploy dist --branch main       # production
-```
-
-## One-time D1 setup
-
-```bash
-npx wrangler d1 create personal-blog-views           # -> prod id
-npx wrangler d1 create personal-blog-views-preview   # -> preview id
-# paste both ids into wrangler.toml, then apply the schema to each remote DB:
-npx wrangler d1 execute personal-blog-views --remote --file=./schema.sql
-npx wrangler d1 execute personal-blog-views-preview --remote --file=./schema.sql
-```
-
-## View counts
-
-`functions/api/views/[slug].ts` serves `GET` (read) and `POST` (increment) per slug;
-`functions/api/views/index.ts` returns all counts for the listing page. The `POST` is
-**unauthenticated by design** - it's fired by every anonymous reader's browser, so
-there's no client to authenticate and no token the server could hand out that an
-attacker wouldn't also receive. `public/script.js` claims a per-slug `localStorage`
-slot before posting so a real visitor isn't double-counted, but that is a UX dedup,
-**not** a security control: anyone can `curl -X POST /api/views/<slug>` - or loop it
-from any web page (CORS blocks reading the *response*, not the write itself) - to
-inflate a count. The blast radius is a meaningless number, not data exposure or
-access.
-
-To keep counts roughly honest, add a **WAF Rate Limiting rule** as the edge-level
-backstop (same mechanism as the newsletter one below): Cloudflare dashboard → Security
-→ WAF → Rate limiting rules, match `starts_with(http.request.uri.path, "/api/views/")
-and http.request.method eq "POST"`, e.g. 10 requests / 1 min per IP → *Block*. It runs
-*before* the Function. This is account/zone config, not committed code.
-
-## Secrets / vars
-
-The view counter needs none. The **newsletter** (see below) needs five Resend keys:
-
-| Name | Kind | Where it's set |
-|------|------|----------------|
-| `RESEND_API_KEY` | secret | `.dev.vars` (local) · `wrangler pages secret put` / dashboard (remote) · GitHub secret (CI test key) |
-| `RESEND_VERIFY_SECRET` | secret | same - any long random string; signs the confirm token |
-| `RESEND_FROM` | var | `wrangler.toml` `[vars]` / `[env.preview.vars]` · GitHub Actions **variable** |
-| `RESEND_AUDIENCE_VERIFIED_ID` | var | same - id of the *verified* mailing list |
-| `RESEND_CONFIRM_TEMPLATE_ALIAS` | var | same - alias of the Resend template for the **Latvian** confirm email |
-| `RESEND_CONFIRM_TEMPLATE_ALIAS_EN` | var | same - alias of the Resend template for the **English** confirm email |
-
-The audience/template **ids** are account-scoped identifiers, not credentials - they
-grant nothing without the API key (which an attacker who had it could use to list the
-audiences anyway), so committing them as `[vars]` adds no real exposure and avoids the
-operational cost of provisioning them out-of-band in every environment.
-
-Secrets **never** go in `wrangler.toml`. Local secrets live in `.dev.vars`
-(gitignored); remote ones in `npx wrangler pages secret put <NAME>` or the dashboard.
-After editing `[vars]` in `wrangler.toml`, run `npm run cf-typegen` to keep `Env` in
-sync (the newsletter keys are also typed by the committed `functions/env.d.ts`, so the
-Functions type-check even before that).
-
-For local dev, copy the committed `.dev.vars.example` to `.dev.vars` (gitignored) and
-fill in the two secrets - the non-secret vars come from `wrangler.toml`:
-
-```ini
-RESEND_API_KEY="re_..."
-RESEND_VERIFY_SECRET="any-long-random-string"
-```
-
-## Newsletter (Resend)
-
-Sign-up is **double opt-in**. `functions/api/newsletter/subscribe.ts` validates the
-email and sends the confirm email as a **Resend template** - one per language
-(`RESEND_CONFIRM_TEMPLATE_ALIAS` for Latvian, `RESEND_CONFIRM_TEMPLATE_ALIAS_EN` for
-English), chosen from the `lang` the form posts.
-The subject and markup live in the template; the function only fills its
-`{{confirm_url}}` variable with the signed link. Nothing is stored at this point: the
-unverified address lives only inside the token. `confirm.ts` verifies that link and
-adds the contact to the **verified** audience (the real list), redirecting to
-`/vestkopa/confirmed` or `/en/newsletter/confirmed` (or the matching `…/invalid` if
-the token is bad/expired).
-
-The **language rides inside the signed token** - a click from a mail client carries no
-cookie and no referer, so there is nothing else to recover it from. An English sign-up
-therefore needs its own Resend template:
-
-```bash
-CONFIRM_SUBJECT_EN="<the English subject line>" \
-  npm run template:sync -- --lang=en      # preview alias; then duplicate in the UI
-```
-
-That path **refuses to run without `CONFIRM_SUBJECT_EN`** rather than inventing a
-subject line, and `emails/newsletter-confirm-en.html` still holds placeholder copy -
-both are waiting on real English wording.
-
-The only
-subscriber state is that single audience plus a stateless signed JWT (HS256 via
-[`jose`](https://github.com/panva/jose), keyed on `RESEND_VERIFY_SECRET`) - **no D1**. The functions talk to Resend through the official
-[`resend`](https://www.npmjs.com/package/resend) SDK; `wrangler.toml` sets
-`compatibility_flags = ["nodejs_compat"]` so it bundles on workerd - ensure that flag
-is enabled for **both** the Production and Preview environments of the Pages project.
-Newsletters
-themselves are sent as Resend **Broadcasts** to the verified audience; Resend also
-hosts the unsubscribe page and the `List-Unsubscribe` header.
-
-One-time Resend setup:
-
-1. Verify the sending domain `davispazars.lv` (add the SPF/DKIM/DMARC DNS records Resend
-   shows).
-2. Create one **verified** audience per tier and paste its id into `wrangler.toml`:
-   - production → top-level `[vars]` (`RESEND_AUDIENCE_VERIFIED_ID`)
-   - preview/test → a **separate** audience in `[env.preview.vars]`
-     (so test sign-ups never touch the production list)
-3. Create the confirm-email **template** (Resend → Templates) with a subject and body
-   in Latvian, placing the confirm button/link on a `{{confirm_url}}` variable. Paste
-   its **alias** into `wrangler.toml` as `RESEND_CONFIRM_TEMPLATE_ALIAS` (the SDK takes the
-   alias in `template.id` in place of the UUID; the alias is stabler and can stay the same
-   across tiers - a separate template per tier is fine but not required).
-4. Create API keys: production, preview, and a **test** key for CI.
-5. Set the secrets per environment (Production vs Preview) via the Cloudflare dashboard
-   (Pages → Settings → Variables and Secrets) or `wrangler pages secret put`:
-   `RESEND_API_KEY`, `RESEND_VERIFY_SECRET`.
-6. In the GitHub repo, add Actions **secrets** `RESEND_API_KEY` + `RESEND_VERIFY_SECRET`
-   and **variables** `RESEND_FROM`, `RESEND_AUDIENCE_VERIFIED_ID`,
-   `RESEND_CONFIRM_TEMPLATE_ALIAS`, all pointing at the **test** key + test
-   audience/template, for the CI job below.
-
-### Bot protection
-
-There is **no CAPTCHA / Turnstile** on the form, by design. Subscribe is
-non-destructive - it only emails a signed double opt-in link and stores nothing
-until the confirm click - so the abuse surface is small. The guardrails are the
-**double opt-in** itself (the confirm click is proof of a real, reachable human),
-the per-IP **rate limit** below, and a **WAF rate-limiting rule** at the edge. A
-bot check was dropped because it added friction and could silently lock out
-legitimate users whose browser (e.g. Safari with iCloud Private Relay) blocked
-the challenge.
-
-### Rate limiting
-
-`subscribe.ts` uses the [Rate Limiting binding](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/)
-`SUBSCRIBE_RATE_LIMITER` (declared in `wrangler.toml` `[[ratelimits]]`, **5 requests
-per 60 s per IP**) and returns `429` when tripped. The check is **optional in code**
-(`if (env.SUBSCRIBE_RATE_LIMITER)`), so it no-ops in `astro dev` and anywhere the
-binding isn't present. Two caveats:
-
-- The binding counts **per Cloudflare location**, not globally - it's a coarse abuse
-  guard, not a precise cap.
-- Add a **WAF Rate Limiting rule** as the edge-level backstop (it runs *before* the
-  Function, so it also shields your Resend quota): in the Cloudflare dashboard →
-  Security → WAF → Rate limiting rules, match `http.request.uri.path eq
-  "/api/newsletter/subscribe"`, e.g. 5 requests / 1 min per IP → *Block*. This is
-  account/zone config, not committed code.
-
-## CI
-
-`.github/workflows/ci.yml` runs on PRs to `main` (and pushes to `main`): `npm ci`,
-`npm run build`, `npm test`. The newsletter tests use the real Resend **test** key and
-send only to the `delivered@resend.dev` simulator, writing to the test audience and
-cleaning up after each case. The token/validation tests need no secrets, so forked PRs
-(which don't receive secrets) still get a useful gate. Deploys are **not** done here -
-Cloudflare Pages' Git integration handles those.
