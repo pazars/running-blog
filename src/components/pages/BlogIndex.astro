@@ -112,9 +112,15 @@ const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort((a, b) =>
         }
       </div>
 
-      <p class="blog-empty color-fg-muted d-none" data-js-blog-empty>
-        {t("blog.empty")}
-      </p>
+      {
+        posts.length === 0 ? (
+          <p class="blog-empty color-fg-muted">{t("blog.none")}</p>
+        ) : (
+          <p class="blog-empty color-fg-muted d-none" data-js-blog-empty>
+            {t("blog.empty")}
+          </p>
+        )
+      }
     </section>
   </main>
 

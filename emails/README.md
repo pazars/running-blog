@@ -74,8 +74,10 @@ The HTML comes from `newsletter/layout.html` plus one partial per block type
 ```bash
 npm run build                                                # writes dist/newsletter-cards.json
 npm run newsletter:build -- newsletters/<issue>.mjs          # -> newsletters/out/<issue>.html
-npm run newsletter:send -- newsletters/<issue>.mjs           # checks only, sends nothing
-npm run newsletter:send -- newsletters/<issue>.mjs --send    # test send to the preview audience
+npm run newsletter:send -- newsletters/<issue>.mjs                       # checks only, sends nothing
+npm run newsletter:send -- newsletters/<issue>.mjs --send                # test send to the preview audience
+npm run newsletter:send -- newsletters/<issue>.mjs --production          # production checks, sends nothing
+npm run newsletter:send -- newsletters/<issue>.mjs --production --send   # send to subscribers
 ```
 
 Put options after `--`. npm swallows flags written before it, and the scripts
@@ -96,15 +98,35 @@ Changing the JPEG settings in `astro.config.mjs` requires clearing
 
 ### Sending
 
-`newsletter:send` only targets the audience in `[env.preview.vars]`. It has no
-production option. Every run:
+`newsletter:send` targets the audience in `[env.preview.vars]`, or the one in
+`[vars]` with `--production`. Every run:
 
 1. renders the issue,
 2. fetches each image and link (images must return an `image/*` content type),
-3. prints the size and the preview audience's recipients.
+3. prints the size, a content hash of the subject, preheader and HTML, and the
+   audience's recipients (only the count for production).
 
-With `--send` it then asks you to type `send`, creates a draft broadcast, confirms
-Resend recorded the preview audience, and sends. `preheader` becomes the preview text.
+With `--send` it then asks for confirmation, creates a draft broadcast, confirms
+Resend recorded the right audience, and sends. `preheader` becomes the preview text.
+A test asks you to type `send`.
+
+`--production` adds these checks, and refuses to send if any fails:
+
+- A test with the same content hash must already have been sent to the preview
+  audience. Broadcast names carry the hash (`TEST <issue> <hash> <time>`), and the
+  check reads Resend's broadcast list, so any change to the issue or a rebuilt post
+  card needs a new test.
+- The issue must not already be sent or queued to production (`PROD <issue> ...`).
+- `--asset-origin` isn't allowed: images have to load from production.
+- Instead of `send`, you type the number of subscribers.
+
+The usual order:
+
+```bash
+npm run newsletter:send -- newsletters/<issue>.mjs --send                # check the test email
+npm run newsletter:send -- newsletters/<issue>.mjs --production          # dry run
+npm run newsletter:send -- newsletters/<issue>.mjs --production --send
+```
 
 Resend fills the footer's `{{{RESEND_UNSUBSCRIBE_URL}}}` per recipient and adds the
 `List-Unsubscribe` header. Unsubscribing applies to the contact, not the audience,
