@@ -26,57 +26,17 @@
 // delete that one in the dashboard first - a leftover visual design can otherwise win
 // over the HTML on send.
 
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resend } from "resend";
+import { loadEnvFile, wranglerTable } from "./lib/env.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const bail = (msg, detail) => {
   console.error(detail ? `${msg}:` : msg, detail ?? "");
   process.exit(1);
 };
-
-// Minimal KEY=VALUE reader (# comments, optional quotes) for .dev.vars.
-function loadEnvFile(path) {
-  if (!existsSync(path)) return {};
-  const out = {};
-  for (const raw of readFileSync(path, "utf8").split("\n")) {
-    const line = raw.trim();
-    if (!line || line.startsWith("#")) continue;
-    const eq = line.indexOf("=");
-    if (eq === -1) continue;
-    let val = line.slice(eq + 1).trim();
-    if (/^(".*"|'.*')$/.test(val)) val = val.slice(1, -1);
-    out[line.slice(0, eq).trim()] = val;
-  }
-  return out;
-}
-
-// Read a single TOML table's KEY = "value" pairs from wrangler.toml. Narrow on
-// purpose: every bracketed line (`[table]` or array-of-tables `[[table]]`) is a
-// boundary, and we only collect scalars while inside the exact table we want - so
-// neighbouring tables like `[[ratelimits]]` can't leak their keys in.
-function wranglerTable(tableName) {
-  const toml = readFileSync(resolve(root, "wrangler.toml"), "utf8");
-  const want = `[${tableName}]`;
-  const out = {};
-  let inTable = false;
-  for (const raw of toml.split("\n")) {
-    const line = raw.trim();
-    if (/^\[.*\]\s*$/.test(line)) {
-      inTable = line === want;
-      continue;
-    }
-    if (!inTable || line.startsWith("#")) continue;
-    const m = line.match(/^([A-Za-z0-9_]+)\s*=\s*(.+?)\s*$/);
-    if (!m) continue;
-    let val = m[2].trim();
-    if (/^(".*"|'.*')$/.test(val)) val = val.slice(1, -1);
-    out[m[1]] = val;
-  }
-  return out;
-}
 
 const devVars = loadEnvFile(resolve(root, ".dev.vars"));
 const apiKey = process.env.RESEND_API_KEY ?? devVars.RESEND_API_KEY;

@@ -46,3 +46,6 @@ pnpm-debug.log*
 
 # docs
 docs/
+
+# built newsletter issues (npm run newsletter:build); the issue sources are committed
+newsletters/out/

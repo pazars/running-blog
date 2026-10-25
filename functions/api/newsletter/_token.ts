@@ -16,7 +16,7 @@ const TOKEN_TTL = "3d"; // 3 days to click the confirm link
 
 const key = (secret: string) => new TextEncoder().encode(secret);
 
-/** Everything the confirm/unsubscribe handlers can trust from a token. */
+/** Everything the confirm handler can trust from a token. */
 export interface TokenClaims {
   email: string;
   /** UI language the sign-up came from, so the landing page matches the email. */

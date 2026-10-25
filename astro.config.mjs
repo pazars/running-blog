@@ -120,6 +120,17 @@ export default defineConfig({
   image: {
     layout: "constrained",
     responsiveStyles: true,
+    // mozjpeg for every JPEG Astro encodes (the OG share images and the newsletter
+    // card images): ~20% smaller than libjpeg at the same quality setting. Matters
+    // most for email, where every subscriber downloads every image on open.
+    // CAUTION: Astro's image filenames and its cache (node_modules/.astro/assets)
+    // are keyed on the transform + service entrypoint, NOT this `config`. Changing
+    // it re-encodes nothing that is already cached and keeps the old URLs; clear
+    // node_modules/.astro/assets (and the Pages build cache) after editing it.
+    service: {
+      entrypoint: "astro/assets/services/sharp",
+      config: { jpeg: { mozjpeg: true } },
+    },
   },
   markdown: {
     // As of Astro 6.4 the markdown.{remark,rehype}Plugins keys are deprecated;
