@@ -370,11 +370,11 @@
 })();
 
 // ===== Language Preference =====
-// Persist an EXPLICIT language choice so the "/" negotiator
-// (functions/index.ts) honours it on later visits instead of re-guessing from
-// Accept-Language. Written ONLY when a human clicks the switcher: landing on a
-// shared /en/ link is not a stated preference, and flipping the cookie there
-// would silently change where "/" sends a Latvian reader afterwards.
+// Persist an EXPLICIT language choice so the "/" handler
+// (functions/index.ts) sends later visits to that language instead of
+// defaulting to Latvian. Written ONLY when a human clicks the switcher: landing
+// on a shared /en/ link is not a stated preference, and flipping the cookie
+// there would silently change where "/" sends a Latvian reader afterwards.
 //
 // Set synchronously on click, before the navigation. No preventDefault, so the
 // anchor still works with JS disabled - you just don't get the memory.
