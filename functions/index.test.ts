@@ -7,7 +7,7 @@ const context = (request: Request) => {
 };
 
 describe("root language negotiation", () => {
-  it("redirects an English browser navigation to the English home page", async () => {
+  it("serves Latvian to an English browser that has not chosen a language", async () => {
     const request = new Request("https://davispazars.lv/", {
       headers: {
         "Accept-Language": "en-GB,en;q=0.9,lv;q=0.8",
@@ -18,15 +18,32 @@ describe("root language negotiation", () => {
 
     const response = await onRequest(ctx);
 
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("Latvian home");
+    // Accept-Language is not a signal any more, so it must not fragment caches.
+    expect(response.headers.get("vary")).toBe("Cookie");
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("redirects a reader whose cookie asks for English", async () => {
+    const request = new Request("https://davispazars.lv/", {
+      headers: {
+        "Accept-Language": "lv",
+        Cookie: "lang=en",
+        "Sec-Fetch-Mode": "navigate",
+      },
+    });
+    const { context: ctx, next } = context(request);
+
+    const response = await onRequest(ctx);
+
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("https://davispazars.lv/en/");
-    expect(response.headers.get("vary")).toBe(
-      "Accept-Language, Cookie, Sec-Fetch-Mode",
-    );
+    expect(response.headers.get("vary")).toBe("Cookie");
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("lets an explicit Latvian cookie override an English browser preference", async () => {
+  it("serves the root to a reader who chose Latvian", async () => {
     const request = new Request("https://davispazars.lv/", {
       headers: {
         "Accept-Language": "en",
@@ -40,9 +57,7 @@ describe("root language negotiation", () => {
 
     expect(response.status).toBe(200);
     expect(await response.text()).toBe("Latvian home");
-    expect(response.headers.get("vary")).toContain("Accept-Language");
-    expect(response.headers.get("vary")).toContain("Cookie");
-    expect(response.headers.get("vary")).toContain("Sec-Fetch-Mode");
+    expect(response.headers.get("vary")).toBe("Cookie");
     expect(next).toHaveBeenCalledOnce();
   });
 
@@ -88,7 +103,7 @@ describe("root language negotiation", () => {
     expect(next).toHaveBeenCalledOnce();
   });
 
-  it("ignores an unsupported query value and negotiates normally", async () => {
+  it("ignores an unsupported query value and defaults to Latvian", async () => {
     const request = new Request("https://davispazars.lv/?lang=de", {
       headers: {
         "Accept-Language": "en",
@@ -99,10 +114,8 @@ describe("root language negotiation", () => {
 
     const response = await onRequest(ctx);
 
-    expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe(
-      "https://davispazars.lv/en/?lang=de",
-    );
-    expect(next).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("Latvian home");
+    expect(next).toHaveBeenCalledOnce();
   });
 });
