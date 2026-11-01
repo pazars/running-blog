@@ -83,10 +83,13 @@ must include the page itself and use trailing-slashed URLs (`canonical()`).
 
 **Root negotiation** happens only in `functions/index.ts`, for `/` only:
 
-- The `lang` cookie (set only by the switcher, `data-js-lang-pick`) beats `Accept-Language`.
+- The `lang` cookie (set only by the switcher, `data-js-lang-pick`) is the only
+  signal. `Accept-Language` is deliberately ignored: most Latvian readers run an
+  English-language browser, so sniffing it would send them to `/en/`.
+- No cookie means Latvian, whatever the browser header says. Crawlers send no
+  cookie, so they get Latvian with `hreflang`.
 - 302, never 301.
-- `Vary: Accept-Language, Cookie, Sec-Fetch-Mode` on every response.
-- Only `Sec-Fetch-Mode: navigate` is redirected; crawlers get Latvian with `hreflang`.
+- `Vary: Cookie` on every response.
 - `?lang=` skips negotiation.
 
 Don't use `functions/_middleware.ts`: a root middleware runs for every URL and

@@ -27,37 +27,7 @@ function fromCookie(header: string | null): Lang | undefined {
   return isLang(value) ? value : undefined;
 }
 
-/**
- * RFC 9110 Accept-Language: highest q-value wins, ties keep header order.
- *   "en-GB,en;q=0.9,lv;q=0.8" -> "en"
- *   "lv;q=0.3, en;q=0.9"      -> "en"   (q beats position)
- *   "*"                       -> undefined (caller falls back to Latvian)
- *   "de,fr;q=0.9"             -> undefined (nothing we serve)
- */
-function fromAcceptLanguage(header: string | null): Lang | undefined {
-  if (!header) return undefined;
-
-  const ranked = header
-    .split(",")
-    .map((part, index) => {
-      const [tag, ...params] = part.trim().split(";");
-      const q = params.map((p) => p.trim()).find((p) => p.startsWith("q="))?.slice(2);
-      const weight = q === undefined ? 1 : Number.parseFloat(q);
-      return {
-        // "en-GB" -> "en": we target languages, not regions.
-        base: tag.trim().toLowerCase().split("-")[0],
-        q: Number.isFinite(weight) ? weight : 0,
-        index,
-      };
-    })
-    // q=0 means "explicitly not acceptable".
-    .filter((entry) => entry.q > 0 && isLang(entry.base))
-    .sort((a, b) => b.q - a.q || a.index - b.index);
-
-  return ranked[0]?.base as Lang | undefined;
-}
-
-// `onRequest`, not `onRequestGet`: HEAD must negotiate identically to GET, or a
+// `onRequest`, not `onRequestGet`: HEAD must behave identically to GET, or a
 // client that probes with HEAD sees the Latvian page and then gets redirected on
 // the follow-up GET. Anything else (a stray POST to "/") passes straight through.
 export const onRequest: PagesFunction = async (context) => {
@@ -73,7 +43,7 @@ export const onRequest: PagesFunction = async (context) => {
   // An explicit ?lang= escape hatch, useful for testing and for linking someone
   // to a specific language regardless of their browser. English redirects to
   // its prefixed canonical home; Latvian stays at the unprefixed root. Unknown
-  // values are ignored and fall through to normal negotiation.
+  // values are ignored and fall through to Latvian.
   const requested = url.searchParams.get("lang");
   if (isLang(requested)) {
     if (requested === DEFAULT_LOCALE) return next();
@@ -83,40 +53,35 @@ export const onRequest: PagesFunction = async (context) => {
     return Response.redirect(target.toString(), 302);
   }
 
-  // Only redirect a real top-level browser navigation. Crawlers, unfurlers and
-  // subresource fetches fall through to the Latvian page at 200, which carries
-  // hreflang lv/en/x-default - so search engines discover both versions
-  // themselves instead of being steered by their Accept-Language. This is a
-  // header check rather than User-Agent sniffing, which is fragile and endless.
-  if (request.headers.get("Sec-Fetch-Mode") !== "navigate") return next();
-
-  const chosen =
-    fromCookie(request.headers.get("Cookie")) ??
-    fromAcceptLanguage(request.headers.get("Accept-Language")) ??
-    DEFAULT_LOCALE;
+  // The ONLY signal is the cookie the switcher writes when a reader clicks LV or
+  // EN. Accept-Language is deliberately not consulted: most Latvian readers run
+  // an English-language browser, so it would send them to /en/ - the opposite of
+  // what they want. A reader who has never chosen gets Latvian.
+  //
+  // Crawlers and unfurlers send no cookie, so they get the Latvian page at 200
+  // with hreflang lv/en/x-default, and discover the English version from that.
+  const chosen = fromCookie(request.headers.get("Cookie")) ?? DEFAULT_LOCALE;
 
   if (chosen !== DEFAULT_LOCALE) {
     const target = new URL(`/${chosen}/`, url);
     target.search = url.search;
     return new Response(null, {
-      // 302, never 301: this is a per-visitor guess, and a cached permanent
-      // redirect would trap a Latvian reader who later clears their cookie.
+      // 302, never 301: this is a per-visitor choice, and a cached permanent
+      // redirect would trap a Latvian reader who later switches back.
       status: 302,
       headers: {
         location: target.toString(),
-        vary: "Accept-Language, Cookie, Sec-Fetch-Mode",
+        vary: "Cookie",
         "cache-control": "no-store",
       },
     });
   }
 
-  // Latvian: serve "/" as-is, but tell caches the response depends on these
-  // inputs. Without Vary a shared cache would serve one visitor's language to
+  // Latvian: serve "/" as-is, but tell caches the response depends on the
+  // cookie. Without Vary a shared cache could serve one visitor's language to
   // everyone - the single biggest footgun in edge language negotiation.
   const response = await next();
   const out = new Response(response.body, response);
-  out.headers.append("vary", "Accept-Language");
   out.headers.append("vary", "Cookie");
-  out.headers.append("vary", "Sec-Fetch-Mode");
   return out;
 };
